@@ -119,13 +119,13 @@ public class Unit {
         return (dx + dy <= range) ? true : false;
     }
 
-
+    public bool has_acted_in_stage = false;
     private bool _has_attacked;
     public bool has_attacked {
         get { return _has_attacked; }
         set {
             _has_attacked = value;
-            determine_acted();
+            has_acted_in_stage = true;
         }
     }
 
@@ -134,32 +134,15 @@ public class Unit {
         get { return _has_moved; }
         set {
             _has_moved = value;
-            determine_acted();
+            has_acted_in_stage = true;
         }
     }
 
-    private bool _has_acted;
-    public bool has_acted {
-        get { return _has_acted; }
-        set {
-            _has_acted = value;
-            if (!_has_acted) {
-                _has_attacked = false;
-                _has_moved = false;
-
-            }
-        }
-    }
-
-    private void determine_acted() {
-        if (has_attacked || has_moved) {
-            _has_acted = true;
-        } else 
-            _has_acted = false;
-    }
-
-    public void reset_action() {
-        has_acted = false;
+    public void reset_actions() {
+        has_attacked = false;
+        has_moved = false;
+        has_acted_in_stage = false;
+        attack_set = false;
     }
 
     public int get_type() {

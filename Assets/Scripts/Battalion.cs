@@ -37,8 +37,14 @@ public class Battalion : MonoBehaviour {
     public void reset_all_actions() {
         foreach (int type in units.Keys) {
             for (int i = 0; i < units[type].Count; i++) {
-                units[type][i].has_acted = false;
-                units[type][i].attack_set = false;
+                units[type][i].reset_actions();
+            }
+        }
+    }
+    public void reset_all_stage_actions() {
+        foreach (int type in units.Keys) {
+            for (int i = 0; i < units[type].Count; i++) {
+                units[type][i].has_acted_in_stage = false;
             }
         }
     }

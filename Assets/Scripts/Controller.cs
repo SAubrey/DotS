@@ -53,19 +53,18 @@ public class Controller : MonoBehaviour {
         unit_panel_man = GameObject.Find("UnitPanelManager").GetComponent<UnitPanelManager>();
         line_drawer = GameObject.Find("LineDrawer").GetComponent<LineDrawer>();
         enemy_brain = GameObject.Find("EnemyBrain").GetComponent<EnemyBrain>();
-    }
 
-    void Start() {
         stores.Add(ASTRA, astra);
         stores.Add(MARTIAL, martial);
         stores.Add(ENDURA, endura);
         stores.Add("city", city);
-        
+    }
+
+    void Start() {
         set_player(ASTRA);
     }
 
     public void advance_turn() {
-        // Update turn number
         turn_number += 1;
 
         city.decrement_light();
@@ -128,7 +127,6 @@ public class Controller : MonoBehaviour {
         Application.Quit();
     }
 }
-//GameObject.Find("HP Image").GetComponent<Image>().sprite = gameObject.GetComponent<SpriteRenderer>().sprite;
 
 public struct Pos {
     public int x, y;

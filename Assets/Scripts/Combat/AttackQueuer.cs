@@ -181,6 +181,7 @@ public class Attack {
                 // show gained xp hitsplat
             }
         } else if (state == Unit.INJURED) {
+            // slot cleared in unit script.
         }
     }
 

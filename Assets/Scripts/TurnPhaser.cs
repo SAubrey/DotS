@@ -42,10 +42,6 @@ public class TurnPhaser : MonoBehaviour {
         disable_mineB();
     }
 
-    public void advance_stage() {
-        stage++;
-    }
-
     private void pre_phase() {
         // Disable next turn button
         disable_mineB();
@@ -68,12 +64,13 @@ public class TurnPhaser : MonoBehaviour {
             advance_stage(); // No travel card, enter action.
         } else {
             if (cell.name != MapCell.RUINS && cell.name != MapCell.CAVE) {
+
                 // DRAW CARD
                 tc = td.draw_card(cell.tier);
                 td.display_card(tc);
+
                 if (tc.type == TravelCard.COMBAT) {
-                    pulled_combat_card = true;
-                    c.get_active_bat().in_battle = true;
+                    handle_combat_card(tc);
                 } 
             }
         }
@@ -103,6 +100,20 @@ public class TurnPhaser : MonoBehaviour {
         pre_phase();
     }
 
+    private void handle_combat_card(TravelCard tc) {
+        pulled_combat_card = true;
+        c.get_active_bat().in_battle = true;
+
+        if (tc.ID == TravelDeck.ATT1_1) {
+
+        } else if (tc.ID == TravelDeck.ATT4_1) { // ambush!
+            // 
+        }   
+    }
+
+    public void advance_stage() {
+        stage++;
+    }
     // Stage and player adjustment happen internally only. 
     // advance_stage is the only externally accessible way to advance.
     private int _stage = 0;

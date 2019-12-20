@@ -39,7 +39,6 @@ public class BattlePhaser : MonoBehaviour {
         enemy_brain = c.enemy_brain;
 
         reset();
-        update_advB_text();
     }
 
     public void reset() {
@@ -54,13 +53,13 @@ public class BattlePhaser : MonoBehaviour {
         action2_stage = false;
         assessment_stage = false;
         targeting = false;
-        next_stage();
+        advance_stage();
     }
 
-    public void next_stage() {
+    public void advance_stage() {
         selector.deselect();
-        update_advB_text();
         stage = _stage + 1;
+        update_advB_text();
     }
 
     // ---STAGES---
@@ -75,7 +74,7 @@ public class BattlePhaser : MonoBehaviour {
         can_skip = true;
         selector.deselect();
         c.get_active_bat().clear_selected_unit_type();
-        //next_stage();
+        //advance_stage();
         // Scan through placed characters and the enemy to determine initial effects.
     }
 
@@ -164,9 +163,10 @@ public class BattlePhaser : MonoBehaviour {
             else if (phase_stage == ACTION2) action2();
             else if (phase_stage == ASSESSMENT) assessment();
 
-            // After 3 rounds of phases, battle yields until the next turn.
-            //if (_stage > num_stages * 3) {
-            if (_stage > 2) {
+            c.get_active_bat().reset_all_stage_actions();
+            // After 3 phases, battle yields until the next turn.
+            //if (_stage > 2) {
+            if (_stage > num_stages * 3) {
                 if (!check_end_conditions()) {
                     c.formation.save_board(c.get_player());
                     reset();
@@ -178,7 +178,7 @@ public class BattlePhaser : MonoBehaviour {
 
     private bool check_end_conditions() {
         if (check_player_won()) {
-            
+            c.get_player_obj().change_var(Storeable.EXPERIENCE, 1);
         } else if (check_enemy_won()) {
             Debug.Log("Game over for " + c.get_player()); 
         } else {

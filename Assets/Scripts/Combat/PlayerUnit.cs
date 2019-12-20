@@ -50,11 +50,12 @@ public class PlayerUnit : Unit {
         int state = get_post_dmg_state(calc_dmg_taken(dmg));
         if (state == INJURED) {
             injured = true;
+            slot.empty();
             // show injured
             Debug.Log(this.ToString() + " has been injured.");
         } else if (state == DEAD) {
             dead = true;
-            slot.show_dead();
+            slot.show_dead(); 
             slot.c.bat_loader.load_text(slot.c.get_active_bat());
             slot.c.get_active_bat().add_dead_unit(this);
         }
@@ -62,13 +63,13 @@ public class PlayerUnit : Unit {
     }
 
     public bool attempt_move(Slot end) {
-        if (has_acted || (end.get_group().has_enemy() || 
+        if (has_acted_in_stage || end.get_group().has_enemy() || 
             !in_range(slot.get_punit().movement_range, 
                 slot.col, slot.row,
-                end.col, end.row))) 
+                end.col, end.row))
             return false;
         move(end);
-        end.selector.deselect();
+        end.c.selector.deselect();
         return true;
     }
 

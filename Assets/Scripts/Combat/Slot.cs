@@ -1,15 +1,17 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
+
 
 public class Slot : MonoBehaviour {
     private Unit unit;
     public Image img;
     public Controller c;
-    public Selector selector;
     private Formation f;
     public GameObject unit_panel;
     private Camera cam;
-    private Text name_txt;
+    public Text namefg_T;
+    public Text namebg_T;
 
     public int col; // LEFT, MID, RIGHT
     public int row; // FRONT, MID, REAR
@@ -19,20 +21,16 @@ public class Slot : MonoBehaviour {
     void Awake() {
         c = GameObject.Find("Controller").GetComponent<Controller>();
         cam = GameObject.Find("BattleCamera").GetComponent<Camera>();
-        name_txt = GetComponentInChildren<Text>();
-        name_txt.transform.LookAt(cam.transform);
-        name_txt.transform.forward = name_txt.transform.forward * -1;
-    }
-    void Start() {
+
+        namebg_T.transform.LookAt(cam.transform);
+        namebg_T.transform.forward = namefg_T.transform.forward * -1;
+
         f = c.formation;
-        selector = c.selector;
-        group = f.get_group(row, col);
-        f.add_slot_to_group(this);
-        
+        //selector = c.selector;
     }
 
     public void click() {
-        selector.handle_slot(this);
+        c.selector.handle_slot(this);
     }
 
     public bool fill(Unit u) {
@@ -50,7 +48,7 @@ public class Slot : MonoBehaviour {
             unit = null;
         }
         set_sprite(PlayerUnit.EMPTY);
-        set_name_txt("");
+        set_namefg_T("");
         show_no_selection();
         group.validate_unit_order();
     }
@@ -61,7 +59,7 @@ public class Slot : MonoBehaviour {
             unit = null;
         }
         set_sprite(PlayerUnit.EMPTY);
-        set_name_txt("");
+        set_namefg_T("");
         show_no_selection();
     }
 
@@ -75,7 +73,7 @@ public class Slot : MonoBehaviour {
         } else if (u.is_enemy()) {
             unit = u as Enemy;
         }
-        set_name_txt(unit.get_name());
+        set_namefg_T(unit.get_name());
         unit.set_slot(this);
     }
 
@@ -113,6 +111,16 @@ public class Slot : MonoBehaviour {
             img.color = Color.red;
     }
 
+    public void show_offensive() {
+        if (img != null)
+            img.color = new Color(1, 0.2f, 0.2f, 1);
+    }
+
+    public void show_defensive() {
+        if (img != null)
+            img.color = Color.blue;
+    }
+
     public bool has_punit() {
         if (unit == null) return false;
         if (unit.is_playerunit()) return true;
@@ -141,13 +149,19 @@ public class Slot : MonoBehaviour {
         return has_enemy() ? unit as Enemy : null;
     }
 
-    private void set_name_txt(string txt) {
-        name_txt.text = txt;
+    private void set_namefg_T(string txt) {
+        namefg_T.text = txt;
+        namebg_T.text = txt;
     }
 
     public Sprite get_sprite() { return img.sprite; }
 
     public Group get_group() {
         return group;
+    }
+
+    public void set_group(Group g) {
+        group = g;
+        g.add_slot(this);
     }
 }

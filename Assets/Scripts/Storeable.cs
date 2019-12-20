@@ -35,7 +35,7 @@ public class Storeable : MonoBehaviour {
 
     public void decrement_light() {
         if (light > 0) {
-            light -= 1;
+            light--;
         }
         if (light <= 0) {
             decrement_sc();
@@ -44,10 +44,9 @@ public class Storeable : MonoBehaviour {
     
     private void decrement_sc() {
         if (star_crystals > 0) {
-            star_crystals -= 1;
+            star_crystals--;
             light = 4;
-        }
-        else {
+        } else {
             decrement_unity();
         }
     }
@@ -86,6 +85,7 @@ public class Storeable : MonoBehaviour {
             erelics += val;
         else if (var == EQUIMARES)
             equimares += val;
+        
     }
 
     public int get_var(string var) {
@@ -120,7 +120,7 @@ public class Storeable : MonoBehaviour {
     }
 
     private int _light = 4;
-    new int light {
+    public new int light {
         get { return _light; }
         set { 
             if (validate_change(_light + value)) {
@@ -131,7 +131,7 @@ public class Storeable : MonoBehaviour {
     }
     
     private int _unity = 0;
-    int unity {
+    public int unity {
         get { return _unity; }
         set { 
             if (validate_change(_unity + value)) {

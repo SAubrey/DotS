@@ -17,36 +17,42 @@ public class PlayerPanel : UnitPanel {
         aq = c.attack_queuer;
     }
 
+    // Limit what a player can do with a unit based on game logic.
+    /* A player can only ever move OR attack in action phase. 
+    */
     public override void update_panel(Slot slot) {
         if (slot.get_enemy() != null)
             return;
 
         PlayerUnit punit = slot.get_punit();
         update_text(punit);
-
         disable_attackB();
         disable_moveB();
         disable_returnB();
         depress_moveB();
         //Debug.Log(" attack set? " + punit.attack_set);
         //Debug.Log("has attacked? " + punit.has_attacked);
+
         bool actionable_staging = (bp.range_stage && punit.is_range()) || 
                                 (bp.action1_stage || bp.action2_stage);
-            
-        if (!punit.has_moved && (bp.movement_stage || actionable_staging)) {
+
+        if (!punit.has_moved && !punit.has_acted_in_stage && 
+            (bp.movement_stage || actionable_staging)) {
             enable_moveB();
         } else if (bp.placement_stage) {
             enable_returnB();
         } 
+
         bool is_first_slot_in_group = slot.get_group().get_highest_player_slot() == slot;
-        if (bp.targeting && !punit.has_attacked && actionable_staging && is_first_slot_in_group) {
+        if (bp.targeting && !punit.has_acted_in_stage && !punit.has_attacked && 
+            actionable_staging && is_first_slot_in_group) {
             enable_attackB();
         }
     
         if (punit.attack_set)
-            press_attackB();
+            press_attackB(); // show cancel attack
         else
-            depress_attackB();
+            depress_attackB(); // show that an attack has not been selected
         /*if (punit.has_moved)
             press_moveB();
         else

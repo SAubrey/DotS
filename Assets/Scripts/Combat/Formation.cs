@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 
 /* There is a single formation containing groups of 3 slots. Only the first slot performs game actions.
  */
@@ -14,8 +15,8 @@ public class Formation : MonoBehaviour {
     public const int LEFT = 0;
     public const int RIGHT = 2;
 
+    public GameObject slot_panel;
     private Controller c;
-    private Selector selector;
 
     public Sprite archer;
     public Sprite warrior;
@@ -66,7 +67,6 @@ public class Formation : MonoBehaviour {
 
     void Awake() {
         c = GameObject.Find("Controller").GetComponent<Controller>();
-        selector = c.selector;
 
         culture_boards.Add(Controller.ASTRA, astra_board);
         culture_boards.Add(Controller.ENDURA, endura_board);
@@ -110,11 +110,17 @@ public class Formation : MonoBehaviour {
         unit_buttons.Add(PlayerUnit.SPEARMAN, spearman_img);
         unit_buttons.Add(PlayerUnit.INSPIRITOR, inspiritor_img);
         unit_buttons.Add(PlayerUnit.MINER, miner_img);
+
+        add_slots_to_groups();
     }
 
-    // Used once per slot for slots to add themselves.
-    public void add_slot_to_group(Slot slot) {
-        groups[slot.row][slot.col].add_slot(slot);
+    private void add_slots_to_groups() {
+        Component[] slots = slot_panel.GetComponentsInChildren<Slot>();
+        foreach (Slot s in slots) {
+            //s.add_to_group();
+            s.set_group(groups[s.row][s.col]);
+            //add_slot_to_group(s);
+        }
     }
 
     public Group get_group(int row, int col) {
@@ -182,7 +188,7 @@ public class Formation : MonoBehaviour {
                     s.empty_without_validation();
             }
         }
-        selector.selected_slot = null;
+        c.selector.selected_slot = null;
         clear_placement_selection();
     }
 

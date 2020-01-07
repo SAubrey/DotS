@@ -10,11 +10,12 @@ public class UnitPanel : MonoBehaviour {
     public Text unit_name;
     public Slot slot;
 
+
     void Awake() {
         selector = GameObject.Find("Selector").GetComponent<Selector>();
         bp = GameObject.Find("BattlePhaser").GetComponent<BattlePhaser>();
     }
-
+    
     public void reposition(Slot slot) {
         Vector3 slot_pos = slot.transform.position;
         panel.transform.position = new Vector3(slot_pos.x, slot_pos.y - .3f, slot_pos.z);

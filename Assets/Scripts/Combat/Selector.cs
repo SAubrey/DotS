@@ -35,10 +35,7 @@ public class Selector : MonoBehaviour {
     public void handle_slot(Slot slot) {
         if (cs.current_cam != CamSwitcher.BATTLE)
             return;
-        //Debug.Log("Slot's unit: " + slot.get_unit());
-        //if (slot.get_unit() != null) {
-        //    Debug.Log("Unit's slot: " + slot.get_unit().get_slot());
-        //}
+            
         // Attempting to attack or move. Do not select a new slot upon failure.
         bool selection_taking_action = selected_slot != null && (selecting_target || selecting_move);
         if (selection_taking_action) {
@@ -46,20 +43,22 @@ public class Selector : MonoBehaviour {
             return;
         }
 
-        bool punit_selected_for_placement = bp.placement_stage && slot.get_unit() == null;
+        bool punit_selected_for_placement = bp.placement_stage && slot.is_empty();
         if (punit_selected_for_placement) {
-            // The highest order slot must be filled first.
-            Slot highest_slot = slot.get_group().get_highest_empty_slot();
-            if (highest_slot.fill(c.get_active_bat().get_selected_unit())) {
-                bp.can_skip = true;
-                bat_loader.load_text(c.get_active_bat()); // update inventory text
-                deselect();
-            }
-        } 
-        else if (!slot.is_empty()) { // Select unit already present in slot
+            place_punit(slot);
+        } else if (!slot.is_empty()) { // Select unit already present in slot
             set_selected(slot);
         }
-        // Display unit information regardless
+    }
+
+    private void place_punit(Slot slot) {
+        // The highest order slot must be filled first.
+        Slot highest_slot = slot.get_group().get_highest_empty_slot();
+        if (highest_slot.fill(c.get_active_bat().get_selected_unit())) {
+            bp.can_skip = true;
+            bat_loader.load_text(c.get_active_bat()); // update inventory text
+            deselect();
+        }
     }
 
     private void attempt_action(Slot slot) {

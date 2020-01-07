@@ -45,14 +45,16 @@ public class PlayerUnit : Unit {
 
     /* A player unit is injured if the damage taken is equal or greater
        than half its resilience rounded down. Returns true if dead.
-       Returns 1 if dead, 2 if injured, 0 if no effect. */ 
+       Returns 1 if dead, 2 if injured, 0 if no effect. 
+       ! Do not remove a slot's unit directly! Cleanup happens after the
+       battle sequence in Battalion/ 
+       */ 
     public override int take_damage(int dmg) {
         int state = get_post_dmg_state(calc_dmg_taken(dmg));
         if (state == INJURED) {
             injured = true;
-            slot.empty();
-            // show injured
-            Debug.Log(this.ToString() + " has been injured.");
+            slot.show_injured();
+            slot.c.get_active_bat().add_injured_unit(this);
         } else if (state == DEAD) {
             dead = true;
             slot.show_dead(); 

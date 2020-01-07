@@ -111,6 +111,11 @@ public class Slot : MonoBehaviour {
             img.color = Color.red;
     }
 
+    public void show_injured() {
+        if (img != null)
+            img.color = Color.yellow;
+    }
+
     public void show_offensive() {
         if (img != null)
             img.color = new Color(1, 0.2f, 0.2f, 1);

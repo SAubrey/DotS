@@ -21,8 +21,10 @@ public class BattlePhaser : MonoBehaviour {
 
     public Button adv_stageB;
     public Text stageT; 
+    public Text phaseT; 
 
     public bool placement_stage = true;
+    public bool init_placement_stage = true;
     public bool intuitive_stage = false;
     public bool range_stage = false;
     public bool action1_stage = false;
@@ -46,6 +48,7 @@ public class BattlePhaser : MonoBehaviour {
         can_skip = false;
 
         placement_stage = false;
+        init_placement_stage = true;
         intuitive_stage = false;
         range_stage = false;
         action1_stage = false;
@@ -71,10 +74,11 @@ public class BattlePhaser : MonoBehaviour {
 
     private void intuitive() {
         placement_stage = false;
+        init_placement_stage = false;
         can_skip = true;
         selector.deselect();
         c.get_active_bat().clear_selected_unit_type();
-        //advance_stage();
+        advance_stage();
         // Scan through placed characters and the enemy to determine initial effects.
     }
 
@@ -99,6 +103,7 @@ public class BattlePhaser : MonoBehaviour {
     // pikemen special ability can hit diagonally
     }
     private void post_action1() {
+        enemy_brain.move_units();
         enemy_brain.stage_attacks();
     }
 
@@ -127,6 +132,7 @@ public class BattlePhaser : MonoBehaviour {
 
     private void post_assessment() {
         c.get_active_bat().reset_all_actions(); // reset movement/attacks
+        phase++;
     }
 
     private void battle() {
@@ -164,15 +170,25 @@ public class BattlePhaser : MonoBehaviour {
             else if (phase_stage == ASSESSMENT) assessment();
 
             c.get_active_bat().reset_all_stage_actions();
-            // After 3 phases, battle yields until the next turn.
-            //if (_stage > 2) {
-            if (_stage > num_stages * 3) {
+        }
+    }
+    private int _phase = 1;
+    // After 3 phases, battle yields until the next turn.
+    private int phase {
+        get { return _phase; }
+        set {
+            _phase = value; 
+            phaseT.text = "Phase " + phase;
+
+            if (_phase > 3) {
+                _phase = 1;
                 if (!check_end_conditions()) {
                     c.formation.save_board(c.get_player());
                     reset();
                     tp.advance_stage();
                 }
             }
+
         }
     }
 
@@ -214,13 +230,14 @@ public class BattlePhaser : MonoBehaviour {
         Text txt = adv_stageB.GetComponentInChildren<Text>();
         string basestr = "Advance to ";
         if (stage == PLACEMENT) {
-            txt.text = basestr + "intuitive stage";
+            txt.text = basestr + "range stage";
             stageT.text = "Placement";
         }
+        /*
         else if (stage == INTUITIVE) {
             txt.text = basestr + "range stage";
             stageT.text = "Intuitive";
-        }
+        }*/
         else if (stage == RANGE){
             txt.text = basestr + "1st action stage";
             stageT.text = "Range";

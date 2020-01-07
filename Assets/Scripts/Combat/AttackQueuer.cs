@@ -66,12 +66,12 @@ public class AttackQueuer : MonoBehaviour {
             toggle = !toggle;
             if (att != null) {
                 attack(att);
-                yield return new WaitForSeconds(WAIT_TIME);
+                yield return new WaitForSeconds(WAIT_TIME); // fix  
             }
         } while(att != null);
 
         // Clear attacks and clean the battlefield
-        c.get_active_bat().remove_dead_units();
+        c.get_active_bat().post_battle();
         c.enemy_brain.clear_dead_enemies();
         reset();
         c.battle_phaser.post_battle(); // after reset

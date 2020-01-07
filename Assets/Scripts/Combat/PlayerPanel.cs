@@ -39,7 +39,7 @@ public class PlayerPanel : UnitPanel {
         if (!punit.has_moved && !punit.has_acted_in_stage && 
             (bp.movement_stage || actionable_staging)) {
             enable_moveB();
-        } else if (bp.placement_stage) {
+        } else if (bp.init_placement_stage) {
             enable_returnB();
         } 
 

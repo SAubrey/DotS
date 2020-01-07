@@ -9,6 +9,7 @@ public class Battalion : MonoBehaviour {
     public int mine_qty;
     private Controller c;
     private List<PlayerUnit> dead_units = new List<PlayerUnit>();
+    private List<PlayerUnit> injured_units = new List<PlayerUnit>();
     public bool in_battle = false;
     
     public IDictionary<int, List<PlayerUnit>> units = new Dictionary<int, List<PlayerUnit>>() {
@@ -79,13 +80,29 @@ public class Battalion : MonoBehaviour {
             dead_units.Add(du);
     }
 
-    public void remove_dead_units() {
+    public void add_injured_unit(PlayerUnit iu) {
+        if (!injured_units.Contains(iu)) 
+            injured_units.Add(iu);
+    }
+
+    public void post_battle() {
+        remove_dead_units();
+        remove_injured_units();
+    }
+
+    private void remove_dead_units() {
         foreach (PlayerUnit du in dead_units) {
-            Debug.Log(du.get_slot());
             du.get_slot().empty();
             units[du.get_ID()].Remove(du);
         }
         dead_units.Clear();
+    }
+
+    private void remove_injured_units() {
+        foreach (PlayerUnit du in injured_units) {
+            du.get_slot().empty();
+        }
+        injured_units.Clear();
     }
 
     public void add_units(int type, int count) {

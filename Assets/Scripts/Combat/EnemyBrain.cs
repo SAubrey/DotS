@@ -46,6 +46,9 @@ public class EnemyBrain : MonoBehaviour{
         }
     }
 
+    /**
+    Targets are maintained unless the target is off the board. 
+    */
     public void retarget() {
         // control for melee vs flying, 
         List<Slot> enemies = f.get_highest_full_slots(Unit.ENEMY);

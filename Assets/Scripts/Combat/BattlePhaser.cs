@@ -41,6 +41,7 @@ public class BattlePhaser : MonoBehaviour {
         reset();
     }
 
+    // Called at the end of 3 phases.
     public void reset() {
         stage = PLACEMENT - 1;
         phase = 1;
@@ -51,6 +52,7 @@ public class BattlePhaser : MonoBehaviour {
         range_stage = false;
         movement_stage = false;
         combat_stage = false;
+        c.formation.reset_groups_dir();
         advance_stage();
     }
 
@@ -101,8 +103,6 @@ public class BattlePhaser : MonoBehaviour {
 
         combat_stage = true;
     }
-    private void post_combat1() {
-    }
 
     private void movement2() {
         combat_stage = false;
@@ -123,13 +123,7 @@ public class BattlePhaser : MonoBehaviour {
         battle();
         combat_stage = false;
     }
-
-    private void post_assessment() {
-        c.formation.rotate_actioned_player_groups();
-        c.formation.reset_groups_dir();
-        c.get_active_bat().reset_all_actions(); // reset movement/attacks
-        phase++;
-    }
+    // ---END FORMAL STAGES---
 
     private void battle() {
         can_skip = false;
@@ -138,11 +132,27 @@ public class BattlePhaser : MonoBehaviour {
 
     // Only called by AttackQueuer after battle animations have finished.
     public void post_battle() {
-        if (stage == COMBAT1) post_combat1();
-       // else if (stage == MOVEMENT) post_movement();
-        else if (stage == ASSESSMENT) post_assessment();
+        if (stage == ASSESSMENT) post_phase();
         can_skip = true;
         check_end_conditions();
+    }
+
+    private void post_phase() {
+        c.formation.rotate_actioned_player_groups();
+        c.get_active_bat().reset_all_actions(); // reset movement/attacks
+        enemy_brain.reset_all_actions();
+        // reset enemy actions
+        phase++;
+    }
+
+    private void post_phases(bool finished) {
+        if (finished) {
+            c.get_active_bat().in_battle = false;
+        } else {
+            c.formation.save_board(c.get_player());
+        }
+        reset();
+        tp.advance_stage();
     }
 
     /*
@@ -178,14 +188,11 @@ public class BattlePhaser : MonoBehaviour {
             phaseT.text = "Phase " + phase;
 
             if (_phase > 3) {
-                _phase = 1;
-                if (!check_end_conditions()) {
-                    c.formation.save_board(c.get_player());
-                    reset();
-                    tp.advance_stage();
-                }
+                if (!check_end_conditions()) 
+                    post_phases(false);
+                else
+                    post_phases(true);
             }
-
         }
     }
 
@@ -197,10 +204,7 @@ public class BattlePhaser : MonoBehaviour {
         } else {
             return false;
         }
-        // If someone won and battle is ending...
-        c.get_active_bat().in_battle = false;
-        reset();
-        tp.advance_stage();
+        post_phases(true);
         return true;
     }
 

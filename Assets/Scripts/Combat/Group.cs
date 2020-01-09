@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System;
 
 // Slot group
 public class Group : MonoBehaviour {
@@ -72,6 +73,24 @@ public class Group : MonoBehaviour {
 
         foreach (Slot s in slots)
             s.face_text_to_cam();
+    }
+
+    public void rotate_towards_target(Group target) {
+        int dx = target.col - col;
+        int dy = target.row - row;
+        
+        // Point in relation to the greater difference
+        if (Math.Abs(dy) >= Math.Abs(dx)) {
+            if (dy > 0)
+                rotate(UP);
+            else if (dy < 0)
+                rotate(DOWN);
+        } else {
+            if (dx > 0)
+                rotate(RIGHT);
+            else if (dx < 0)
+                rotate(LEFT);
+        }
     }
 
     public void reset_dir() {

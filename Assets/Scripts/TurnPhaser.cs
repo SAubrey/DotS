@@ -121,7 +121,6 @@ public class TurnPhaser : MonoBehaviour {
         get { return _stage; }
         set {
             _stage = value;
-            Debug.Log("Phase Stage: " + _stage);
             if (_stage == MOVEMENT) {
 
                 // Don't move if resuming battle.

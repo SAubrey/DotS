@@ -13,6 +13,14 @@ public class EnemyBrain : MonoBehaviour{
         aq = c.attack_queuer;
     }
 
+    public void attack(Slot slot) {
+        Slot target = slot.get_enemy().get_target();
+        if (target == null)
+            return;
+        slot.get_group().rotate_towards_target(target.get_group());
+        aq.attempt_attack(slot, target);
+    }
+
     public void move_units() {
         retarget();
         List<Slot> enemies = f.get_highest_full_slots(Unit.ENEMY);
@@ -32,7 +40,7 @@ public class EnemyBrain : MonoBehaviour{
         List<Slot> enemies = f.get_highest_full_slots(Unit.ENEMY);
         foreach (Slot slot in enemies) {
             if (in_range(slot, slot.get_enemy().get_target()))
-                aq.attempt_attack(slot, slot.get_enemy().get_target());
+                attack(slot);
         }
     }
 
@@ -41,7 +49,7 @@ public class EnemyBrain : MonoBehaviour{
         List<Slot> enemies = f.get_highest_full_slots(Unit.ENEMY);
         foreach (Slot slot in enemies) {
             if (slot.get_enemy().is_range() && in_range(slot, slot.get_enemy().get_target())) {
-                aq.attempt_attack(slot, slot.get_enemy().get_target());
+                attack(slot);
             }
         }
     }
@@ -114,6 +122,13 @@ public class EnemyBrain : MonoBehaviour{
         int dx = Mathf.Abs(start.col - end.col);
         int dy = Mathf.Abs(start.row - end.row);
         return dx + dy;
+    }
+
+    public void reset_all_actions() {
+        List<Slot> enemies = f.get_all_full_slots(Unit.ENEMY);
+        foreach (Slot s in enemies) {
+            s.get_unit().reset_actions();
+        }
     }
 
     public void clear_dead_enemies() {

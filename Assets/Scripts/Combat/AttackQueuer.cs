@@ -38,6 +38,7 @@ public class AttackQueuer : MonoBehaviour {
                 get_player_queue().enqueue(start, end, line_drawer);
             } else {
                 get_enemy_queue().enqueue(start, end, line_drawer);
+                //start.get_group().rotate()
             }
             attacker.attack_set = true;
             return true;

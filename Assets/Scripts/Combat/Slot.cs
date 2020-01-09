@@ -16,17 +16,16 @@ public class Slot : MonoBehaviour {
     public int col; // LEFT, MID, RIGHT
     public int row; // FRONT, MID, REAR
     public int num; // Hierarchy in group. 0, 1, 2
-    private Group group;
+    public Group group;
     
     void Awake() {
         c = GameObject.Find("Controller").GetComponent<Controller>();
         cam = GameObject.Find("BattleCamera").GetComponent<Camera>();
+        col = group.col;
+        row = group.row;
 
-        namebg_T.transform.LookAt(cam.transform);
-        namebg_T.transform.forward = namefg_T.transform.forward * -1;
-
+        face_text_to_cam();
         f = c.formation;
-        //selector = c.selector;
     }
 
     public void click() {
@@ -41,8 +40,9 @@ public class Slot : MonoBehaviour {
         return true;
     }
 
-    // Full slots below the removed slot will be moved up. 
-    public void empty() {
+    // Full slots below the removed slot will be moved up if validated.
+    public Unit empty(bool validate=true) {
+        Unit removed_unit = unit;
         if (unit != null) {
             unit.set_slot(null);
             unit = null;
@@ -50,22 +50,14 @@ public class Slot : MonoBehaviour {
         set_sprite(PlayerUnit.EMPTY);
         set_namefg_T("");
         show_no_selection();
-        group.validate_unit_order();
-    }
-
-    public void empty_without_validation() {
-        if (unit != null) {
-            unit.set_slot(null);
-            unit = null;
-        }
-        set_sprite(PlayerUnit.EMPTY);
-        set_namefg_T("");
-        show_no_selection();
+        if (validate)
+            group.validate_unit_order();
+        return removed_unit;
     }
 
     private void set_unit(Unit u) {
         if (u == null) {
-            Debug.Log("not setting null unit");
+            Debug.Log("! Not setting null unit");
             return;
         }
         if (u.is_playerunit()) {
@@ -165,8 +157,8 @@ public class Slot : MonoBehaviour {
         return group;
     }
 
-    public void set_group(Group g) {
-        group = g;
-        g.add_slot(this);
+    public void face_text_to_cam() {
+        namebg_T.transform.LookAt(cam.transform);
+        namebg_T.transform.forward = namefg_T.transform.forward * -1;
     }
 }

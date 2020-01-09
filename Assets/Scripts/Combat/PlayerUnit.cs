@@ -12,13 +12,14 @@ public class PlayerUnit : Unit {
     public float resilience;
     private float injury_thresh;
     public bool injured = false;
+    public bool defending = false;
 
     protected void init(string name, int att, int def, int res, int mvmt_range, int style,
         int atr1=-1, int atr2=-1, int atr3=-1) {
         create_attribute_list(num_attributes);
         type = PLAYER;
         this.name = name;
-        attack = att;
+        attack_dmg = att;
         defense = def;
         resilience = res;
         movement_range = mvmt_range;
@@ -61,6 +62,7 @@ public class PlayerUnit : Unit {
             slot.c.bat_loader.load_text(slot.c.get_active_bat());
             slot.c.get_active_bat().add_dead_unit(this);
         }
+        defending = false; // Defense only works on first attack this way.
         return state;
     }
 
@@ -76,11 +78,12 @@ public class PlayerUnit : Unit {
     }
 
     public override int calc_dmg_taken(int dmg) {
-        int final_dmg = dmg - defense;
-        return final_dmg > 0 ? final_dmg : 0;
+        if (defending)
+            dmg -= defense;
+        return dmg > 0 ? dmg : 0;
     }
 
-    // Passed damage should have already accounted for defense reduction.
+    // Passed damage should have already accounted for possible defense reduction.
     public int get_post_dmg_state(int dmg) {
         float damaged_resilience = resilience - dmg;
         if (damaged_resilience <= 0) {
@@ -89,6 +92,12 @@ public class PlayerUnit : Unit {
             return INJURED;
         }
         return ALIVE;
+    }
+
+    public void defend() {
+        if (!has_acted) {
+            defending = !defending;
+        }
     }
 }
 

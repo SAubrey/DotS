@@ -44,7 +44,12 @@ public class AttackQueuer : MonoBehaviour {
         }
         return false;
     }
+/*
+TODO: Accumulate multiple attacks on a single unit and have those animate together.
 
+Scan through all enemy attacks and create a list of lists of attacks that
+target the same unit. 
+*/
     /*
     Every unit that has an attack poised will attack regardless of the animation order
     Display attack animations for each simultaneously pulled unit
@@ -167,27 +172,48 @@ public class Attack {
     }
 
     public void attack() {
-        int state = get_end_slot().get_unit().take_damage(get_start_slot().get_unit().attack);
-        if (state == Unit.DEAD) {
-
-            // Remove from player's battalion and update text.
+        // determine damage from flanking, rear
+        int dmg = get_start_slot().get_unit().attack() + 
+                    calc_dir_dmg(start.get_group(), end.get_group());
+        int state = get_end_slot().get_unit().take_damage(dmg);
+        if (state == Unit.DEAD || state == Unit.INJURED) {
             if (direction == AttackQueuer.E_TO_PU) {
                 enemy.clear_target();
                 start.c.enemy_brain.retarget();
-            } else if (direction == AttackQueuer.PU_TO_E) {
-                punit.has_attacked = true;
-                punit.attack_set = false;
-                start.c.get_player_obj().change_var(Storeable.EXPERIENCE, enemy.xp);
-                // show gained xp hitsplat
             }
-        } else if (state == Unit.INJURED) {
-            // slot cleared in unit script.
+        }
+        if (state == Unit.DEAD && direction == AttackQueuer.PU_TO_E) {
+            // Remove from player's battalion and update text.
+            start.c.get_player_obj().change_var(Storeable.EXPERIENCE, enemy.xp);
         }
     }
 
-    public int calc_dmg() {
-        return get_end_slot().get_unit().calc_dmg_taken(get_start_slot().get_unit().attack);
+    public int calc_dmg_taken() {
+        int dmg = get_start_slot().get_unit().attack_dmg + 
+                    calc_dir_dmg(start.get_group(), end.get_group());
+        return get_end_slot().get_unit().calc_dmg_taken(dmg);
     }
+
+    /*
+    */
+    public int calc_dir_dmg(Group att, Group def) {
+        // Check if attacking from behind.
+        if (def.faces(Group.UP) && att.row < def.row) 
+            return 2;
+        else if (def.faces(Group.DOWN) && att.row > def.row) 
+            return 2;
+        else if (def.faces(Group.LEFT) && att.col > def.col) 
+            return 2;
+        else if (def.faces(Group.RIGHT) && att.col < def.col)
+            return 2;
+        
+        // Check if attacking from a side flank.
+        if (def.faces(Group.UP) || def.faces(Group.DOWN))
+            return att.row == def.row ? 1 : 0;
+        else
+            return att.col == def.col ? 1 : 0;
+    }
+
 
     public PlayerUnit get_punit() {
         return punit;

@@ -33,7 +33,7 @@ RectTransform:
   m_Children:
   - {fileID: 6607669165946168614}
   m_Father: {fileID: 6826529380220437176}
-  m_RootOrder: 1
+  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
@@ -148,13 +148,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   img: {fileID: 761647162053808504}
   c: {fileID: 0}
-  selector: {fileID: 0}
   unit_panel: {fileID: 0}
   namefg_T: {fileID: 6259133613733543943}
   namebg_T: {fileID: 4805066736663095067}
   col: 0
   row: 0
   num: 1
+  group: {fileID: 5249068999134589880}
 --- !u!1 &2395367625072451062
 GameObject:
   m_ObjectHideFlags: 0
@@ -585,7 +585,7 @@ RectTransform:
   m_Children:
   - {fileID: 249520746594620737}
   m_Father: {fileID: 6826529380220437176}
-  m_RootOrder: 0
+  m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
@@ -700,13 +700,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   img: {fileID: 6843490939033449979}
   c: {fileID: 0}
-  selector: {fileID: 0}
   unit_panel: {fileID: 0}
   namefg_T: {fileID: 7299812326947874975}
   namebg_T: {fileID: 4837070771718719941}
   col: 0
   row: 0
   num: 2
+  group: {fileID: 5249068999134589880}
 --- !u!1 &7510853317704123990
 GameObject:
   m_ObjectHideFlags: 0
@@ -718,6 +718,7 @@ GameObject:
   - component: {fileID: 6826529380220437176}
   - component: {fileID: 3713335421975833077}
   - component: {fileID: 6709070089153471978}
+  - component: {fileID: 5249068999134589880}
   m_Layer: 5
   m_Name: SlotGroup
   m_TagString: Untagged
@@ -736,9 +737,9 @@ RectTransform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 0.9, y: 0.9, z: 1}
   m_Children:
-  - {fileID: 6843490939033449977}
   - {fileID: 761647162053808506}
   - {fileID: 7900869162085437327}
+  - {fileID: 6843490939033449977}
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -785,6 +786,29 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &5249068999134589880
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7510853317704123990}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3b83ccc7f08cdd94d859687b25bf806b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  MAX: 3
+  direction: 0
+  col: 0
+  row: 0
+  slots:
+  - {fileID: 934661410440452729}
+  - {fileID: 7767857456323462284}
+  - {fileID: 4586324672631545871}
+  s0: {fileID: 934661410440452729}
+  s1: {fileID: 7767857456323462284}
+  s2: {fileID: 4586324672631545871}
 --- !u!1 &7797857980356370541
 GameObject:
   m_ObjectHideFlags: 0
@@ -898,7 +922,7 @@ RectTransform:
   m_Children:
   - {fileID: 6317667778839111749}
   m_Father: {fileID: 6826529380220437176}
-  m_RootOrder: 2
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
@@ -1013,10 +1037,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   img: {fileID: 7900869162085437325}
   c: {fileID: 0}
-  selector: {fileID: 0}
   unit_panel: {fileID: 0}
   namefg_T: {fileID: 4609118334771121752}
   namebg_T: {fileID: 3950274551634663321}
   col: 0
   row: 0
   num: 0
+  group: {fileID: 5249068999134589880}

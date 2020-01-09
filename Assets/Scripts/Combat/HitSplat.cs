@@ -14,7 +14,7 @@ public class HitSplat : MonoBehaviour {
     public Text bg_T;
 
     public void init(Attack att) {
-        int dmg = att.calc_dmg(); // Damage accounting for defense.
+        int dmg = att.calc_dmg_taken(); // Damage accounting for defense.
         set_text(dmg);
 
         if (att.direction == AttackQueuer.E_TO_PU) {

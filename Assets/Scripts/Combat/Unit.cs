@@ -47,7 +47,7 @@ public class Unit {
     // Attack styles
     public const int MELEE = 1;
     public const int RANGE = 2;
-    public int attack;
+    public int attack_dmg;
     public int combat_style;
     public int movement_range = 1;
     public int attack_range = 1;
@@ -64,7 +64,6 @@ public class Unit {
     public int line_id; // unique identifier for looking up drawn attack lines.
 
     public virtual int calc_dmg_taken(int dmg) { return 0; }
-    // Returns true if unit dies.
     public virtual int take_damage(int dmg) { return 0; }
     
     protected void move(Slot end) {
@@ -73,10 +72,58 @@ public class Unit {
         has_moved = true;
         end.get_group().validate_unit_order();
     }
+
+    public int attack() {
+        attack_set = false;
+        has_acted = true;
+        return attack_dmg;
+    }
     protected void create_attribute_list(int num_attributes) {
         for (int i = 0; i < num_attributes; i++) {
             attributes.Insert(i, false);
         }
+    }
+
+    // Check against game-rule limitations.
+    public bool can_hit(Slot end) {
+        bool attacking_self = slot.get_unit().get_type() == end.get_unit().get_type();
+        bool melee_vs_flying = slot.get_unit().combat_style == Unit.MELEE && 
+                                end.get_unit().attributes[Unit.FLYING];
+        bool out_of_range = !in_range(slot.get_unit().attack_range, slot.col, slot.row, end.col, end.row);
+        
+        return (attacking_self || melee_vs_flying || out_of_range || has_acted) ? false : true;
+    }
+
+    public bool in_range(int range, int x, int y, int x1, int y1) {
+        int dx = Mathf.Abs(x - x1);
+        int dy = Mathf.Abs(y - y1);
+        return (dx + dy <= range) ? true : false;
+    }
+
+    public bool has_acted_in_stage = false;
+    private bool _has_acted;
+    public bool has_acted {
+        get { return _has_acted; }
+        set {
+            _has_acted = value;
+            has_acted_in_stage = true;
+        }
+    }
+
+    private bool _has_moved;
+    public bool has_moved {
+        get { return _has_moved; }
+        set {
+            _has_moved = value;
+            has_acted_in_stage = true;
+        }
+    }
+
+    public void reset_actions() {
+        has_acted = false;
+        has_moved = false;
+        has_acted_in_stage = false;
+        attack_set = false;
     }
 
     public bool is_melee() {
@@ -95,54 +142,6 @@ public class Unit {
     }
     public Unit get_unit() {
         return this;
-    }
-
-    // Check against game-rule limitations.
-    public bool can_hit(Slot end) {
-        //Debug.Log("attacking slot: " + slot);
-        //Debug.Log("attacked slot: " + end);
-        bool attacking_self = slot.get_unit().get_type() == end.get_unit().get_type();
-        bool melee_vs_flying = slot.get_unit().combat_style == Unit.MELEE && 
-                                end.get_unit().attributes[Unit.FLYING];
-        bool out_of_range = !in_range(slot.get_unit().attack_range, slot.col, slot.row, end.col, end.row);
-        
-        if (attacking_self || melee_vs_flying || out_of_range || has_attacked) {
-            Debug.Log("can't hit");
-            return false;
-        } 
-        return true;
-    }
-
-    public bool in_range(int range, int x, int y, int x1, int y1) {
-        int dx = Mathf.Abs(x - x1);
-        int dy = Mathf.Abs(y - y1);
-        return (dx + dy <= range) ? true : false;
-    }
-
-    public bool has_acted_in_stage = false;
-    private bool _has_attacked;
-    public bool has_attacked {
-        get { return _has_attacked; }
-        set {
-            _has_attacked = value;
-            has_acted_in_stage = true;
-        }
-    }
-
-    private bool _has_moved;
-    public bool has_moved {
-        get { return _has_moved; }
-        set {
-            _has_moved = value;
-            has_acted_in_stage = true;
-        }
-    }
-
-    public void reset_actions() {
-        has_attacked = false;
-        has_moved = false;
-        has_acted_in_stage = false;
-        attack_set = false;
     }
 
     public int get_type() {

@@ -25,19 +25,19 @@ public class Formation : MonoBehaviour {
     public Sprite miner;
     public Sprite empty;
 
-    private Group front_left;
-    private Group front_mid;
-    private Group front_right;
-    private Group mid_left;
-    private Group mid_mid;
-    private Group mid_right;
-    private Group rear_mid;
+    public Group front_left;
+    public Group front_mid;
+    public Group front_right;
+    public Group mid_left;
+    public Group mid_mid;
+    public Group mid_right;
+    public Group rear_mid;
     
     // Enemy spawn groups
-    private Group rear1_mid;
-    private Group front1_left;
-    private Group front1_mid;
-    private Group front1_right;
+    public Group rear1_mid;
+    public Group front1_left;
+    public Group front1_mid;
+    public Group front1_right;
 
 
     // Button images in battle scene for highlighting selections.
@@ -50,7 +50,7 @@ public class Formation : MonoBehaviour {
 
     private IDictionary<int, Image> unit_buttons = new Dictionary<int, Image>();
 
-    // organized by row, column
+    // Organized by row, column
     private Dictionary<int, Dictionary<int, Group>> groups = new Dictionary<int, Dictionary<int, Group>>() {
         {FRONT1, new Dictionary<int, Group>() },
         {FRONT, new Dictionary<int, Group>() },
@@ -59,7 +59,7 @@ public class Formation : MonoBehaviour {
         {REAR1, new Dictionary<int, Group>() },
     };
 
-
+    // For saving/loading.
     private Dictionary<Location, Unit> astra_board = new Dictionary<Location, Unit>();
     private Dictionary<Location, Unit> endura_board = new Dictionary<Location, Unit>();
     private Dictionary<Location, Unit> martial_board = new Dictionary<Location, Unit>();
@@ -71,18 +71,6 @@ public class Formation : MonoBehaviour {
         culture_boards.Add(Controller.ASTRA, astra_board);
         culture_boards.Add(Controller.ENDURA, endura_board);
         culture_boards.Add(Controller.MARTIAL, martial_board);
-        
-        front1_left = new Group();
-        front1_mid = new Group();
-        front1_right = new Group();
-        front_left = new Group();
-        front_mid = new Group();
-        front_right = new Group();
-        mid_left = new Group();
-        mid_mid = new Group();
-        mid_right = new Group();
-        rear_mid = new Group();
-        rear1_mid = new Group();
 
         groups[FRONT1].Add(LEFT, front1_left);
         groups[FRONT1].Add(MID, front1_mid);
@@ -110,17 +98,6 @@ public class Formation : MonoBehaviour {
         unit_buttons.Add(PlayerUnit.SPEARMAN, spearman_img);
         unit_buttons.Add(PlayerUnit.INSPIRITOR, inspiritor_img);
         unit_buttons.Add(PlayerUnit.MINER, miner_img);
-
-        add_slots_to_groups();
-    }
-
-    private void add_slots_to_groups() {
-        Component[] slots = slot_panel.GetComponentsInChildren<Slot>();
-        foreach (Slot s in slots) {
-            //s.add_to_group();
-            s.set_group(groups[s.row][s.col]);
-            //add_slot_to_group(s);
-        }
     }
 
     public Group get_group(int row, int col) {
@@ -181,15 +158,21 @@ public class Formation : MonoBehaviour {
     }
 
     public void reset() {
-        Debug.Log("resetting slots in Formation");
         foreach (int row in groups.Keys) {
             foreach (int col in groups[row].Keys) {
-                foreach (Slot s in groups[row][col].slots)
-                    s.empty_without_validation();
+                groups[row][col].empty();
             }
         }
         c.selector.selected_slot = null;
         clear_placement_selection();
+    }
+
+    public void reset_groups_dir() {
+        foreach (int row in groups.Keys) {
+            foreach (int col in groups[row].Keys) {
+                groups[row][col].reset_dir();
+            }
+        }
     }
 
     public void save_board(string culture) {
@@ -210,6 +193,22 @@ public class Formation : MonoBehaviour {
         Dictionary <Location, Unit> cb = culture_boards[culture];
         foreach (Location loc in cb.Keys) {
             groups[loc.row][loc.col].get(loc.slot_num).fill(cb[loc]);
+        }
+    }
+
+    /*
+    Rotate units within a group if the first unit has
+    taken action in the battle phase.
+    */
+    public void rotate_actioned_player_groups() {
+        foreach (int row in groups.Keys) {
+            foreach (Group group in groups[row].Values) {
+                if (group.is_empty())
+                    continue;
+                if (group.get(0).get_unit().has_acted) {
+                    group.rotate_units();
+                }
+            }
         }
     }
 }

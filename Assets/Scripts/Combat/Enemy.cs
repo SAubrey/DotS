@@ -47,7 +47,7 @@ public class Enemy : Unit {
         create_attribute_list(num_attributes);
         type = ENEMY;
         this.name = name;
-        attack = att;
+        attack_dmg = att;
         max_health = hp;
         health = hp;
         this.xp = xp;

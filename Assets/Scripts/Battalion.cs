@@ -86,6 +86,13 @@ public class Battalion : MonoBehaviour {
     }
 
     public void post_battle() {
+        // Remove duplicates. Don't injure a dead unit.
+        foreach (PlayerUnit du in dead_units) {
+            foreach (PlayerUnit iu in injured_units) {
+                if (du == iu)
+                    injured_units.Remove(iu);
+            }
+        }
         remove_dead_units();
         remove_injured_units();
     }
@@ -100,6 +107,7 @@ public class Battalion : MonoBehaviour {
 
     private void remove_injured_units() {
         foreach (PlayerUnit du in injured_units) {
+            //if ()
             du.get_slot().empty();
         }
         injured_units.Clear();

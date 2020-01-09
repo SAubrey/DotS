@@ -8,10 +8,11 @@ public class BattlePhaser : MonoBehaviour {
     public const int PLACEMENT = 0;
     public const int INTUITIVE = 1;
     public const int RANGE = 2;
-    public const int ACTION1 = 3;
-    public const int MOVEMENT = 4;
-    public const int ACTION2 = 5;
-    public const int ASSESSMENT = 6;
+    public const int MOVEMENT1 = 3;
+    public const int COMBAT1 = 4;
+    public const int MOVEMENT2 = 5;
+    public const int COMBAT2 = 6;
+    public const int ASSESSMENT = 7;
 
     private Controller c;
     private TurnPhaser tp;
@@ -25,13 +26,10 @@ public class BattlePhaser : MonoBehaviour {
 
     public bool placement_stage = true;
     public bool init_placement_stage = true;
-    public bool intuitive_stage = false;
     public bool range_stage = false;
-    public bool action1_stage = false;
     public bool movement_stage = false;
-    public bool action2_stage = false;
-    public bool assessment_stage = false;
-    public bool targeting = false;
+    public bool combat_stage = false;
+    public bool targeting { get { return combat_stage || range_stage; } }
 
     void Start() {
         c = GameObject.Find("Controller").GetComponent<Controller>();
@@ -45,17 +43,14 @@ public class BattlePhaser : MonoBehaviour {
 
     public void reset() {
         stage = PLACEMENT - 1;
+        phase = 1;
         can_skip = false;
 
         placement_stage = false;
         init_placement_stage = true;
-        intuitive_stage = false;
         range_stage = false;
-        action1_stage = false;
         movement_stage = false;
-        action2_stage = false;
-        assessment_stage = false;
-        targeting = false;
+        combat_stage = false;
         advance_stage();
     }
 
@@ -83,10 +78,8 @@ public class BattlePhaser : MonoBehaviour {
     }
 
     private void range() {
-        intuitive_stage = false;
         range_stage = true;
         can_skip = true;
-        targeting = true;
         // Ranged units attack (enemy and player after player chooses who to attack)
         // (unless someone has first strike!)
         // range units can shoot anywhere, riflemen can only shoot cardinally
@@ -94,43 +87,46 @@ public class BattlePhaser : MonoBehaviour {
         enemy_brain.stage_range_attacks();
     }
 
-    private void action1() {
+    private void movement1() {
         range_stage = false;
         battle(); // range attacks
 
-        action1_stage = true;
-        targeting = true;
-    // pikemen special ability can hit diagonally
-    }
-    private void post_action1() {
-        enemy_brain.move_units();
-        enemy_brain.stage_attacks();
+        movement_stage = true;
     }
 
-    private void movement() {
-        action1_stage = false;
-        targeting = false;
+    private void combat1() {
+        movement_stage = false;
+        enemy_brain.move_units();
+        enemy_brain.stage_attacks();
+
+        combat_stage = true;
+    }
+    private void post_combat1() {
+    }
+
+    private void movement2() {
+        combat_stage = false;
         battle(); // will clear attacks
 
         movement_stage = true;
     }
 
-    private void action2() {
+    private void combat2() {
         movement_stage = false;
         enemy_brain.move_units();
 
-        action2_stage = true;
-        targeting = true;
+        combat_stage = true;
         enemy_brain.stage_attacks();
     }
 
     private void assessment() {
         battle();
-        action2_stage = false;
-        targeting = false;
+        combat_stage = false;
     }
 
     private void post_assessment() {
+        c.formation.rotate_actioned_player_groups();
+        c.formation.reset_groups_dir();
         c.get_active_bat().reset_all_actions(); // reset movement/attacks
         phase++;
     }
@@ -142,7 +138,7 @@ public class BattlePhaser : MonoBehaviour {
 
     // Only called by AttackQueuer after battle animations have finished.
     public void post_battle() {
-        if (stage == ACTION1) post_action1();
+        if (stage == COMBAT1) post_combat1();
        // else if (stage == MOVEMENT) post_movement();
         else if (stage == ASSESSMENT) post_assessment();
         can_skip = true;
@@ -153,7 +149,7 @@ public class BattlePhaser : MonoBehaviour {
     Outwardly, the stage number loops 0 - num_stages once for each of a turn's 3 battle phases.
     Inwardly, it increments to 3x the num_stages to know when to end the phase.
     */
-    int num_stages = 7;
+    int num_stages = 8;
     // Begin one stage less so that stage increment initializes placement.
     private int _stage = PLACEMENT - 1; 
     private int stage {
@@ -164,9 +160,10 @@ public class BattlePhaser : MonoBehaviour {
             if (phase_stage == PLACEMENT) placement();
             else if (phase_stage == INTUITIVE) intuitive();
             else if (phase_stage == RANGE) range();
-            else if (phase_stage == ACTION1) action1();
-            else if (phase_stage == MOVEMENT) movement();
-            else if (phase_stage == ACTION2) action2();
+            else if (phase_stage == MOVEMENT1) movement1();
+            else if (phase_stage == COMBAT1) combat1();
+            else if (phase_stage == MOVEMENT2) movement2();
+            else if (phase_stage == COMBAT2) combat2();
             else if (phase_stage == ASSESSMENT) assessment();
 
             c.get_active_bat().reset_all_stage_actions();
@@ -233,26 +230,25 @@ public class BattlePhaser : MonoBehaviour {
             txt.text = basestr + "range stage";
             stageT.text = "Placement";
         }
-        /*
-        else if (stage == INTUITIVE) {
-            txt.text = basestr + "range stage";
-            stageT.text = "Intuitive";
-        }*/
         else if (stage == RANGE){
-            txt.text = basestr + "1st action stage";
+            txt.text = basestr + "1st movement stage";
             stageT.text = "Range";
         }
-        else if (stage == ACTION1){
-            txt.text = basestr + "movement stage";
-            stageT.text = "Action 1";
+        else if (stage == MOVEMENT1){
+            txt.text = basestr + "1st combat stage";
+            stageT.text = "Movement 1";
         }
-        else if (stage == MOVEMENT){
-            txt.text = basestr + "2nd action stage";
-            stageT.text = "Movement";
+        else if (stage == COMBAT1){
+            txt.text = basestr + "2nd movement stage";
+            stageT.text = "Combat 1";
         }
-        else if (stage == ACTION2){
+        else if (stage == MOVEMENT2){
+            txt.text = basestr + "2nd combat stage";
+            stageT.text = "Movement 2";
+        }
+        else if (stage == COMBAT2){
             txt.text = basestr + "assessment stage";
-            stageT.text = "Action 2";
+            stageT.text = "Combat 2";
         }
         else if (stage == ASSESSMENT){
             txt.text = basestr + "placement stage";

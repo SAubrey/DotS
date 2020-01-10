@@ -62,6 +62,7 @@ public class MapCell {
     public string name;
     public int minerals = 0;
     public int star_crystals = 0;
+    private List<Enemy> enemies = new List<Enemy>();
 
     public MapCell(int tier, Tile tile, Pos pos) {
         this.tile = tile;
@@ -71,6 +72,26 @@ public class MapCell {
 
     public void discover() {
         discovered = true;
+    }
+
+    public void save_enemies(List<Slot> enemy_slots) {
+        enemies.Clear();
+        foreach (Slot es in enemy_slots) {
+            enemies.Add(es.get_enemy());
+        }
+        Debug.Log(enemies.Count);
+    }
+
+    public List<Enemy> get_enemies() {
+        return enemies;
+    }
+
+    public bool has_enemies { 
+        get { return get_enemies().Count > 0; }
+    }
+
+    public void clear_enemies() {
+        enemies.Clear();
     }
 }
 

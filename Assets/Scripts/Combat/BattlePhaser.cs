@@ -53,6 +53,7 @@ public class BattlePhaser : MonoBehaviour {
         movement_stage = false;
         combat_stage = false;
         c.formation.reset_groups_dir();
+        c.formation.clear_battlefield();
         advance_stage();
     }
 
@@ -132,32 +133,42 @@ public class BattlePhaser : MonoBehaviour {
 
     // Only called by AttackQueuer after battle animations have finished.
     public void post_battle() {
-        if (stage == ASSESSMENT) post_phase();
+        if (stage == ASSESSMENT) advance_phase();
         can_skip = true;
         check_end_conditions();
     }
 
-    private void post_phase() {
+    private void advance_phase() {
         c.formation.rotate_actioned_player_groups();
         c.get_active_bat().reset_all_actions(); // reset movement/attacks
-        enemy_brain.reset_all_actions();
-        // reset enemy actions
+        enemy_brain.reset_all_actions(); 
         phase++;
     }
 
-    private void post_phases(bool finished) {
+    private void post_phases(bool finished, bool mini_retreating=false) {
         if (finished) {
             c.get_active_bat().in_battle = false;
         } else {
-            c.formation.save_board(c.get_player());
+            if (mini_retreating) {
+                c.get_active_bat().mini_retreating = true;
+                save_enemies_to_map();
+            } else
+                c.formation.save_board(c.get_disc_name());
         }
         reset();
         tp.advance_stage();
     }
 
+    private void save_enemies_to_map() {
+        // Save enemies on battle field into map cell storage.
+        Vector3 pos = c.get_disc().pos;
+        MapCell mc = c.tile_mapper.get_cell((int)pos.x, (int)pos.y);
+        mc.save_enemies(c.formation.get_all_full_slots(Unit.ENEMY));
+    }
+
     /*
-    Outwardly, the stage number loops 0 - num_stages once for each of a turn's 3 battle phases.
-    Inwardly, it increments to 3x the num_stages to know when to end the phase.
+    Outwardly, the stage number loops 0 -> num_stages once for each of a turn's 3 battle phases.
+    Inwardly, it increments without wrapping.
     */
     int num_stages = 8;
     // Begin one stage less so that stage increment initializes placement.
@@ -167,6 +178,8 @@ public class BattlePhaser : MonoBehaviour {
         set {
             _stage = value;
             int phase_stage = stage;
+            Debug.Log("Total placeable units = " + c.get_active_bat().count_placeable());
+
             if (phase_stage == PLACEMENT) placement();
             else if (phase_stage == INTUITIVE) intuitive();
             else if (phase_stage == RANGE) range();
@@ -196,11 +209,24 @@ public class BattlePhaser : MonoBehaviour {
         }
     }
 
+    // Called by Unity button. 
+    public void retreat() {
+        save_enemies_to_map();
+        // Move unit back to previous space
+        c.tile_mapper.move_player(c.get_disc().prev_pos);
+        // Penalize retreat.
+        c.get_disc().change_var(Storeable.UNITY, -1);
+        
+        post_phases(true, false);
+    }
+
     private bool check_end_conditions() {
-        if (check_player_won()) {
-            c.get_player_obj().change_var(Storeable.EXPERIENCE, 1);
-        } else if (check_enemy_won()) {
-            Debug.Log("Game over for " + c.get_player()); 
+        if (mini_retreating)
+            post_phases(false, true);
+        else if (!enemy_units_on_field) 
+            c.get_disc().change_var(Storeable.EXPERIENCE, 1);
+        else if (enemy_won) {
+            // create some kind of waypoint on map to indicate recovery?
         } else {
             return false;
         }
@@ -208,14 +234,24 @@ public class BattlePhaser : MonoBehaviour {
         return true;
     }
 
-    private bool check_player_won() {
-        List<Slot> enemies = c.formation.get_all_full_slots(Unit.ENEMY);
-        return enemies.Count <= 0 ? true : false;
+    private bool enemy_won {
+        get { return player_units_on_field && !units_in_reserve; }
     }
 
-    private bool check_enemy_won() {
-        List<Slot> punits = c.formation.get_all_full_slots(Unit.PLAYER);
-        return punits.Count <= 0 ? true : false;
+    private bool units_in_reserve {
+        get { return c.get_active_bat().count_placeable() > 0; }
+    }
+
+    private bool player_units_on_field { 
+        get { return c.formation.get_all_full_slots(Unit.PLAYER).Count > 0; }
+    } 
+
+    private bool enemy_units_on_field { 
+        get { return c.formation.get_all_full_slots(Unit.ENEMY).Count > 0; }
+    } 
+
+    private bool mini_retreating {
+        get { return units_in_reserve && !player_units_on_field; }
     }
 
     private bool _can_skip = false;

@@ -59,18 +59,18 @@ public class Formation : MonoBehaviour {
         {REAR1, new Dictionary<int, Group>() },
     };
 
-    // For saving/loading.
+    // For saving/loading. Maintains which units are where.
     private Dictionary<Location, Unit> astra_board = new Dictionary<Location, Unit>();
     private Dictionary<Location, Unit> endura_board = new Dictionary<Location, Unit>();
     private Dictionary<Location, Unit> martial_board = new Dictionary<Location, Unit>();
-    private Dictionary<string, Dictionary<Location, Unit>> culture_boards = new Dictionary<string, Dictionary<Location, Unit>>();
+    private Dictionary<string, Dictionary<Location, Unit>> discipline_boards = new Dictionary<string, Dictionary<Location, Unit>>();
 
     void Awake() {
         c = GameObject.Find("Controller").GetComponent<Controller>();
 
-        culture_boards.Add(Controller.ASTRA, astra_board);
-        culture_boards.Add(Controller.ENDURA, endura_board);
-        culture_boards.Add(Controller.MARTIAL, martial_board);
+        discipline_boards.Add(Controller.ASTRA, astra_board);
+        discipline_boards.Add(Controller.ENDURA, endura_board);
+        discipline_boards.Add(Controller.MARTIAL, martial_board);
 
         groups[FRONT1].Add(LEFT, front1_left);
         groups[FRONT1].Add(MID, front1_mid);
@@ -157,7 +157,7 @@ public class Formation : MonoBehaviour {
         return units;
     }
 
-    public void reset() {
+    public void clear_battlefield() {
         foreach (int row in groups.Keys) {
             foreach (int col in groups[row].Keys) {
                 groups[row][col].empty();
@@ -175,8 +175,8 @@ public class Formation : MonoBehaviour {
         }
     }
 
-    public void save_board(string culture) {
-        Dictionary <Location, Unit> d = culture_boards[culture];
+    public void save_board(string discipline) {
+        Dictionary <Location, Unit> d = discipline_boards[discipline];
 
         foreach (int row in groups.Keys) {
             foreach (int col in groups[row].Keys) {
@@ -189,8 +189,8 @@ public class Formation : MonoBehaviour {
         }
     }
 
-    public void load_board(string culture) {
-        Dictionary <Location, Unit> cb = culture_boards[culture];
+    public void load_board(string discipline) {
+        Dictionary <Location, Unit> cb = discipline_boards[discipline];
         foreach (Location loc in cb.Keys) {
             groups[loc.row][loc.col].get(loc.slot_num).fill(cb[loc]);
         }

@@ -1,16 +1,17 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 
-public class Battalion : MonoBehaviour {
+public class Battalion {
 
     public string player;
+    public Controller c;
+    public int mine_qty;
     // Unit selected for placement in battle view
     private int selected_unit_type;
-    public int mine_qty;
-    private Controller c;
     private List<PlayerUnit> dead_units = new List<PlayerUnit>();
     private List<PlayerUnit> injured_units = new List<PlayerUnit>();
     public bool in_battle = false;
+    public bool mini_retreating = false;
     
     public IDictionary<int, List<PlayerUnit>> units = new Dictionary<int, List<PlayerUnit>>() {
         {PlayerUnit.WARRIOR, new List<PlayerUnit>()},
@@ -20,8 +21,8 @@ public class Battalion : MonoBehaviour {
         {PlayerUnit.INSPIRITOR, new List<PlayerUnit>()},
     };
     
-    void Start() {
-        c = GameObject.Find("Controller").GetComponent<Controller>();
+    public Battalion() {
+        //c = GameObject.Find("Controller").GetComponent<Controller>();
         add_units(PlayerUnit.ARCHER, 3);
         add_units(PlayerUnit.WARRIOR, 2);
         add_units(PlayerUnit.SPEARMAN, 2);
@@ -33,6 +34,11 @@ public class Battalion : MonoBehaviour {
         } else {
             mine_qty = 3;
         }
+    }
+
+    public void lose_random_unit() {
+        int roll = Random.Range(0, units.Count);
+        units[roll].RemoveAt(0);
     }
 
     public void reset_all_actions() {
@@ -66,11 +72,20 @@ public class Battalion : MonoBehaviour {
         return null;
     }
 
-    public int count_placeable(int type) {
+    public int count_placeable(int type=-1) {
         int i = 0;
-        foreach (PlayerUnit u in units[type]) {
+        if (type >= 0) {
+            foreach (PlayerUnit u in units[type]) {
             if (!u.is_placed() && !u.injured) 
                 i++;      
+            }
+        } else { // Count all units.
+            for (int t = 0; t < units.Count; t++) {
+                foreach (PlayerUnit u in units[t]) {
+                    if (!u.is_placed() && !u.injured)
+                        i++;
+                }
+            }
         }
         return i;
     }

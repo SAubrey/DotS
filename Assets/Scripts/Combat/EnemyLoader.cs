@@ -104,14 +104,25 @@ public class EnemyLoader : MonoBehaviour {
         }
     }
 
-    public void load(int biome, int tier, int quantity) {
+    private void reset() {
+        spawn_column = 0;
+    }
 
+    public void load(int biome, int tier, int quantity) {
         for (int i = 0; i < quantity; i++) {
             int rarity = roll_rarity(); 
             int enemyID = pick_enemy(biome, tier, rarity);
             Enemy e = Enemy.create_enemy(enemyID);
             slot_enemy(e);
         }
+        reset();
+    }
+
+    public void load_existing_enemies(List<Enemy> enemies) {
+        foreach (Enemy e in enemies) {
+            slot_enemy(e);
+        }
+        reset();
     }
 
     private int roll_rarity() {

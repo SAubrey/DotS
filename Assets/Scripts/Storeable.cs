@@ -13,12 +13,9 @@ public class Storeable : MonoBehaviour {
     public const string ERELICS = "erelics";
     public const string EQUIMARES = "equimares";
 
-    private Controller c;
-    private MapUI map_ui;
-
     public string self;
-    public GameObject piece;
-    public Battalion bat;
+    protected Controller c;
+    protected MapUI map_ui;
 
     void Start() {
         c = GameObject.Find("Controller").GetComponent<Controller>();
@@ -26,11 +23,11 @@ public class Storeable : MonoBehaviour {
         
         if (self == "city") {
             _light = 8;
-        } else {
-            _light = 4;
-            _unity = 10;
-            pos = new Vector3(10.5f, 10.5f);
         }
+    }
+
+    public virtual void register_turn() {
+        decrement_light();
     }
 
     public void decrement_light() {
@@ -59,7 +56,7 @@ public class Storeable : MonoBehaviour {
         }
     }
 
-    private bool validate_change(int value) {
+    private bool verify_change(int value) {
         if (value < 0) {
             return false;
         }
@@ -110,108 +107,99 @@ public class Storeable : MonoBehaviour {
         return 0;
     }
 
-    private Vector3 _pos;// = new Vector3(0f, 0f, 0);
-    public Vector3 pos {
-        get { return _pos; }
-        set {
-            _pos = value;
-            piece.transform.position = new Vector3(value.x, value.y, 0);
-        }
-    }
-
-    private int _light = 4;
+    protected int _light = 4;
     public new int light {
         get { return _light; }
         set { 
-            if (validate_change(_light + value)) {
+            if (verify_change(_light + value)) {
                 _light = value; 
                 map_ui.update_stat_text(LIGHT, self, _light);
             }
         }
     }
     
-    private int _unity = 0;
+    protected int _unity = 0;
     public int unity {
         get { return _unity; }
         set { 
-            if (validate_change(_unity + value)) {
+            if (verify_change(_unity + value)) {
                 _unity = value; 
                 map_ui.update_stat_text(UNITY, self, _unity);
             }
         }
     }
 
-    private int _experience = 0;
+    protected int _experience = 0;
     public int experience {
         get { return _experience; }
         set { 
-            if (validate_change(_experience + value)) {
+            if (verify_change(_experience + value)) {
                 _experience = value; 
                 map_ui.update_stat_text(EXPERIENCE, self, _experience);
             }
         }
     }
 
-    private int _star_crystals = 0;
+    protected int _star_crystals = 0;
     public int star_crystals {
         get { return _star_crystals; }
         set { 
-            if (validate_change(_star_crystals + value)) {
+            if (verify_change(_star_crystals + value)) {
                 _star_crystals = value; 
                 map_ui.update_stat_text(STAR_CRYSTALS, self, _star_crystals);
             } 
         }
     }
 
-    private int _minerals = 0;
+    protected int _minerals = 0;
     public int minerals {
         get { return _minerals; }
         set { 
-            if (validate_change(_minerals + value)) {
+            if (verify_change(_minerals + value)) {
                 _minerals = value; 
                 map_ui.update_stat_text(MINERALS, self, _minerals);
             } 
         }
     }
 
-    private int _arelics = 0;
+    protected int _arelics = 0;
     public int arelics {
         get { return _arelics; }
         set { 
-            if (validate_change(_arelics + value)) {
+            if (verify_change(_arelics + value)) {
                 _arelics = value; 
                 map_ui.update_stat_text(ARELICS, self, _arelics);
             } 
         }
     }
 
-    private int _mrelics = 0;
+    protected int _mrelics = 0;
     public int mrelics {
         get { return _mrelics; }
         set { 
-            if (validate_change(_mrelics + value)) {
+            if (verify_change(_mrelics + value)) {
                 _mrelics = value; 
                 map_ui.update_stat_text(MRELICS, self, _mrelics);
             }
         }
     }
 
-    private int _erelics = 0;
+    protected int _erelics = 0;
     public int erelics {
         get { return _erelics; }
         set { 
-            if (validate_change(_erelics + value)) {
+            if (verify_change(_erelics + value)) {
                 _erelics = value; 
                 map_ui.update_stat_text(ERELICS, self, _erelics);
             } 
         }
     }
 
-    private int _equimares = 0;
+    protected int _equimares = 0;
     public int equimares {
         get { return _equimares; }
         set { 
-            if (validate_change(_equimares + value)) {
+            if (verify_change(_equimares + value)) {
                 _equimares = value; 
                 map_ui.update_stat_text(EQUIMARES, self, _equimares);
             }

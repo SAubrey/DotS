@@ -21,14 +21,6 @@ public class AttackQueuer : MonoBehaviour {
         line_drawer = c.line_drawer;
     }
 
-    public AttackQueue get_enemy_queue() {
-        return enemy_queue;
-    }
-
-    public AttackQueue get_player_queue() {
-        return player_queue;
-    }
-
     public bool attempt_attack(Slot start, Slot end) {
         Unit attacker = start.get_unit();
         if (end.get_unit() == null)
@@ -38,7 +30,6 @@ public class AttackQueuer : MonoBehaviour {
                 get_player_queue().enqueue(start, end, line_drawer);
             } else {
                 get_enemy_queue().enqueue(start, end, line_drawer);
-                //start.get_group().rotate()
             }
             attacker.attack_set = true;
             return true;
@@ -100,6 +91,13 @@ target the same unit.
     private void reset() {
         enemy_queue.reset();
         player_queue.reset();
+    }
+    public AttackQueue get_enemy_queue() {
+        return enemy_queue;
+    }
+
+    public AttackQueue get_player_queue() {
+        return player_queue;
     }
 }
 
@@ -185,7 +183,7 @@ public class Attack {
         }
         if (state == Unit.DEAD && direction == AttackQueuer.PU_TO_E) {
             // Remove from player's battalion and update text.
-            start.c.get_player_obj().change_var(Storeable.EXPERIENCE, enemy.xp);
+            start.c.get_disc().change_var(Storeable.EXPERIENCE, enemy.xp);
         }
     }
 

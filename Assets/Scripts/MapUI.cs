@@ -72,16 +72,16 @@ public class MapUI : MonoBehaviour {
         // Update each field from culture's storeable dictionary
 
         foreach (string key in fields) {
-            update_stat_text(key, storeable, c.stores[storeable].get_var(key));
+            update_stat_text(key, storeable, c.discs[storeable].get_var(key));
         }
-        highlight_culture(c.get_player());
+        highlight_culture(c.get_disc_name());
     }
 
     public void update_stat_text(string field, string calling_class, int val) {
         if (calling_class == "city") {
             if (field != Storeable.UNITY || field != Storeable.EXPERIENCE)
                 city_ui[field].text = val.ToString();
-        } else if (calling_class == c.active_player) {
+        } else if (calling_class == c.active_disc) {
             bat_ui[field].text = val.ToString();
         }
     }

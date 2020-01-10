@@ -25,16 +25,16 @@ public class Controller : MonoBehaviour {
     public LineDrawer line_drawer;
     public EnemyBrain enemy_brain;
 
-    public Storeable astra;
-    public Storeable martial;
-    public Storeable endura;
+    public Discipline astra;
+    public Discipline martial;
+    public Discipline endura;
     public Storeable city;
     private int turn_number = 1;
-    public int num_players = 3;
+    public int num_discs = 3;
 
-    public string active_player;
+    public string active_disc; // disciplines are like sub factions.
 
-    public IDictionary<string, Storeable> stores = new Dictionary<string, Storeable>();
+    public IDictionary<string, Discipline> discs = new Dictionary<string, Discipline>();
 
     void Awake() {
         // Public classes that all other classes will grab from initially.
@@ -54,65 +54,67 @@ public class Controller : MonoBehaviour {
         line_drawer = GameObject.Find("LineDrawer").GetComponent<LineDrawer>();
         enemy_brain = GameObject.Find("EnemyBrain").GetComponent<EnemyBrain>();
 
-        stores.Add(ASTRA, astra);
-        stores.Add(MARTIAL, martial);
-        stores.Add(ENDURA, endura);
-        stores.Add("city", city);
+        discs.Add(ASTRA, astra);
+        discs.Add(MARTIAL, martial);
+        discs.Add(ENDURA, endura);
     }
 
     void Start() {
-        set_player(ASTRA);
+        set_disc(ASTRA);
     }
 
     public void advance_turn() {
-        turn_number += 1;
+        turn_number++;
 
-        city.decrement_light();
-        astra.decrement_light();
-        martial.decrement_light();
-        endura.decrement_light();
+        foreach (Discipline disc in discs.Values) {
+            disc.register_turn();
+        }
+        city.register_turn();
 
         map_ui.turn_number_t.text = turn_number.ToString();
-        map_ui.load_stats(active_player);
+        map_ui.load_stats(active_disc);
     }
      
-    public void set_player(string type) {
-        active_player = type;
-        map_ui.load_stats(active_player);
-        formation.reset();
+    public void set_disc(string type) {
+        active_disc = type;
+        map_ui.load_stats(active_disc);
 
         if (get_active_bat().in_battle) {
-            Debug.Log("Loading " + active_player);
-            formation.load_board(active_player);
+            if (get_active_bat().mini_retreating) {
+                enemy_loader.load_existing_enemies(tile_mapper.get_enemies(get_disc().pos));
+            } else {
+                Debug.Log("Loading " + active_disc);
+                formation.load_board(active_disc);
+            }
         }
     }
 
-    public void rotate_player() {
-        if (get_player() == ASTRA) set_player(ENDURA);
-        else if (get_player() == ENDURA) set_player(MARTIAL);
-        else if (get_player() == MARTIAL) set_player(ASTRA);
-        Debug.Log("Rotated player to " + get_player());
+    public void rotate_disc() {
+        if (get_disc_name() == ASTRA) set_disc(ENDURA);
+        else if (get_disc_name() == ENDURA) set_disc(MARTIAL);
+        else if (get_disc_name() == MARTIAL) set_disc(ASTRA);
+        Debug.Log("Rotated disc to " + get_disc_name());
     }       
 
-    public string get_player() {
-        return active_player;
+    public string get_disc_name() {
+        return active_disc;
     }
 
-    public Storeable get_player_obj() {
-        return stores[get_player()];
+    public Discipline get_disc() {
+        return discs[get_disc_name()];
     }
 
     public Battalion get_active_bat() {
-        return stores[get_player()].bat;
+        return get_disc().bat;
     }
 
     // BUTTON HANDLES
     public void inc_stat(string field) {
-        stores[active_player].change_var(field, 1);
+        discs[active_disc].change_var(field, 1);
     }
 
     public void dec_stat(string field) {
-        stores[active_player].change_var(field, -1);
+        discs[active_disc].change_var(field, -1);
     }
 
     public void inc_city_stat(string field) {

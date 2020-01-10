@@ -154,13 +154,25 @@ public class TileMapper : MonoBehaviour {
             }
         }
     }
+
+    public MapCell get_cell(int x, int y) {
+        return map[new Pos(x, y)];
+    }
+
+    public MapCell get_cell(Vector3 pos) {
+        return map[new Pos((int)pos.x, (int)pos.y)];
+    }
+
+    public List<Enemy> get_enemies(Vector3 pos) {
+        return get_cell(pos).get_enemies();
+    }
     
-    private bool move_player(Vector3 pos) {
+    public bool move_player(Vector3 pos) {
         int x = (int)pos.x;
         int y = (int)pos.y;
-        if (get_tile(tm, pos.x, pos.y) == null || 
-            !check_adjacent(x, y, 
-            (int)c.get_player_obj().pos.x, (int)c.get_player_obj().pos.y)) {
+        if (get_tile(pos.x, pos.y) == null || 
+                !check_adjacent(x, y, 
+                (int)c.get_disc().pos.x, (int)c.get_disc().pos.y)) {
             return false;
         }
         
@@ -172,17 +184,10 @@ public class TileMapper : MonoBehaviour {
             tm.SetTile(new Vector3Int(x, y, 0), cell.tile);
         }
                  
-        c.stores[c.active_player].pos = pos;
+        c.get_disc().pos = pos;
         return true;
     }
 
-    // Limits map movement to the cardinal-directions.
-    /*
-    public static bool check_adjacent(int x, int y, int x1, int y1) {
-        int dx = Mathf.Abs(Mathf.Abs(x) - Mathf.Abs(x1));
-        int dy = Mathf.Abs(Mathf.Abs(y) - Mathf.Abs(y1));
-        return (dx + dy == 1) ? true : false;
-    }*/
     public static bool check_adjacent(int x, int y, int x1, int y1) {
         int dx = Mathf.Abs(x - x1);
         int dy = Mathf.Abs(y - y1);
@@ -231,7 +236,7 @@ public class TileMapper : MonoBehaviour {
         return 0;
     }
  */
-    public TileBase get_tile(Tilemap tm, float x, float y) {
+    public TileBase get_tile(float x, float y) {
         if (x >= 0 && y >= 0) 
             return tm.GetTile(new Vector3Int((int)x, (int)y, 0));
         return null;  

@@ -79,7 +79,7 @@ public class MapCell {
         foreach (Slot es in enemy_slots) {
             enemies.Add(es.get_enemy());
         }
-        Debug.Log(enemies.Count);
+        Debug.Log("Saved " + enemies.Count + " enemies.");
     }
 
     public List<Enemy> get_enemies() {

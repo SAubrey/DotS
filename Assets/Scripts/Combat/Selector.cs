@@ -15,7 +15,17 @@ public class Selector : MonoBehaviour {
     private UnitPanelManager unit_panel_man;
 
     public bool selecting_target = false;
-    public bool selecting_move = false;
+    private bool _selecting_move = false;
+    public bool selecting_move {
+        get { return _selecting_move; }
+        set { 
+            _selecting_move = value;
+            if (!value)
+                c.unit_panel_man.player_panel.depress_moveB();
+            else // do you want this?
+                c.unit_panel_man.player_panel.press_moveB();
+        }
+    }
     public Slot selected_slot;
 
     void Start() {
@@ -43,10 +53,10 @@ public class Selector : MonoBehaviour {
             return;
         }
 
-        bool punit_selected_for_placement = bp.placement_stage && slot.is_empty();
+        bool punit_selected_for_placement = bp.placement_stage && slot.is_empty;
         if (punit_selected_for_placement) {
             place_punit(slot);
-        } else if (!slot.is_empty()) { // Select unit already present in slot
+        } else if (!slot.is_empty) { // Select unit already present in slot
             set_selected(slot);
         }
     }
@@ -62,7 +72,8 @@ public class Selector : MonoBehaviour {
     }
 
     private void attempt_action(Slot slot) {
-        if (selecting_target) { // Attack
+        // ---Attack---
+        if (selecting_target) { 
             selecting_target = false;
             Slot highest_enemy_slot = slot.get_group().get_highest_enemy_slot();
             if (highest_enemy_slot != null) {
@@ -71,17 +82,25 @@ public class Selector : MonoBehaviour {
             }
             c.unit_panel_man.player_panel.depress_attackB();
 
-        } else if (selecting_move && slot.is_empty()) { // Move
+        // ---Move---
+        } else if (selecting_move) { 
             selecting_move = false;
-            c.unit_panel_man.player_panel.depress_moveB();
 
-            // Don't allow moves into empty spaces within group.
             // Units are either moved up automatically or can be swapped. 
-            Slot highest_slot = slot.get_group().get_highest_empty_slot();
-            if (selected_slot.get_group() == highest_slot.get_group())
-                return;
-            if (selected_slot.get_punit().attempt_move(highest_slot))
+            if (slot.is_empty) {
+                Slot highest_es = slot.get_group().get_highest_empty_slot();
+                slot = highest_es;
+                // Prevent pointless movement within same group.
+                if (selected_slot.get_group() == highest_es.get_group()) {
+                    Debug.Log("same group, no move.");
+                    return;
+                }
+                //else if (selected_slot.get_punit().attempt_move(highest_es))
+                    //deselect();
+            }
+            if (selected_slot.get_punit().attempt_move(slot)) {
                 deselect();
+            }
         }
     }
 

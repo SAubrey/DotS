@@ -67,13 +67,15 @@ public class PlayerUnit : Unit {
     }
 
     public bool attempt_move(Slot end) {
-        if (has_acted_in_stage || end.get_group().has_enemy() || 
-            !in_range(slot.get_punit().movement_range, 
-                slot.col, slot.row,
-                end.col, end.row))
+        if (!can_move(end))
             return false;
-        move(end);
-        end.c.selector.deselect();
+        if (end.get_punit() != null) {
+            if (!end.get_punit().has_moved) {
+                return swap_places(end);
+            }
+        } else {
+            move(end);
+        }
         return true;
     }
 

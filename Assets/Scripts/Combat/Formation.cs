@@ -7,13 +7,14 @@ using UnityEngine.EventSystems;
 /* There is a single formation containing groups of 3 slots. Only the first slot performs game actions.
  */
 public class Formation : MonoBehaviour {
+    /*
     public const int FRONT1 = 3;
     public const int FRONT = 2;
     public const int MID = 1;
     public const int REAR = 0;
     public const int REAR1 = -1;
     public const int LEFT = 0;
-    public const int RIGHT = 2;
+    public const int RIGHT = 2;*/
 
     public GameObject slot_panel;
     private Controller c;
@@ -50,14 +51,14 @@ public class Formation : MonoBehaviour {
 
     private IDictionary<int, Image> unit_buttons = new Dictionary<int, Image>();
 
-    // Organized by row, column
-    private Dictionary<int, Dictionary<int, Group>> groups = new Dictionary<int, Dictionary<int, Group>>() {
-        {FRONT1, new Dictionary<int, Group>() },
+    // Organized by column, row
+    private Dictionary<int, Dictionary<int, Group>> groups = new Dictionary<int, Dictionary<int, Group>>();
+   /*     {FRONT1, new Dictionary<int, Group>() },
         {FRONT, new Dictionary<int, Group>() },
         {MID, new Dictionary<int, Group>() },
         {REAR, new Dictionary<int, Group>() },
         {REAR1, new Dictionary<int, Group>() },
-    };
+    };*/
 
     // For saving/loading. Maintains which units are where.
     private Dictionary<Location, Unit> astra_board = new Dictionary<Location, Unit>();
@@ -71,7 +72,7 @@ public class Formation : MonoBehaviour {
         discipline_boards.Add(Controller.ASTRA, astra_board);
         discipline_boards.Add(Controller.ENDURA, endura_board);
         discipline_boards.Add(Controller.MARTIAL, martial_board);
-
+/*
         groups[FRONT1].Add(LEFT, front1_left);
         groups[FRONT1].Add(MID, front1_mid);
         groups[FRONT1].Add(RIGHT, front1_right);
@@ -83,7 +84,7 @@ public class Formation : MonoBehaviour {
         groups[MID].Add(LEFT, mid_left);
         groups[MID].Add(MID, mid_mid);
         groups[MID].Add(RIGHT, mid_right);
-        groups[REAR].Add(MID, rear_mid);
+        groups[REAR].Add(MID, rear_mid);*/
 
         images.Add(PlayerUnit.ARCHER, archer);
         images.Add(PlayerUnit.WARRIOR, warrior);
@@ -100,10 +101,19 @@ public class Formation : MonoBehaviour {
         unit_buttons.Add(PlayerUnit.MINER, miner_img);
     }
 
-    public Group get_group(int row, int col) {
-        if (groups.ContainsKey(row)) {
-            if (groups[row].ContainsKey(col))
-                return groups[row][col];
+    public void add_group(Group g) {
+        if (!groups.ContainsKey(g.col)) {
+            groups.Add(g.col, new Dictionary<int, Group>());
+        }
+        if (!groups[g.col].ContainsKey(g.row)) {
+            groups[g.col].Add(g.row, g);
+        }
+    }
+
+    public Group get_group(int col, int row) {
+        if (groups.ContainsKey(col)) {
+            if (groups[col].ContainsKey(row))
+                return groups[col][row];
         }
         return null;
     }
@@ -131,11 +141,11 @@ public class Formation : MonoBehaviour {
 
     public List<Slot> get_highest_full_slots(int unit_type) {
         List<Slot> units = new List<Slot>();
-        foreach (int row in groups.Keys) {
-            foreach (Group group in groups[row].Values) {
-                if (unit_type == Unit.ENEMY && group.has_enemy()) {
+        foreach (int col in groups.Keys) {
+            foreach (Group group in groups[col].Values) {
+                if (unit_type == Unit.ENEMY && group.has_enemy) {
                     units.Add(group.get_highest_enemy_slot());
-                } else if (unit_type == Unit.PLAYER && group.has_punit()) {
+                } else if (unit_type == Unit.PLAYER && group.has_punit) {
                     units.Add(group.get_highest_player_slot());
                 }
             }
@@ -145,11 +155,11 @@ public class Formation : MonoBehaviour {
 
     public List<Slot> get_all_full_slots(int unit_type) {
         List<Slot> units = new List<Slot>();
-        foreach (int row in groups.Keys) {
-            foreach (Group group in groups[row].Values) {
-                if (unit_type == Unit.ENEMY && group.has_enemy()) {
+        foreach (int col in groups.Keys) {
+            foreach (Group group in groups[col].Values) {
+                if (unit_type == Unit.ENEMY && group.has_enemy) {
                     units.AddRange(group.get_full_slots());
-                } else if (unit_type == Unit.PLAYER && group.has_punit()) {
+                } else if (unit_type == Unit.PLAYER && group.has_punit) {
                     units.AddRange(group.get_full_slots());
                 }
             }
@@ -158,9 +168,9 @@ public class Formation : MonoBehaviour {
     }
 
     public void clear_battlefield() {
-        foreach (int row in groups.Keys) {
-            foreach (int col in groups[row].Keys) {
-                groups[row][col].empty();
+        foreach (int col in groups.Keys) {
+            foreach (int row in groups[col].Keys) {
+                groups[col][row].empty();
             }
         }
         c.selector.selected_slot = null;
@@ -168,9 +178,9 @@ public class Formation : MonoBehaviour {
     }
 
     public void reset_groups_dir() {
-        foreach (int row in groups.Keys) {
-            foreach (int col in groups[row].Keys) {
-                groups[row][col].reset_dir();
+        foreach (int col in groups.Keys) {
+            foreach (int row in groups[col].Keys) {
+                groups[col][row].reset_dir();
             }
         }
     }
@@ -178,11 +188,11 @@ public class Formation : MonoBehaviour {
     public void save_board(string discipline) {
         Dictionary <Location, Unit> d = discipline_boards[discipline];
 
-        foreach (int row in groups.Keys) {
-            foreach (int col in groups[row].Keys) {
-                foreach (Slot slot in groups[row][col].slots) {
-                    if (!slot.is_empty()) {
-                        d.Add(new Location(row, col, slot.num), slot.get_unit());
+        foreach (int col in groups.Keys) {
+            foreach (int row in groups[col].Keys) {
+                foreach (Slot slot in groups[col][row].slots) {
+                    if (!slot.is_empty) {
+                        d.Add(new Location(col, row, slot.num), slot.get_unit());
                     }
                 }
             }
@@ -192,7 +202,7 @@ public class Formation : MonoBehaviour {
     public void load_board(string discipline) {
         Dictionary <Location, Unit> cb = discipline_boards[discipline];
         foreach (Location loc in cb.Keys) {
-            groups[loc.row][loc.col].get(loc.slot_num).fill(cb[loc]);
+            groups[loc.col][loc.row].get(loc.slot_num).fill(cb[loc]);
         }
     }
 
@@ -203,7 +213,7 @@ public class Formation : MonoBehaviour {
     public void rotate_actioned_player_groups() {
         foreach (int row in groups.Keys) {
             foreach (Group group in groups[row].Values) {
-                if (group.is_empty())
+                if (group.is_empty)
                     continue;
                 if (group.get(0).get_unit().has_acted) {
                     group.rotate_units();
@@ -215,9 +225,9 @@ public class Formation : MonoBehaviour {
 
 public class Location {
     public int col, row, slot_num;
-    public Location(int row, int col, int slot_num) {
-        this.row = row;
+    public Location(int col, int row, int slot_num) {
         this.col = col;
+        this.row = row;
         this.slot_num = slot_num;
     }
 }

@@ -8,12 +8,14 @@ public class Slot : MonoBehaviour {
     public Image img;
     public Controller c;
     private Formation f;
-    public GameObject unit_panel;
+    //public GameObject unit_panel;
     private Camera cam;
     public Text namefg_T;
     public Text namebg_T;
 
+    [HideInInspector]
     public int col; // LEFT, MID, RIGHT
+    [HideInInspector]
     public int row; // FRONT, MID, REAR
     public int num; // Hierarchy in group. 0, 1, 2
     public Group group;
@@ -70,18 +72,18 @@ public class Slot : MonoBehaviour {
     }
 
     public Unit get_unit() {
-        if (has_enemy()) {
+        if (has_enemy) {
             return get_enemy();
-        } else if (has_punit()) {
+        } else if (has_punit) {
             return get_punit();
         } 
         return null;
     }
 
     public void set_sprite(int image_ID) { 
-        if (has_punit()) {
+        if (has_punit) {
             img.sprite = f.images[image_ID]; 
-        } else if (has_enemy()) {
+        } else if (has_enemy) {
             img.sprite = c.enemy_loader.images[image_ID];
         } else {
             img.sprite = f.images[image_ID];
@@ -118,32 +120,36 @@ public class Slot : MonoBehaviour {
             img.color = Color.blue;
     }
 
-    public bool has_punit() {
-        if (unit == null) return false;
-        if (unit.is_playerunit()) return true;
-        return false;
+    public bool has_punit {
+        get {
+            if (unit == null) return false;
+            if (unit.is_playerunit()) return true;
+            return false;
+        }
     }
 
-    public bool has_enemy() {
-        if (unit == null) return false;
-        if (unit.is_enemy()) return true;
-        return false;
+    public bool has_enemy {
+        get {
+            if (unit == null) return false;
+            if (unit.is_enemy()) return true;
+            return false;
+        }
     }
 
-    public bool has_unit() {
-        return unit != null ? true : false;
+    public bool has_unit {
+        get { return unit != null ? true : false; }
     }
 
-    public bool is_empty() {
-        return unit == null ? true : false;
+    public bool is_empty {
+        get { return unit == null ? true : false; }
     }
 
     public PlayerUnit get_punit() {
-        return has_punit() ? unit as PlayerUnit : null;
+        return has_punit ? unit as PlayerUnit : null;
     }
 
     public Enemy get_enemy() {
-        return has_enemy() ? unit as Enemy : null;
+        return has_enemy ? unit as Enemy : null;
     }
 
     private void set_namefg_T(string txt) {

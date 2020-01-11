@@ -63,7 +63,7 @@ public class EnemyBrain : MonoBehaviour{
         foreach (Slot slot in enemies) {
             Slot target = slot.get_enemy().get_target();
             if (target != null) {
-                if (target.has_punit())
+                if (target.has_punit)
                     continue;
             } else 
                 find_nearest_target(slot);
@@ -93,16 +93,16 @@ public class EnemyBrain : MonoBehaviour{
         if (dy != 0) dy = dy < 0 ? -1 : 1;
 
         // Does not account for being able to move into groups owned by enemies.
-        Group xmove = f.get_group(start.row, start.col + dx);
+        Group xmove = f.get_group(start.col + dx, start.row);
         //Debug.Log("xmove: " + (start.col + dx) + "y: " + (start.row) + " - " + xmove);
         if (xmove != null) {
-            if (xmove.is_empty())
+            if (xmove.is_empty)
                 return xmove.get_highest_empty_slot();
         } 
-        Group ymove = f.get_group(start.row + dy, start.col);
+        Group ymove = f.get_group(start.col, start.row + dy);
         //Debug.Log("ymove: " + (start.col) + "y: " + (start.row + dy) + " - " + ymove);
         if (ymove != null) {
-            if (ymove.is_empty())
+            if (ymove.is_empty)
                 return ymove.get_highest_empty_slot();
         }
         return null;

@@ -14,21 +14,24 @@ public class Group : MonoBehaviour {
     private int direction;
     public int col, row;
     public Slot[] slots = new Slot[MAX];
+    Controller c;
 
     void Start() {
         direction = default_direction;
+        c = GameObject.Find("Controller").GetComponent<Controller>();
+        c.formation.add_group(this);
     }
 
     // Moves units up within their group upon vacancies from unit death/movement.
     public void validate_unit_order() {
-        if (is_empty())
+        if (is_empty)
             return;
 
         for (int i = 0; i < MAX; i++) {
-            if (!slots[i].is_empty()) 
+            if (!slots[i].is_empty) 
                 continue;
             for (int j = i + 1; j < MAX; j++) {
-                if (slots[j].is_empty())
+                if (slots[j].is_empty)
                     continue;
                 // Move unit to higher slot
                 slots[i].fill(slots[j].empty(false));
@@ -47,7 +50,7 @@ public class Group : MonoBehaviour {
     */
     public void rotate_units() {
         // Nothing to rotate with.
-        if (is_empty() || (get(1).is_empty() && get(2).is_empty()))
+        if (is_empty || (get(1).is_empty && get(2).is_empty))
             return;
 
         // immutable units copy
@@ -56,11 +59,11 @@ public class Group : MonoBehaviour {
             us[i] = get(i).get_unit();
         
         for (int i = 0; i < MAX; i++) {
-            if (get(i).is_empty())
+            if (get(i).is_empty)
                 continue;
 
             int place = (i + 1) % 3;
-            if (get(i).is_empty()) {
+            if (get(i).is_empty) {
                 place = (i + 2) % 3; 
             }
             set(i, us[place]);
@@ -112,21 +115,21 @@ public class Group : MonoBehaviour {
 
     public Slot get_highest_empty_slot() {
         for (int i = 0; i < MAX; i++) 
-            if (slots[i].is_empty())
+            if (slots[i].is_empty)
                 return slots[i];
         return null;
     }
 
     public Slot get_highest_enemy_slot() {
         for (int i = 0; i < MAX; i++) 
-            if (slots[i].has_enemy())
+            if (slots[i].has_enemy)
                 return slots[i];  
         return null;
     }
 
     public Slot get_highest_player_slot() {
         foreach (Slot s in slots) 
-            if (s.has_punit())
+            if (s.has_punit)
                 return s;  
         return null;
     }
@@ -134,23 +137,27 @@ public class Group : MonoBehaviour {
     public List<Slot> get_full_slots() {
         List<Slot> full_slots = new List<Slot>();
         foreach (Slot s in slots) 
-            if (s.has_unit())
+            if (s.has_unit)
                 full_slots.Add(s);  
         return full_slots;
     }
 
-    public bool has_punit() {
-        foreach (Slot slot in slots)
-            if (slot.get_punit() != null)
-                return true;
-        return false;
+    public bool has_punit {
+        get {
+            foreach (Slot slot in slots)
+                if (slot.get_punit() != null)
+                    return true;
+            return false;
+        }
     }
 
-    public bool has_enemy() {
-        foreach (Slot slot in slots)
-            if (slot.get_enemy() != null)
-                return true;
-        return false;
+    public bool has_enemy {
+        get {
+            foreach (Slot slot in slots)
+                if (slot.get_enemy() != null)
+                    return true;
+            return false;
+        }
     }
 
     public void empty() {
@@ -158,11 +165,13 @@ public class Group : MonoBehaviour {
             s.empty(false);
     }
 
-    public bool is_empty() {
-        foreach (Slot slot in slots)
-            if (!slot.is_empty())
-                return false;
-        return true;
+    public bool is_empty {
+        get {
+            foreach (Slot slot in slots)
+                if (!slot.is_empty)
+                    return false;
+            return true;
+        }
     }
 
     public bool faces(int direction) {

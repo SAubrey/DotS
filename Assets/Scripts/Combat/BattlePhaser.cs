@@ -149,10 +149,10 @@ public class BattlePhaser : MonoBehaviour {
         if (finished) {
             c.get_active_bat().in_battle = false;
         } else {
-            if (mini_retreating) {
+            if (mini_retreating) { // Fall back and regroup.
                 c.get_active_bat().mini_retreating = true;
                 save_enemies_to_map();
-            } else
+            } else // Save the board exactly as is.
                 c.formation.save_board(c.get_disc_name());
         }
         reset();
@@ -178,7 +178,6 @@ public class BattlePhaser : MonoBehaviour {
         set {
             _stage = value;
             int phase_stage = stage;
-            Debug.Log("Total placeable units = " + c.get_active_bat().count_placeable());
 
             if (phase_stage == PLACEMENT) placement();
             else if (phase_stage == INTUITIVE) intuitive();

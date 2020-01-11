@@ -100,9 +100,9 @@ public class TurnPhaser : MonoBehaviour {
 
     private void finish_phase() {
         if (pulled_combat_card) {
-            cs.set_active(CamSwitcher.MAP, true);
             pulled_combat_card = false;
         }
+        cs.set_active(CamSwitcher.MAP, true);
         player++;
         pre_phase();
     }

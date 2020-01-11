@@ -26,7 +26,7 @@ public class EnemyLoader : MonoBehaviour {
 
     private Formation f;
     public System.Random rand;
-    private int enemy_row = 3;
+    private int enemy_row = 7;
 
     public Sprite galtsa, grem, endu, korote, molner, etuena, clypte, goliath, kverm,
         latu, eke_tu, oetem, eke_fu, eke_shi_ami, eke_lord, ketemcol, mahukin, drongo, maheket,
@@ -144,20 +144,20 @@ public class EnemyLoader : MonoBehaviour {
     private bool slot_enemy(Enemy enemy) {
         bool success = false;
         if (enemy.attributes[Enemy.FLANKING]) { // If flanking, place in rear.
-            if (fill_slot(enemy, -1, 1)) {
+            if (fill_slot(enemy, 5, 3)) {
                 success = true;
             } else {
-                success = fill_slot(enemy, enemy_row, spawn_column);
+                success = fill_slot(enemy, 6 - spawn_column, enemy_row);
             }
         } else {
-            success = fill_slot(enemy, enemy_row, spawn_column);
+            success = fill_slot(enemy, 6 - spawn_column, enemy_row);
         }
         spawn_column++;
         return success;
     }
 
-    private bool fill_slot(Enemy enemy, int row, int col) {
-        Slot s = f.get_group(row, col).get_highest_empty_slot();
+    private bool fill_slot(Enemy enemy, int col, int row) {
+        Slot s = f.get_group(col, row).get_highest_empty_slot();
         if (s != null) {
             s.fill(enemy);
             return true;
@@ -204,7 +204,7 @@ public class EnemyLoader : MonoBehaviour {
         biomes[CAVE][0][Enemy.UNCOMMON].Add(Enemy.DUALE);
     }
 
-    private int _spawn_column = 1;
+    private int _spawn_column = 4;
     public int spawn_column {
         get { return _spawn_column % 3; }
         set {

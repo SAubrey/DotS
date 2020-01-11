@@ -82,7 +82,7 @@ public class Controller : MonoBehaviour {
         if (get_active_bat().in_battle) {
             if (get_active_bat().mini_retreating) {
                 enemy_loader.load_existing_enemies(tile_mapper.get_enemies(get_disc().pos));
-            } else {
+            } else { // Resume battle as it was.
                 Debug.Log("Loading " + active_disc);
                 formation.load_board(active_disc);
             }

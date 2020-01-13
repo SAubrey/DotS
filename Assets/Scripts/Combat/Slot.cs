@@ -19,18 +19,23 @@ public class Slot : MonoBehaviour {
     public int row; // FRONT, MID, REAR
     public int num; // Hierarchy in group. 0, 1, 2
     public Group group;
+    private bool _disabled = false;
+    public Button button;
     
     void Awake() {
         c = GameObject.Find("Controller").GetComponent<Controller>();
         cam = GameObject.Find("BattleCamera").GetComponent<Camera>();
         col = group.col;
         row = group.row;
+        button = GetComponent<Button>();
 
         face_text_to_cam();
         f = c.formation;
     }
 
     public void click() {
+        if (disabled)
+            return;
         c.selector.handle_slot(this);
     }
 
@@ -90,6 +95,14 @@ public class Slot : MonoBehaviour {
         }
     }
 
+    public bool disabled {
+        get { return _disabled; }
+        set { 
+            _disabled = value;
+            button.interactable = !_disabled;
+        }
+    }
+
     public void show_selection() {
         if (img != null)
             img.color = Color.gray;
@@ -142,6 +155,10 @@ public class Slot : MonoBehaviour {
 
     public bool is_empty {
         get { return unit == null ? true : false; }
+    }
+
+    public bool is_type(int type) {
+        return group.type == type;
     }
 
     public PlayerUnit get_punit() {

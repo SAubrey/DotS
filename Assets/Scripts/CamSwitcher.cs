@@ -92,6 +92,7 @@ public class CamSwitcher : MonoBehaviour {
             mapCam.enabled = active;
             mapUI_canvas.SetActive(active);
             if (active) {
+                mapCam.transform.SetPositionAndRotation(new Vector3(10, 10, -1), Quaternion.identity);
                 set_active(BATTLE, false);
                 set_active(MENU, false);
             }

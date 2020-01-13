@@ -36,7 +36,7 @@ public class HitSplat : MonoBehaviour {
     }
 
     private void translate_up() {
-        this.transform.Translate(0, 0.0015f, 0);
+        this.transform.Translate(0, 0.015f, 0);
     }
 
     private void fade() {

@@ -19,11 +19,12 @@ public class FOVZoomer : MonoBehaviour {
         if (cs.current_cam == CamSwitcher.BATTLE) {
             if (verify_input(battle_cam.fieldOfView + (Input.mouseScrollDelta.y * -SCROLL_FACTOR)))
                 battle_cam.fieldOfView += Input.mouseScrollDelta.y * -SCROLL_FACTOR;
-            if (Input.GetKeyDown(KeyCode.Plus)) {
+
+            if (Input.GetKey(KeyCode.Plus) || Input.GetKey(KeyCode.Q)) {
                 if (verify_input(battle_cam.fieldOfView + BUTTON_ZOOM_INCREMENT))
                     battle_cam.fieldOfView += BUTTON_ZOOM_INCREMENT;
             }
-            else if (Input.GetKeyDown(KeyCode.Minus)) {
+            else if (Input.GetKey(KeyCode.Minus) || Input.GetKey(KeyCode.E)) {
                 if (verify_input(battle_cam.fieldOfView - BUTTON_ZOOM_INCREMENT))
                     battle_cam.fieldOfView -= BUTTON_ZOOM_INCREMENT;
             }

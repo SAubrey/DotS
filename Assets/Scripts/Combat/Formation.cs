@@ -7,14 +7,6 @@ using UnityEngine.EventSystems;
 /* There is a single formation containing groups of 3 slots. Only the first slot performs game actions.
  */
 public class Formation : MonoBehaviour {
-    /*
-    public const int FRONT1 = 3;
-    public const int FRONT = 2;
-    public const int MID = 1;
-    public const int REAR = 0;
-    public const int REAR1 = -1;
-    public const int LEFT = 0;
-    public const int RIGHT = 2;*/
 
     public GameObject slot_panel;
     private Controller c;
@@ -53,12 +45,6 @@ public class Formation : MonoBehaviour {
 
     // Organized by column, row
     private Dictionary<int, Dictionary<int, Group>> groups = new Dictionary<int, Dictionary<int, Group>>();
-   /*     {FRONT1, new Dictionary<int, Group>() },
-        {FRONT, new Dictionary<int, Group>() },
-        {MID, new Dictionary<int, Group>() },
-        {REAR, new Dictionary<int, Group>() },
-        {REAR1, new Dictionary<int, Group>() },
-    };*/
 
     // For saving/loading. Maintains which units are where.
     private Dictionary<Location, Unit> astra_board = new Dictionary<Location, Unit>();
@@ -72,19 +58,6 @@ public class Formation : MonoBehaviour {
         discipline_boards.Add(Controller.ASTRA, astra_board);
         discipline_boards.Add(Controller.ENDURA, endura_board);
         discipline_boards.Add(Controller.MARTIAL, martial_board);
-/*
-        groups[FRONT1].Add(LEFT, front1_left);
-        groups[FRONT1].Add(MID, front1_mid);
-        groups[FRONT1].Add(RIGHT, front1_right);
-        groups[REAR1].Add(MID, rear1_mid);
-
-        groups[FRONT].Add(LEFT, front_left);
-        groups[FRONT].Add(MID, front_mid);
-        groups[FRONT].Add(RIGHT, front_right);
-        groups[MID].Add(LEFT, mid_left);
-        groups[MID].Add(MID, mid_mid);
-        groups[MID].Add(RIGHT, mid_right);
-        groups[REAR].Add(MID, rear_mid);*/
 
         images.Add(PlayerUnit.ARCHER, archer);
         images.Add(PlayerUnit.WARRIOR, warrior);
@@ -101,6 +74,11 @@ public class Formation : MonoBehaviour {
         unit_buttons.Add(PlayerUnit.MINER, miner_img);
     }
 
+    void Start() {
+        build_t1_battlefield();
+    }
+
+    // For groups to add themselves. 
     public void add_group(Group g) {
         if (!groups.ContainsKey(g.col)) {
             groups.Add(g.col, new Dictionary<int, Group>());
@@ -218,6 +196,71 @@ public class Formation : MonoBehaviour {
                 if (group.get(0).get_unit().has_acted) {
                     group.rotate_units();
                 }
+            }
+        }
+    }
+
+    public void build_t1_battlefield() {
+        set_groups(4, 6, 5, 6, Group.PLAYER);
+        set_groups(5, 5, 4, 4, Group.PLAYER);
+
+        set_groups(2, 3, 4, 6, Group.ENEMY);
+        set_groups(7, 8, 4, 6, Group.ENEMY);
+        set_groups(4, 6, 2, 3, Group.ENEMY);
+        set_groups(4, 6, 7, 8, Group.ENEMY);
+
+        // set neutral
+        set_groups(4, 4, 4, 4, Group.NEUTRAL);
+        set_groups(6, 6, 4, 4, Group.NEUTRAL);
+        // lower half
+        set_groups(0, 3, 3, 3, Group.NEUTRAL);
+        set_groups(7, 10, 3, 3, Group.NEUTRAL);
+        set_groups(2, 3, 2, 2, Group.NEUTRAL);
+        set_groups(7, 8, 2, 2, Group.NEUTRAL);
+        set_groups(3, 3, 0, 1, Group.NEUTRAL);
+        set_groups(7, 7, 0, 1, Group.NEUTRAL);
+        // upper half        
+        set_groups(0, 3, 7, 7, Group.NEUTRAL);
+        set_groups(7, 10, 7, 7, Group.NEUTRAL);
+        set_groups(2, 3, 8, 8, Group.NEUTRAL);
+        set_groups(7, 8, 8, 8, Group.NEUTRAL);
+        set_groups(3, 3, 9, 10, Group.NEUTRAL);
+        set_groups(6, 6, 9, 10, Group.NEUTRAL);
+
+        // set PERIPHERY
+        set_groups(4, 6, 0, 1, Group.PERIPHERY);
+        set_groups(4, 6, 9, 10, Group.PERIPHERY);
+        set_groups(0, 1, 4, 6, Group.PERIPHERY);
+        set_groups(9, 10, 4, 6, Group.PERIPHERY);
+        // corners
+        set_groups(0, 1, 2, 2, Group.PERIPHERY); //SW
+        set_groups(1, 1, 1, 1, Group.PERIPHERY);
+        set_groups(2, 2, 0, 1, Group.PERIPHERY);
+        set_groups(9, 10, 2, 2, Group.PERIPHERY); // SE
+        set_groups(9, 9, 1, 1, Group.PERIPHERY);
+        set_groups(8, 8, 0, 1, Group.PERIPHERY);
+        set_groups(0, 1, 8, 8, Group.PERIPHERY); // NW
+        set_groups(1, 1, 9, 9, Group.PERIPHERY);
+        set_groups(2, 2, 9, 10, Group.PERIPHERY);
+        set_groups(8, 8, 9, 10, Group.PERIPHERY); // NE
+        set_groups(9, 9, 9, 9, Group.PERIPHERY);
+        set_groups(9, 10, 8, 8, Group.PERIPHERY);
+    }
+
+    public void build_t2_battlefield() {
+        build_t1_battlefield();
+        set_groups(4, 4, 4, 4, Group.PLAYER);
+        set_groups(6, 6, 4, 4, Group.PLAYER);
+    }
+
+    public void build_t3_battlefield() {
+
+    }
+
+    public void set_groups(int colmin, int colmax, int rowmin, int rowmax, int type) {
+        for (int c = colmin; c <= colmax; c++) {
+            for (int r = rowmin; r <= rowmax; r++) {
+                get_group(c, r).set_type(type);
             }
         }
     }

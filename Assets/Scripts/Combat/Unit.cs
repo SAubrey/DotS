@@ -114,7 +114,10 @@ public class Unit {
         bool out_of_range = !in_range(slot.get_punit().movement_range, 
                 slot.col, slot.row,
                 dest.col, dest.row);
-        bool opposite_unit = dest.get_unit().type != get_unit().type;
+        bool opposite_unit = false;
+        if (dest.has_unit)
+            opposite_unit = dest.get_unit().type != type;
+
         if (has_acted_in_stage || opposite_unit || out_of_range)
             return false;
         return true;

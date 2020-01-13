@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class AttackQueuer : MonoBehaviour {
-    public const float WAIT_TIME = 2.0f;
+    public const float WAIT_TIME = 3.0f;
     private Controller c;
     private LineDrawer line_drawer;
     public GameObject hit_splat_prefab;
@@ -63,7 +63,7 @@ target the same unit.
             toggle = !toggle;
             if (att != null) {
                 attack(att);
-                yield return new WaitForSeconds(WAIT_TIME); // fix  
+                yield return new WaitForSeconds(WAIT_TIME / 2);
             }
         } while(att != null);
 
@@ -76,7 +76,8 @@ target the same unit.
 
     private void attack(Attack att) {
         create_hitsplat(att);
-        line_drawer.begin_fade(att.get_start_slot().get_unit());
+        int line_id = att.get_start_slot().get_unit().line_id;
+        line_drawer.get_line(line_id).begin_fade();
         att.attack();
     }
 
@@ -107,9 +108,10 @@ public class AttackQueue {
 
     public void enqueue(Slot start, Slot end, LineDrawer ld) {
         attack_list.Add(new Attack(start, end));
-        //Debug.Log(attack_list.Count);
         // display visually
-        ld.draw_line(start.get_unit(), start.transform.position, end.transform.position);
+        Vector3 s = start.transform.position;
+        Vector3 e = end.transform.position;
+        ld.draw_line(start.get_unit(), s, e);
     }
 
     public Attack dequeue() {

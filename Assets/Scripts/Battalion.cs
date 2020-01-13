@@ -22,7 +22,6 @@ public class Battalion {
     };
     
     public Battalion() {
-        //c = GameObject.Find("Controller").GetComponent<Controller>();
         add_units(PlayerUnit.ARCHER, 3);
         add_units(PlayerUnit.WARRIOR, 2);
         add_units(PlayerUnit.SPEARMAN, 2);

@@ -47,14 +47,14 @@ public class Selector : MonoBehaviour {
             return;
             
         // Attempting to attack or move. Do not select a new slot upon failure.
-        bool selection_taking_action = selected_slot != null && (selecting_target || selecting_move);
+        bool selection_taking_action = selected_slot != null && 
+            (selecting_target || selecting_move);
         if (selection_taking_action) {
             attempt_action(slot);
             return;
         }
 
-        bool punit_selected_for_placement = bp.placement_stage && slot.is_empty;
-        if (punit_selected_for_placement) {
+        if (verify_placement(slot)) {
             place_punit(slot);
         } else if (!slot.is_empty) { // Select unit already present in slot
             set_selected(slot);
@@ -132,6 +132,20 @@ public class Selector : MonoBehaviour {
             selecting_target = false;
             selecting_move = false;
         }
+    }
+
+    private bool verify_placement(Slot dest) {
+        bool valid_init_place = 
+            c.battle_phaser.init_placement_stage && 
+             dest.is_type(Group.PLAYER);
+        bool valid_post_init_place = 
+            (dest.is_type(Group.PLAYER) || dest.is_type(Group.PERIPHERY)) &&
+            !c.battle_phaser.init_placement_stage;
+
+        if (bp.placement_stage && dest.is_empty &&
+            (valid_init_place || valid_post_init_place))
+            return true;
+        return false;
     }
 
     // Called from player unit panel return button

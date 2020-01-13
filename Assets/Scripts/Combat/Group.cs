@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using System;
+using UnityEngine.UI;
 
 // Slot group
 public class Group : MonoBehaviour {
@@ -10,16 +11,39 @@ public class Group : MonoBehaviour {
     public const int LEFT = 90;
     public const int RIGHT = 270;
     public const int MAX = 3;
+    
+    // Group types. Used to limit unit placement.
+    public const int NEUTRAL = 0; // Cannot place here.
+    public const int PLAYER = 1; // player can only place here initially.
+    public const int ENEMY = 2; // Only enemy can place here.
+    public const int PERIPHERY = 3; // Player can place here phase 2+.
+    
+    public Color neutral_color;
+    public Color player_color;
+    public Color enemy_color;
+    public Color periphery_color;
+    public Color disabled_color;
+    public int type;
+
     public int default_direction;
     private int direction;
     public int col, row;
     public Slot[] slots = new Slot[MAX];
     Controller c;
+    private bool _disabled = false;
+    Image img;
 
+    void Awake() {
+        c = GameObject.Find("Controller").GetComponent<Controller>();
+        c.formation.add_group(this);
+    }
     void Start() {
         direction = default_direction;
         c = GameObject.Find("Controller").GetComponent<Controller>();
-        c.formation.add_group(this);
+        img = GetComponent<Image>();
+        //c.formation.add_group(this);
+        set_color(type);
+
     }
 
     // Moves units up within their group upon vacancies from unit death/movement.
@@ -93,6 +117,34 @@ public class Group : MonoBehaviour {
                 rotate(RIGHT);
             else if (dx < 0)
                 rotate(LEFT);
+        }
+    }
+
+    public void set_type(int type) {
+        set_color(type);
+        this.type = type;
+    }
+
+    // Toggles the group color if no parameter is set. 
+    private void set_color(int type) {
+        if (type == NEUTRAL)
+            img.color = neutral_color;
+        else if(type == PLAYER) {
+            img.color = player_color;
+        } else if (type == ENEMY)
+            img.color = enemy_color;
+        else if (type == PERIPHERY) 
+            img.color = periphery_color;
+    }
+
+    public bool disabled {
+        get { return _disabled; }
+        set { 
+            _disabled = value;
+            img.enabled = !_disabled;
+            foreach (Slot s in slots)
+                s.disabled = _disabled;
+
         }
     }
 

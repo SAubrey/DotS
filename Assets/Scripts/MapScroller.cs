@@ -14,10 +14,10 @@ public class MapScroller : MonoBehaviour {
     private const float BATTLE_MAX_X = 56f;
     private const float BATTLE_MIN_Y = -20f;
     private const float BATTLE_MAX_Y = 27f;*/
-    private const float BATTLE_MIN_X = -225f;
-    private const float BATTLE_MAX_X = -160f;
-    private const float BATTLE_MIN_Y = -21f;
-    private const float BATTLE_MAX_Y = 27f;
+    private const float BATTLE_MIN_X = -2000f;
+    private const float BATTLE_MAX_X = 2100f;
+    private const float BATTLE_MIN_Y = -1600f;
+    private const float BATTLE_MAX_Y = 1500f;
 
 
     void Start() {
@@ -28,7 +28,7 @@ public class MapScroller : MonoBehaviour {
         if (cs.current_cam == CamSwitcher.MAP) 
             check_input(-0.5f);
         else if (cs.current_cam == CamSwitcher.BATTLE) 
-            check_input(-1f);
+            check_input(-50f);
     }
 
     private void check_input(float scale) {

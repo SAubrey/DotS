@@ -12,9 +12,8 @@ public class UIElementDragger : EventTrigger {
     }
     public void Update() {
         if (dragging) {
-            Vector3 pos = cam.ScreenToWorldPoint(
-                new Vector3(Input.mousePosition.x, Input.mousePosition.y, 0));
-            transform.position = new Vector2(pos.x, pos.y);
+            Vector3 pos = (Input.mousePosition);
+            transform.position = new Vector3(pos.x, pos.y, 0);
         }
     }
 

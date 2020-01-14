@@ -258,6 +258,7 @@ public class TileMapper : MonoBehaviour {
                 }
             } 
         }
+        map[new Pos(10, 10)].discover(); // discover the city.
     }
 
     void generate_t2(Tilemap tm) {

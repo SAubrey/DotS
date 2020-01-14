@@ -61,9 +61,11 @@ public class Unit {
     protected Slot slot = null;
     protected bool dead = false; // Used to determine what to remove in the Battalion.
     private bool placed = false;
-    public int line_id; // unique identifier for looking up drawn attack lines.
+     // unique identifier for looking up drawn attack lines and aggregating attacks.
+    public int attack_id;
 
     public virtual int calc_dmg_taken(int dmg) { return 0; }
+    public virtual int get_post_dmg_state(int dmg) { return 0; }
     public virtual int take_damage(int dmg) { return 0; }
     
     protected void move(Slot end) {
@@ -91,6 +93,7 @@ public class Unit {
         has_acted = true;
         return attack_dmg;
     }
+
     protected void create_attribute_list(int num_attributes) {
         for (int i = 0; i < num_attributes; i++) {
             attributes.Insert(i, false);

@@ -71,10 +71,10 @@ public class PlayerPanel : UnitPanel {
         if (!bp.targeting)
             return;
         reset_buttons(1);
-
+        Debug.Log(bp.targeting);
         toggle_attackB();
         if (slot.get_punit().attack_set) {
-            aq.get_player_queue().remove_attack(slot.get_punit(), c.line_drawer);
+            aq.get_player_queue().remove_attack(slot.get_punit().attack_id, c.line_drawer);
             selector.selecting_target = false;
         } else {
             selector.selecting_target = !selector.selecting_target;

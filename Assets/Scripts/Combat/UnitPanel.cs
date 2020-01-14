@@ -9,17 +9,19 @@ public class UnitPanel : MonoBehaviour {
     public Text AttT;
     public Text unit_name;
     public Slot slot;
+    private Camera cam;
 
     public virtual void update_panel(Slot slot) {}
 
     void Awake() {
         selector = GameObject.Find("Selector").GetComponent<Selector>();
         bp = GameObject.Find("BattlePhaser").GetComponent<BattlePhaser>();
+         cam = GameObject.Find("BattleCamera").GetComponent<Camera>();
     }
 
     public void reposition(Slot slot) {
-        Vector3 slot_pos = slot.transform.position;
-        panel.transform.position = new Vector3(slot_pos.x, slot_pos.y - .3f, slot_pos.z);
+        Vector3 slot_pos = cam.WorldToScreenPoint(slot.transform.position);
+        panel.transform.position = new Vector3(slot_pos.x, slot_pos.y - 50f, 0);
     }
     
     public void set_name(string s) {

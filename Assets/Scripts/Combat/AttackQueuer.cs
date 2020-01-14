@@ -3,18 +3,17 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class AttackQueuer : MonoBehaviour {
+    public const int PU_TO_E = 0;
+    public const int E_TO_PU = 1;
     public const float WAIT_TIME = 3.0f;
     private Controller c;
     private LineDrawer line_drawer;
     public GameObject hit_splat_prefab;
     public GameObject FieldPanel;
 
-    public const int PU_TO_E = 0;
-    public const int E_TO_PU = 1;
-    // Attacks queue must be searchable in case of deletion before the battle.
-    
     private AttackQueue enemy_queue = new AttackQueue();
     private AttackQueue player_queue = new AttackQueue();
+    private int attack_id = 0; // Unique identifier for each attack & line.
 
     void Start() {
         c = GameObject.Find("Controller").GetComponent<Controller>();
@@ -27,66 +26,92 @@ public class AttackQueuer : MonoBehaviour {
             return false;
         if (start.get_unit().can_hit(end)) {
             if (attacker.is_playerunit()) {
-                get_player_queue().enqueue(start, end, line_drawer);
+                get_player_queue().add_attack(start, end, attack_id, line_drawer);
             } else {
-                get_enemy_queue().enqueue(start, end, line_drawer);
+                get_enemy_queue().add_attack(start, end, attack_id, line_drawer);
             }
+            attack_id++;
             attacker.attack_set = true;
             return true;
         }
         return false;
     }
-/*
-TODO: Accumulate multiple attacks on a single unit and have those animate together.
 
-Scan through all enemy attacks and create a list of lists of attacks that
-target the same unit. 
-*/
     /*
-    Every unit that has an attack poised will attack regardless of the animation order
-    Display attack animations for each simultaneously pulled unit
+    Alternates attack animations between sides. Group attacks, or 
+    multiple attackers on a single unit, display simultaneously.
      */
     public IEnumerator battle() {
         bool toggle = true;
-        Attack att;
+        List<Attack> attacks;
         do {
-            // Take turns giving each side a chance to show an attack. 
             if (toggle) {
-                att = player_queue.dequeue();
-                if (att == null) 
-                    att = enemy_queue.dequeue();
+                attacks = player_queue.get_group();
+                if (attacks == null) 
+                    attacks = enemy_queue.get_group();
             } else {
-                att = enemy_queue.dequeue();
-                if (att == null)
-                    att = player_queue.dequeue();
+                attacks = enemy_queue.get_group();
+                if (attacks == null)
+                    attacks = player_queue.get_group();
             }
             toggle = !toggle;
-            if (att != null) {
-                attack(att);
+            if (attacks != null) {
+                if (attacks.Count > 1)
+                    group_attack(attacks);
+                else 
+                    attack(attacks[0]);
                 yield return new WaitForSeconds(WAIT_TIME / 2);
             }
-        } while(att != null);
+        } while(attacks != null);
+        post_battle();
+    }
 
+    /*
+    Multiple units attacking the same unit will combine their attack damage
+    before substracting by defense and then determining the state of the
+    attacked unit. This is especially necessary for player units
+    given that a player unit's resilience must be calculated against 
+    with a single damage sum.
+    */
+    private void group_attack(List<Attack> attacks) {
+        int sum_dmg = 0;
+        foreach (Attack a in attacks) {
+            sum_dmg += (a.get_start_unit().attack() + a.calc_dir_dmg());
+        }
+        Unit end_u = attacks[0].get_end_unit();
+        int state = end_u.take_damage(sum_dmg);
+        foreach (Attack a in attacks) {
+            a.post_attack(state);
+            line_drawer.get_line(a.get_start_unit().attack_id).begin_fade();
+        }
+        create_hitsplat(sum_dmg, state, attacks[0].get_end_slot());
+    }
+
+    private void attack(Attack att) {
+        int dmg = att.calc_dmg_taken();
+        int state = att.get_end_unit().get_post_dmg_state(dmg);
+        create_hitsplat(dmg, state, att.get_end_slot());
+        int attack_id = att.get_start_unit().attack_id;
+        line_drawer.get_line(attack_id).begin_fade();
+        att.attack();
+    }
+
+    private void post_battle() {
         // Clear attacks and clean the battlefield
         c.get_active_bat().post_battle();
         c.enemy_brain.clear_dead_enemies();
         reset();
         c.battle_phaser.post_battle(); // after reset
+        c.line_drawer.clear();
     }
 
-    private void attack(Attack att) {
-        create_hitsplat(att);
-        int line_id = att.get_start_slot().get_unit().line_id;
-        line_drawer.get_line(line_id).begin_fade();
-        att.attack();
-    }
-
-    private void create_hitsplat(Attack att) {
+    private void create_hitsplat(int dmg, int state, Slot end_slot) {
         GameObject hs = GameObject.Instantiate(hit_splat_prefab);
         hs.transform.SetParent(FieldPanel.transform, false); 
         HitSplat hs_script = hs.GetComponent<HitSplat>();
-        hs.transform.position = att.get_end_slot().transform.position;
-        hs_script.init(att);
+        Debug.Log("state?" + state);
+        hs_script.init(dmg, state, end_slot);
+        // create XP hitsplat here if end unit is enemy?
     }
 
     private void reset() {
@@ -104,52 +129,76 @@ target the same unit.
 
 
 public class AttackQueue {
-    public List<Attack> attack_list = new List<Attack>();
+    Dictionary<Unit, List<Attack>> groupings = new Dictionary<Unit, List<Attack>>();
 
-    public void enqueue(Slot start, Slot end, LineDrawer ld) {
-        attack_list.Add(new Attack(start, end));
+    public void add_attack(Slot start, Slot end, int id, LineDrawer ld) {
+        //attack_list.Add(new Attack(start, end, id));
+        if (!groupings.ContainsKey(end.get_unit()))
+            groupings.Add(end.get_unit(), new List<Attack>());
+        groupings[end.get_unit()].Add(new Attack(start, end, id));
+
         // display visually
         Vector3 s = start.transform.position;
         Vector3 e = end.transform.position;
-        ld.draw_line(start.get_unit(), s, e);
+        ld.draw_line(start.get_unit(), s, e, id);
     }
 
-    public Attack dequeue() {
-        if (attack_list.Count <= 0) {
+    public List<Attack> get_group() {
+        if (groupings.Count <= 0)
             return null;
+
+        // Get the first group of size 2+
+        List<Attack> group = new List<Attack>();
+        foreach (Unit u in groupings.Keys) {
+            if (groupings[u].Count > 1) {
+                group = groupings[u];
+                break;
+            }
         }
-        Attack attack = attack_list[attack_list.Count - 1];
-        if (attack != null) {
-            attack_list.RemoveAt(attack_list.Count - 1);
-            return attack;
-        } else {
-            return null;
+
+        // If no group of size 2+ exists, pick any of size 1.
+        if (group.Count == 0) { 
+            foreach (Unit u in groupings.Keys) {
+                group = groupings[u];
+                break;
+            }
         }
+        groupings.Remove(group[0].get_end_unit());
+        return group;
     }
 
-    public Attack find_attack(PlayerUnit pu) {
-        foreach (Attack a in attack_list) {
-            if (a.get_punit() == pu)
-                return a;
+    // Attackers maintain the attack ID.
+    public Attack find_attack(int attack_id) {
+        foreach (List<Attack> attacks in groupings.Values) {
+            foreach (Attack a in attacks) {
+                if (a.id == attack_id)
+                    return a;
+            }
         }
         return null;
     }
 
     // Used when a player rescinds a planned attack.
-    public void remove_attack(PlayerUnit pu, LineDrawer ld) {
-        Attack Attack = find_attack(pu);
-        attack_list.Remove(find_attack(pu));
-        ld.remove(pu.line_id);
-        pu.attack_set = false;
+    public void remove_attack(int attack_id, LineDrawer ld) {
+        Attack a = find_attack(attack_id);
+        Debug.Log("is the attack found?" + a);
+        if (a != null) {
+            a.get_start_unit().attack_set = false;
+            groupings[a.get_end_unit()].Remove(a);
+            if (groupings[a.get_end_unit()].Count < 1)
+                groupings.Remove(a.get_end_unit());
+        }
+        ld.remove(attack_id);
     }
 
     public void reset() {
-        attack_list = new List<Attack>();
+        groupings.Clear();
     }
 }
 
+
 /*
-To Attack, iterate through player units as keys for either attack list.
+Attacks are 1:1 relationships, from start(attacker) to end(defender)
  */
 public class Attack {
     private PlayerUnit punit;
@@ -157,10 +206,14 @@ public class Attack {
     private Slot start;
     private Slot end;
     public int direction;
-    
-    public Attack(Slot start, Slot end) {
+    public int id;
+
+    public Attack(Slot start, Slot end, int id) {
         this.start = start;
         this.end = end;
+        this.id = id;
+        start.get_unit().attack_id = id;
+
         if (start.get_unit().is_playerunit()) {
             punit = start.get_punit();
             enemy = end.get_enemy();
@@ -174,30 +227,44 @@ public class Attack {
 
     public void attack() {
         // determine damage from flanking, rear
-        int dmg = get_start_slot().get_unit().attack() + 
-                    calc_dir_dmg(start.get_group(), end.get_group());
-        int state = get_end_slot().get_unit().take_damage(dmg);
-        if (state == Unit.DEAD || state == Unit.INJURED) {
-            if (direction == AttackQueuer.E_TO_PU) {
-                enemy.clear_target();
-                start.c.enemy_brain.retarget();
-            }
+        int dmg = get_start_unit().attack() + calc_dir_dmg();
+        int state = get_end_unit().take_damage(dmg);
+        post_attack(state);
+    }
+
+    public void post_attack(int state) {
+        if (direction == AttackQueuer.E_TO_PU)
+            post_enemy_attack(state);
+        else 
+            post_player_attack(state);
+    }
+
+    public void post_player_attack(int state) {
+        int xp = enemy.take_xp_from_death();
+        if (state == Unit.DEAD && xp > 0) {
+            start.c.get_disc().change_var(Storeable.EXPERIENCE, xp);
         }
-        if (state == Unit.DEAD && direction == AttackQueuer.PU_TO_E) {
-            // Remove from player's battalion and update text.
-            start.c.get_disc().change_var(Storeable.EXPERIENCE, enemy.xp);
+    }
+    public void post_enemy_attack(int state) {
+        if (state == Unit.DEAD || state == Unit.INJURED) {
+            enemy.clear_target();
+            start.c.enemy_brain.retarget();
         }
     }
 
     public int calc_dmg_taken() {
-        int dmg = get_start_slot().get_unit().attack_dmg + 
-                    calc_dir_dmg(start.get_group(), end.get_group());
-        return get_end_slot().get_unit().calc_dmg_taken(dmg);
+        return get_end_unit().calc_dmg_taken(get_raw_dmg());
+    }
+
+    public int get_raw_dmg() {
+        return get_start_unit().attack_dmg + calc_dir_dmg();
     }
 
     /*
     */
-    public int calc_dir_dmg(Group att, Group def) {
+    public int calc_dir_dmg() {
+        Group att = get_start_slot().get_group();
+        Group def = get_end_slot().get_group();
         // Check if attacking from behind.
         if (def.faces(Group.UP) && att.row < def.row) 
             return 2;
@@ -230,5 +297,13 @@ public class Attack {
     
     public Slot get_start_slot() {
         return start;
+    }
+
+    public Unit get_start_unit() {
+        return start.get_unit();
+    }
+
+    public Unit get_end_unit() {
+        return end.get_unit();
     }
 }

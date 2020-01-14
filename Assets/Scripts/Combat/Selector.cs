@@ -13,7 +13,6 @@ public class Selector : MonoBehaviour {
     private AttackQueuer aq;
     private LineDrawer line_drawer;
     private UnitPanelManager unit_panel_man;
-
     public bool selecting_target = false;
     private bool _selecting_move = false;
     public bool selecting_move {
@@ -22,7 +21,7 @@ public class Selector : MonoBehaviour {
             _selecting_move = value;
             if (!value)
                 c.unit_panel_man.player_panel.depress_moveB();
-            else // do you want this?
+            else
                 c.unit_panel_man.player_panel.press_moveB();
         }
     }
@@ -45,7 +44,7 @@ public class Selector : MonoBehaviour {
     public void handle_slot(Slot slot) {
         if (cs.current_cam != CamSwitcher.BATTLE)
             return;
-            
+        Debug.Log("Selecting target? " + selecting_target);
         // Attempting to attack or move. Do not select a new slot upon failure.
         bool selection_taking_action = selected_slot != null && 
             (selecting_target || selecting_move);
@@ -139,7 +138,7 @@ public class Selector : MonoBehaviour {
             c.battle_phaser.init_placement_stage && 
              dest.is_type(Group.PLAYER);
         bool valid_post_init_place = 
-            (dest.is_type(Group.PLAYER) || dest.is_type(Group.PERIPHERY)) &&
+            (dest.is_type(Group.PERIPHERY)) &&
             !c.battle_phaser.init_placement_stage;
 
         if (bp.placement_stage && dest.is_empty &&

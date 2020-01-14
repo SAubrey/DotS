@@ -86,7 +86,7 @@ public class PlayerUnit : Unit {
     }
 
     // Passed damage should have already accounted for possible defense reduction.
-    public int get_post_dmg_state(int dmg) {
+    public override int get_post_dmg_state(int dmg) {
         float damaged_resilience = resilience - dmg;
         if (damaged_resilience <= 0) {
             return DEAD;

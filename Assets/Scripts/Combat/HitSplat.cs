@@ -13,18 +13,10 @@ public class HitSplat : MonoBehaviour {
     public Text fg_T;
     public Text bg_T;
 
-    public void init(Attack att) {
-        int dmg = att.calc_dmg_taken(); // Damage accounting for defense.
+    public void init(int dmg, int state, Slot end_slot) {
         set_text(dmg);
-
-        if (att.direction == AttackQueuer.E_TO_PU) {
-            set_color(att.get_punit().get_post_dmg_state(dmg));
-        } else {
-            if (dmg > 0)
-                set_color(Unit.DEAD);
-            else
-                set_color(Unit.ALIVE);
-        }
+        set_color(state);
+        transform.position = end_slot.transform.position;
     }
 
     void Update() {
@@ -36,7 +28,7 @@ public class HitSplat : MonoBehaviour {
     }
 
     private void translate_up() {
-        this.transform.Translate(0, 0.015f, 0);
+        this.transform.Translate(0, 1f, 0);
     }
 
     private void fade() {

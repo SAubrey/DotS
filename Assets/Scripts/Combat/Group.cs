@@ -36,14 +36,12 @@ public class Group : MonoBehaviour {
     void Awake() {
         c = GameObject.Find("Controller").GetComponent<Controller>();
         c.formation.add_group(this);
+        img = GetComponent<Image>();
     }
     void Start() {
         direction = default_direction;
         c = GameObject.Find("Controller").GetComponent<Controller>();
-        img = GetComponent<Image>();
-        //c.formation.add_group(this);
         set_color(type);
-
     }
 
     // Moves units up within their group upon vacancies from unit death/movement.

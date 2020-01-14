@@ -11,8 +11,6 @@ public class Line : MonoBehaviour {
     public void init(GameObject parent, Unit u, int id, 
                 Vector3 start_pos, Vector3 end_pos) {
         this.id = id;
-
-        //transform.SetParent(transform, true);
         draw(u, start_pos, end_pos);
     }
 
@@ -41,21 +39,18 @@ public class Line : MonoBehaviour {
         
         lr.sortingLayerName = "Top";
         lr.positionCount = 2;
-        lr.startWidth = .4f;
-        lr.endWidth = .01f;
+        lr.startWidth = 20f;
+        lr.endWidth = 1f;
         if (u.get_type() == Unit.ENEMY) {
-            lr.startColor = new Color(1, 0, 0, 0.1f);
+            lr.startColor = new Color(1, 0, 0, 0);
             lr.endColor = new Color(1, 0, 0, 1);
         } else {
-            lr.startColor = new Color(1, 1, 1, 0.1f);
+            lr.startColor = new Color(1, 1, 1, 0);
             lr.endColor = new Color(1, 1, 1, 1);
         }
         lr.SetPosition(0, start_pos);
         lr.SetPosition(1, end_pos);
         lr.useWorldSpace = true;
-
-
-        u.line_id = id;
     }
 
     public void begin_fade() {

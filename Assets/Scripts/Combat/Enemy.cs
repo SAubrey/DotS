@@ -35,8 +35,8 @@ public class Enemy : Unit {
     public const int TERRA_QUAL = 27;
     public const int DUALE = 28;
 
-    //public int rarity;
     public int xp;
+    public bool xp_taken = false;
     //public bool placed = false;
     public int max_health;
     public int health;
@@ -127,7 +127,14 @@ public class Enemy : Unit {
             dead = true;
             slot.show_dead();
         }
-        return health <= 0 ? 1 : 0;
+        return health <= 0 ? DEAD : INJURED;
+    }
+
+    public override int get_post_dmg_state(int dmg) {
+        if (health - dmg <= 0)
+            return DEAD;
+        else 
+            return INJURED;
     }
 
     public void clear_target() {
@@ -140,13 +147,16 @@ public class Enemy : Unit {
     public Slot get_target() {
         return target;
     }
+
+    public int take_xp_from_death() {
+        return xp_taken ? -1 : xp;
+    }
 }
 
 
 public class Galtsa : Enemy {
     public Galtsa() {
         ID = GALTSA;
-        //name = "Galtsa";
         init("Galtsa", 2, 2, 2, MELEE, CHARGE, GROUPING_3, 0);
     }
 }

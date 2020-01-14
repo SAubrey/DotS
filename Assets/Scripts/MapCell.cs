@@ -83,6 +83,7 @@ public class MapCell {
     }
 
     public List<Enemy> get_enemies() {
+        Debug.Log("Retrieving " + enemies.Count + " enemies from " + pos.x + ", " + pos.y);
         return enemies;
     }
 

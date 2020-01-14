@@ -61,6 +61,7 @@ public class TurnPhaser : MonoBehaviour {
         cell = tm.get_cell(c.get_disc().pos);
 
         if (cell.discovered) {
+            Debug.Log("Cell " + cell + " was already discovered.");
             advance_stage(); // No travel card, enter action.
         } else {
             cell.discover();

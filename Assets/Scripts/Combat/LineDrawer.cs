@@ -6,22 +6,18 @@ public class LineDrawer : MonoBehaviour {
     public GameObject Line;
     public GameObject FieldPanel;
     public Dictionary<int, Line> lines = new Dictionary<int, Line>();
-    private const float TIMEOUT = AttackQueuer.WAIT_TIME;
-    int id = 0; // unique identifier for each line.
-  
-    public void draw_line(Unit u, Vector3 start_pos, Vector3 end_pos) {
-        if (u == null) {
-            Debug.Log("not drawing null line");
+
+
+    public void draw_line(Unit start_u, Vector3 start_pos, Vector3 end_pos, int id) {
+        if (start_u == null) {
             return;
         }
         GameObject L = GameObject.Instantiate(Line);
         Line line = L.GetComponent<Line>();
-        line.init(FieldPanel, u, id, start_pos, end_pos);
+        line.init(FieldPanel, start_u, id, start_pos, end_pos);
 
         // manage ID
-        u.line_id = id;
         lines.Add(id, line);
-        id++;
     }
 
     public Line get_line(int id) {
@@ -33,5 +29,9 @@ public class LineDrawer : MonoBehaviour {
             lines[id].remove();
             lines.Remove(id);
         }
+    }
+
+    public void clear() {
+        lines.Clear();
     }
 }

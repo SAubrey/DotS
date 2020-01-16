@@ -10,8 +10,28 @@ public class Slot : MonoBehaviour {
     private Formation f;
     //public GameObject unit_panel;
     private Camera cam;
+
+    // --VISUAL-- 
     public Text namefg_T;
     public Text namebg_T;
+    public Color unselected_not_front;
+    public Color dead;
+    public Color injured;
+    private Color transparent = new Color(0, 0, 0, 0);
+    private Color healthbar_fill_color = new Color(1, 1, 1, .8f);
+    public Color healthbar_bg_color;
+    public Slider healthbar;
+    public Image healthbar_bg;
+    public Image healthbar_fill;
+    private int healthbar_inc_width = 15;
+
+    public Text attfgT, attbgT;
+    public Image attfgI, attbgI;
+    public Text deffgT, defbgT;
+    public Image deffgI, defbgI;
+
+    public Text hpfgT, hpbgT;
+
 
     [HideInInspector]
     public int col; // LEFT, MID, RIGHT
@@ -28,6 +48,7 @@ public class Slot : MonoBehaviour {
         col = group.col;
         row = group.row;
         button = GetComponent<Button>();
+        //toggle_healthbar(false);
 
         face_text_to_cam();
         f = c.formation;
@@ -57,6 +78,7 @@ public class Slot : MonoBehaviour {
         set_sprite(PlayerUnit.EMPTY);
         set_namefg_T("");
         show_no_selection();
+        toggle_healthbar(!healthbar.enabled);
         if (validate)
             group.validate_unit_order();
         return removed_unit;
@@ -69,9 +91,12 @@ public class Slot : MonoBehaviour {
         }
         if (u.is_playerunit()) {
             unit = u as PlayerUnit;
+            set_up_healthbar((int)get_punit().resilience);
         } else if (u.is_enemy()) {
             unit = u as Enemy;
+            set_up_healthbar(get_enemy().max_health);
         }
+        toggle_healthbar(!healthbar.enabled);
         set_namefg_T(unit.get_name());
         unit.set_slot(this);
     }
@@ -99,6 +124,7 @@ public class Slot : MonoBehaviour {
         get { return _disabled; }
         set { 
             _disabled = value;
+            toggle_healthbar(!healthbar.enabled);
             button.interactable = !_disabled;
         }
     }
@@ -109,18 +135,22 @@ public class Slot : MonoBehaviour {
     }
 
     public void show_no_selection() {
-        if (img != null)
+        if (img == null)
+            return;
+        if (num == 0)
             img.color =  Color.white;
+        else
+            img.color = unselected_not_front;
     }
 
     public void show_dead() {
         if (img != null)
-            img.color = Color.red;
+            img.color = dead;
     }
 
     public void show_injured() {
         if (img != null)
-            img.color = Color.yellow;
+            img.color = injured;
     }
 
     public void show_offensive() {
@@ -131,6 +161,56 @@ public class Slot : MonoBehaviour {
     public void show_defensive() {
         if (img != null)
             img.color = Color.blue;
+    }
+
+    public void set_up_healthbar(int max_hp) {
+        healthbar.maxValue = max_hp;
+        healthbar.value = healthbar.maxValue;
+
+        // Adjust width based on max hp.
+        RectTransform t = healthbar.transform as RectTransform;
+        t.sizeDelta = new Vector2(healthbar_inc_width * max_hp, t.sizeDelta.y);
+        update_healthbar(max_hp);
+    }
+
+    public void update_healthbar(float hp) {
+        healthbar.value = hp;
+        if (unit.is_playerunit()) {
+            if (healthbar.value < healthbar.maxValue / 2)
+                healthbar.fillRect.GetComponent<Image>().color = injured;
+        } else {
+            float red = ((float)get_enemy().health / (float)get_enemy().max_health);
+            healthbar.fillRect.GetComponent<Image>().color = new Color(1, red, red, 1);
+        }
+        hpfgT.text = healthbar.value + " / " + healthbar.maxValue;
+        hpbgT.text = hpfgT.text;
+        attfgT.text = get_unit().attack_dmg.ToString();
+        attbgT.text = attfgT.text;
+        deffgT.text = get_unit().defense.ToString();
+        defbgT.text = deffgT.text;
+    }
+
+    public void toggle_healthbar(bool state) {
+        if (state) {
+            healthbar_bg.color = healthbar_bg_color;
+            healthbar_fill.color = healthbar_fill_color;
+        } else {
+            healthbar_bg.color = transparent;
+            healthbar_fill.color = transparent;
+        }
+        healthbar.enabled = state;
+        hpfgT.enabled = state;
+        hpbgT.enabled = state;
+
+        attfgT.enabled = state;
+        attbgT.enabled = state;
+        attfgI.enabled = state;
+        attbgI.enabled = state;
+
+        deffgT.enabled = state;
+        defbgT.enabled = state;
+        deffgI.enabled = state;
+        defbgI.enabled = state;
     }
 
     public bool has_punit {
@@ -183,5 +263,7 @@ public class Slot : MonoBehaviour {
     public void face_text_to_cam() {
         namebg_T.transform.LookAt(cam.transform);
         namebg_T.transform.forward = namefg_T.transform.forward * -1;
+        healthbar.transform.LookAt(cam.transform);
+        healthbar.transform.forward = healthbar.transform.forward * -1;
     }
 }

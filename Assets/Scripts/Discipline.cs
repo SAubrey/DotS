@@ -10,6 +10,7 @@ public class Discipline : Storeable {
         bat = new Battalion();
         bat.c = c;
         map_ui = c.map_ui;
+        city_ui = c.city_ui;
 
         _light = 4;
         _unity = 10;

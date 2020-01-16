@@ -13,13 +13,17 @@ public class Storeable : MonoBehaviour {
     public const string ERELICS = "erelics";
     public const string EQUIMARES = "equimares";
 
+    public static string[] FIELDS = { LIGHT, UNITY, EXPERIENCE, STAR_CRYSTALS,
+                            MINERALS, ARELICS, MRELICS, ERELICS, EQUIMARES };
     public string self;
     protected Controller c;
     protected MapUI map_ui;
+    public CityUIManager city_ui;
 
     void Start() {
         c = GameObject.Find("Controller").GetComponent<Controller>();
         map_ui = c.map_ui;
+        city_ui = c.city_ui;
         
         if (self == "city") {
             _light = 8;
@@ -61,6 +65,19 @@ public class Storeable : MonoBehaviour {
             return false;
         }
         return true;
+    }
+
+    public bool verify_change(string type, int value) {
+        if (get_var(type) + value < 0) {
+            return false;
+        }
+        return true;
+    }
+
+    public void update_text_fields(string type, int value) {
+        //city_ui = 
+        map_ui.update_stat_text(type, self, value);
+        city_ui.update_stat_text(type, self, value);
     }
 
     public void change_var(string var, int val) {
@@ -113,7 +130,7 @@ public class Storeable : MonoBehaviour {
         set { 
             if (verify_change(_light + value)) {
                 _light = value; 
-                map_ui.update_stat_text(LIGHT, self, _light);
+                update_text_fields(LIGHT, _light);
             }
         }
     }
@@ -124,7 +141,7 @@ public class Storeable : MonoBehaviour {
         set { 
             if (verify_change(_unity + value)) {
                 _unity = value; 
-                map_ui.update_stat_text(UNITY, self, _unity);
+                update_text_fields(UNITY, _unity);
             }
         }
     }
@@ -135,18 +152,18 @@ public class Storeable : MonoBehaviour {
         set { 
             if (verify_change(_experience + value)) {
                 _experience = value; 
-                map_ui.update_stat_text(EXPERIENCE, self, _experience);
+                update_text_fields(EXPERIENCE, _experience);
             }
         }
     }
 
-    protected int _star_crystals = 0;
+    protected int _star_crystals = 1;
     public int star_crystals {
         get { return _star_crystals; }
         set { 
             if (verify_change(_star_crystals + value)) {
                 _star_crystals = value; 
-                map_ui.update_stat_text(STAR_CRYSTALS, self, _star_crystals);
+                update_text_fields(STAR_CRYSTALS, _star_crystals);
             } 
         }
     }
@@ -157,7 +174,7 @@ public class Storeable : MonoBehaviour {
         set { 
             if (verify_change(_minerals + value)) {
                 _minerals = value; 
-                map_ui.update_stat_text(MINERALS, self, _minerals);
+                update_text_fields(MINERALS, _minerals);
             } 
         }
     }
@@ -168,7 +185,7 @@ public class Storeable : MonoBehaviour {
         set { 
             if (verify_change(_arelics + value)) {
                 _arelics = value; 
-                map_ui.update_stat_text(ARELICS, self, _arelics);
+                update_text_fields(ARELICS, _arelics);
             } 
         }
     }
@@ -179,7 +196,7 @@ public class Storeable : MonoBehaviour {
         set { 
             if (verify_change(_mrelics + value)) {
                 _mrelics = value; 
-                map_ui.update_stat_text(MRELICS, self, _mrelics);
+                update_text_fields(MRELICS, _mrelics);
             }
         }
     }
@@ -190,7 +207,7 @@ public class Storeable : MonoBehaviour {
         set { 
             if (verify_change(_erelics + value)) {
                 _erelics = value; 
-                map_ui.update_stat_text(ERELICS, self, _erelics);
+                update_text_fields(ERELICS, _erelics);
             } 
         }
     }
@@ -201,7 +218,7 @@ public class Storeable : MonoBehaviour {
         set { 
             if (verify_change(_equimares + value)) {
                 _equimares = value; 
-                map_ui.update_stat_text(EQUIMARES, self, _equimares);
+                update_text_fields(EQUIMARES, _equimares);
             }
         }
     }

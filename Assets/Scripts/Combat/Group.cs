@@ -96,8 +96,9 @@ public class Group : MonoBehaviour {
         this.direction = direction;
         transform.localEulerAngles = new Vector3(0, 0, direction);
 
-        foreach (Slot s in slots)
+        foreach (Slot s in slots) {
             s.face_text_to_cam();
+        }
     }
 
     public void rotate_towards_target(Group target) {

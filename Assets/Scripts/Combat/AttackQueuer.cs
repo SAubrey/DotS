@@ -260,7 +260,7 @@ public class Attack {
         return get_start_unit().attack_dmg + calc_dir_dmg();
     }
 
-    /*
+    /* Accout for additional flank or rear damage.
     */
     public int calc_dir_dmg() {
         Group att = get_start_slot().get_group();

@@ -62,7 +62,7 @@ public class Formation : MonoBehaviour {
         images.Add(PlayerUnit.ARCHER, archer);
         images.Add(PlayerUnit.WARRIOR, warrior);
         images.Add(PlayerUnit.SPEARMAN, spearman);
-        images.Add(PlayerUnit.INSPIRITOR, inspiritor);
+        images.Add(PlayerUnit.INSPIRATOR, inspiritor);
         images.Add(PlayerUnit.MINER, miner);
         images.Add(PlayerUnit.EMPTY, empty);
 
@@ -70,7 +70,7 @@ public class Formation : MonoBehaviour {
         unit_buttons.Add(PlayerUnit.ARCHER, archer_img);
         unit_buttons.Add(PlayerUnit.WARRIOR, warrior_img);
         unit_buttons.Add(PlayerUnit.SPEARMAN, spearman_img);
-        unit_buttons.Add(PlayerUnit.INSPIRITOR, inspiritor_img);
+        unit_buttons.Add(PlayerUnit.INSPIRATOR, inspiritor_img);
         unit_buttons.Add(PlayerUnit.MINER, miner_img);
     }
 

@@ -18,14 +18,14 @@ public class Battalion {
         {PlayerUnit.SPEARMAN, new List<PlayerUnit>()},
         {PlayerUnit.ARCHER, new List<PlayerUnit>()},
         {PlayerUnit.MINER, new List<PlayerUnit>()},
-        {PlayerUnit.INSPIRITOR, new List<PlayerUnit>()},
+        {PlayerUnit.INSPIRATOR, new List<PlayerUnit>()},
     };
     
     public Battalion() {
         add_units(PlayerUnit.ARCHER, 3);
         add_units(PlayerUnit.WARRIOR, 2);
         add_units(PlayerUnit.SPEARMAN, 2);
-        add_units(PlayerUnit.INSPIRITOR, 1);
+        add_units(PlayerUnit.INSPIRATOR, 1);
         add_units(PlayerUnit.MINER, 1);
 
         if (player == Controller.ENDURA) {

@@ -12,7 +12,7 @@ public class BatLoader : MonoBehaviour {
     public Text spearman_t;
     public Text archer_t;
     public Text miner_t;
-    public Text inspiritor_t;
+    public Text inspirator_t;
     public Dictionary<int, Text> texts = new Dictionary<int, Text>();
     
     void Start() {
@@ -20,7 +20,7 @@ public class BatLoader : MonoBehaviour {
         texts.Add(PlayerUnit.SPEARMAN, spearman_t);
         texts.Add(PlayerUnit.ARCHER, archer_t);
         texts.Add(PlayerUnit.MINER, miner_t);
-        texts.Add(PlayerUnit.INSPIRITOR, inspiritor_t);
+        texts.Add(PlayerUnit.INSPIRATOR, inspirator_t);
     }
 
     // This loads the player's battalion composition into the static

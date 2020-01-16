@@ -123,6 +123,8 @@ public class Enemy : Unit {
 
     public override int take_damage(int dmg) {
         health -= dmg;
+        slot.update_healthbar(health);
+
         if (health <= 0) {
             dead = true;
             slot.show_dead();
@@ -135,6 +137,11 @@ public class Enemy : Unit {
             return DEAD;
         else 
             return INJURED;
+    }
+
+    public override float get_post_dmg_hp(int dmg) {
+        float damaged_hp = health - dmg;
+        return damaged_hp;
     }
 
     public void clear_target() {

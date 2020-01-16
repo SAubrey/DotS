@@ -155,24 +155,13 @@ public class TileMapper : MonoBehaviour {
         }
     }
 
-    public MapCell get_cell(int x, int y) {
-        return map[new Pos(x, y)];
-    }
-
-    public MapCell get_cell(Vector3 pos) {
-        return map[new Pos((int)pos.x, (int)pos.y)];
-    }
-
-    public List<Enemy> get_enemies(Vector3 pos) {
-        return get_cell(pos).get_enemies();
-    }
-    
     public bool move_player(Vector3 pos) {
+        Discipline d = c.get_disc();
         int x = (int)pos.x;
         int y = (int)pos.y;
         if (get_tile(pos.x, pos.y) == null || 
                 !check_adjacent(x, y, 
-                (int)c.get_disc().pos.x, (int)c.get_disc().pos.y)) {
+                (int)d.pos.x, (int)d.pos.y)) {
             return false;
         }
         
@@ -183,9 +172,27 @@ public class TileMapper : MonoBehaviour {
             tm.SetTile(new Vector3Int(x, y, 0), null); // clear shadow
             tm.SetTile(new Vector3Int(x, y, 0), cell.tile);
         }
-                 
         c.get_disc().pos = pos;
         return true;
+    }
+
+    public bool is_at_city(Discipline disc) {
+        if ((int)disc.pos.x == 10 && (int)disc.pos.y == 10) {
+            return true;
+        }
+        return false;
+    }
+
+    public MapCell get_cell(int x, int y) {
+        return map[new Pos(x, y)];
+    }
+
+    public MapCell get_cell(Vector3 pos) {
+        return map[new Pos((int)pos.x, (int)pos.y)];
+    }
+
+    public List<Enemy> get_enemies(Vector3 pos) {
+        return get_cell(pos).get_enemies();
     }
 
     public static bool check_adjacent(int x, int y, int x1, int y1) {

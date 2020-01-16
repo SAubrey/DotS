@@ -19,7 +19,7 @@ public class MapUI : MonoBehaviour {
     public Text c_mrelics;
     public Text c_erelics;
     public Text c_equimares;
-    public IDictionary<string, Text> city_ui = new Dictionary<string, Text>();
+    public IDictionary<string, Text> city_inv = new Dictionary<string, Text>();
 
     // Battalion UI
     public GameObject invP;
@@ -35,55 +35,52 @@ public class MapUI : MonoBehaviour {
     public Text b_equimares;
 
     public Text bat_text;
-    public IDictionary<string, Text> bat_ui = new Dictionary<string, Text>();
+    public IDictionary<string, Text> disc_inv = new Dictionary<string, Text>();
 
-    public static List<string> fields = new List<string>() {
-        "light", "unity", "experience", 
-        "star_crystals", "minerals", "arelics", 
-        "mrelics", "erelics", "equimares"
-    };
 
     Controller c;
     void Awake() {
         c = GameObject.Find("Controller").GetComponent<Controller>();
         
         // Populate city dictionary
-        city_ui.Add("light", c_light);
-        city_ui.Add("star_crystals", c_star_crystals);
-        city_ui.Add("minerals", c_minerals);
-        city_ui.Add("arelics", c_arelics);
-        city_ui.Add("mrelics", c_mrelics);
-        city_ui.Add("erelics", c_erelics);
-        city_ui.Add("equimares", c_equimares);
+        city_inv.Add(Storeable.LIGHT, c_light);
+        city_inv.Add(Storeable.STAR_CRYSTALS, c_star_crystals);
+        city_inv.Add(Storeable.MINERALS, c_minerals);
+        city_inv.Add(Storeable.ARELICS, c_arelics);
+        city_inv.Add(Storeable.MRELICS, c_mrelics);
+        city_inv.Add(Storeable.ERELICS, c_erelics);
+        city_inv.Add(Storeable.EQUIMARES, c_equimares);
 
         // Populate batallion dictionary
-        bat_ui.Add("light", b_light);
-        bat_ui.Add("unity", b_unity);
-        bat_ui.Add("experience", b_experience);
-        bat_ui.Add("star_crystals", b_star_crystals);
-        bat_ui.Add("minerals", b_minerals);
-        bat_ui.Add("arelics", b_arelics);
-        bat_ui.Add("mrelics", b_mrelics);
-        bat_ui.Add("erelics", b_erelics);
-        bat_ui.Add("equimares", b_equimares);
+        disc_inv.Add(Storeable.LIGHT, b_light);
+        disc_inv.Add(Storeable.UNITY, b_unity);
+        disc_inv.Add(Storeable.EXPERIENCE, b_experience);
+        disc_inv.Add(Storeable.STAR_CRYSTALS, b_star_crystals);
+        disc_inv.Add(Storeable.MINERALS, b_minerals);
+        disc_inv.Add(Storeable.ARELICS, b_arelics);
+        disc_inv.Add(Storeable.MRELICS, b_mrelics);
+        disc_inv.Add(Storeable.ERELICS, b_erelics);
+        disc_inv.Add(Storeable.EQUIMARES, b_equimares);
     }
 
-    public void load_stats(string storeable) {
-        // Update each field from culture's storeable dictionary
-
-        foreach (string key in fields) {
-            update_stat_text(key, storeable, c.discs[storeable].get_var(key));
+    public void load_stats(Storeable s) {
+        // Trigger resource property UI updates by non-adjusting values.
+        foreach (string resource in Storeable.FIELDS) {
+            s.change_var(resource, 0);
         }
+        c.city_ui.load_unit_counts();
         highlight_culture(c.get_disc_name());
     }
 
     public void update_stat_text(string field, string calling_class, int val) {
+        Text t = null;
         if (calling_class == "city") {
-            if (field != Storeable.UNITY || field != Storeable.EXPERIENCE)
-                city_ui[field].text = val.ToString();
+            city_inv.TryGetValue(field, out t);
         } else if (calling_class == c.active_disc) {
-            bat_ui[field].text = val.ToString();
+            disc_inv.TryGetValue(field, out t);
         }
+        if (t != null)
+            t.text = val.ToString();
     }
 
     private void highlight_culture(string culture) {
@@ -100,8 +97,12 @@ public class MapUI : MonoBehaviour {
     }
 
     public void toggle_city_panel() {
-        city_panel_active = !city_panel_active;
-        cityP.SetActive(city_panel_active);
+        if (c.tile_mapper.is_at_city(c.get_disc())) {
+            c.city_ui.toggle_city_panel();
+        } else {
+            city_panel_active = !city_panel_active;
+            cityP.SetActive(city_panel_active);
+        }
     }
 
     public void toggle_inv_panel() {

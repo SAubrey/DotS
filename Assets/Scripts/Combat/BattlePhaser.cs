@@ -57,6 +57,12 @@ public class BattlePhaser : MonoBehaviour {
         advance_stage();
     }
 
+    public void check_all_units_placed() {
+        if (!init_placement_stage)
+            return;
+        can_skip = units_in_reserve ? false : true;
+    }
+
     public void advance_stage() {
         selector.deselect();
         stage = _stage + 1;
@@ -222,10 +228,11 @@ public class BattlePhaser : MonoBehaviour {
     private bool check_end_conditions() {
         if (mini_retreating)
             post_phases(false, true);
-        else if (!enemy_units_on_field) 
+        else if (!enemy_units_on_field) // player won
             c.get_disc().change_var(Storeable.EXPERIENCE, 1);
         else if (enemy_won) {
             // create some kind of waypoint on map to indicate recovery?
+
         } else {
             return false;
         }
@@ -234,7 +241,7 @@ public class BattlePhaser : MonoBehaviour {
     }
 
     private bool enemy_won {
-        get { return player_units_on_field && !units_in_reserve; }
+        get { return !player_units_on_field && !units_in_reserve; }
     }
 
     private bool units_in_reserve {
@@ -258,7 +265,8 @@ public class BattlePhaser : MonoBehaviour {
         get { return _can_skip; }
         set { 
             _can_skip = value;
-            adv_stageB.enabled = _can_skip;
+            //adv_stageB.enabled = _can_skip;
+            adv_stageB.interactable = _can_skip;
             }
     }
 

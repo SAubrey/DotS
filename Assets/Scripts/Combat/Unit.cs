@@ -48,6 +48,7 @@ public class Unit {
     public const int MELEE = 1;
     public const int RANGE = 2;
     public int attack_dmg;
+    public int defense;
     public int combat_style;
     public int movement_range = 1;
     public int attack_range = 1;
@@ -66,6 +67,7 @@ public class Unit {
 
     public virtual int calc_dmg_taken(int dmg) { return 0; }
     public virtual int get_post_dmg_state(int dmg) { return 0; }
+    public virtual float get_post_dmg_hp(int dmg) { return 0; }
     public virtual int take_damage(int dmg) { return 0; }
     
     protected void move(Slot end) {

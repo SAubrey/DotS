@@ -64,7 +64,8 @@ public class Selector : MonoBehaviour {
         // The highest order slot must be filled first.
         Slot highest_slot = slot.get_group().get_highest_empty_slot();
         if (highest_slot.fill(c.get_active_bat().get_selected_unit())) {
-            bp.can_skip = true;
+            if (bp.init_placement_stage)
+                bp.check_all_units_placed();
             bat_loader.load_text(c.get_active_bat()); // update inventory text
             deselect();
         }
@@ -154,6 +155,7 @@ public class Selector : MonoBehaviour {
         Slot s = selected_slot;
         deselect();
         s.empty();
+        bp.check_all_units_placed();
         bat_loader.load_text(c.get_active_bat());
     }
 }

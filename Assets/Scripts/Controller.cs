@@ -24,6 +24,7 @@ public class Controller : MonoBehaviour {
     public EnemyLoader enemy_loader;
     public LineDrawer line_drawer;
     public EnemyBrain enemy_brain;
+    public CityUIManager city_ui;
 
     public Discipline astra;
     public Discipline martial;
@@ -53,6 +54,7 @@ public class Controller : MonoBehaviour {
         unit_panel_man = GameObject.Find("UnitPanelManager").GetComponent<UnitPanelManager>();
         line_drawer = GameObject.Find("LineDrawer").GetComponent<LineDrawer>();
         enemy_brain = GameObject.Find("EnemyBrain").GetComponent<EnemyBrain>();
+        city_ui = GameObject.Find("CityUIManager").GetComponent<CityUIManager>();
 
         discs.Add(ASTRA, astra);
         discs.Add(MARTIAL, martial);
@@ -72,18 +74,19 @@ public class Controller : MonoBehaviour {
         city.register_turn();
 
         map_ui.turn_number_t.text = turn_number.ToString();
-        map_ui.load_stats(active_disc);
+        map_ui.load_stats(get_disc());
+        map_ui.load_stats(city);
     }
      
     public void set_disc(string type) {
         active_disc = type;
-        map_ui.load_stats(active_disc);
+        map_ui.load_stats(get_disc());
+        map_ui.load_stats(city);
 
         if (get_active_bat().in_battle) {
             if (get_active_bat().mini_retreating) {
                 enemy_loader.load_existing_enemies(tile_mapper.get_enemies(get_disc().pos));
             } else { // Resume battle as it was.
-                Debug.Log("Loading " + active_disc);
                 formation.load_board(active_disc);
             }
         }
@@ -93,7 +96,6 @@ public class Controller : MonoBehaviour {
         if (get_disc_name() == ASTRA) set_disc(ENDURA);
         else if (get_disc_name() == ENDURA) set_disc(MARTIAL);
         else if (get_disc_name() == MARTIAL) set_disc(ASTRA);
-        Debug.Log("Rotated disc to " + get_disc_name());
     }       
 
     public string get_disc_name() {

@@ -124,15 +124,15 @@ public class EnemyBrain : MonoBehaviour{
         return dx + dy;
     }
 
-    public void reset_all_actions() {
+    public void post_phase() {
         List<Slot> enemies = f.get_all_full_slots(Unit.ENEMY);
         foreach (Slot s in enemies) {
-            s.get_unit().reset_actions();
+            s.get_unit().post_phase();
         }
     }
 
     public void clear_dead_enemies() {
-        List<Slot> enemy_slots = f.get_highest_full_slots(Unit.ENEMY);
+        List<Slot> enemy_slots = f.get_all_full_slots(Unit.ENEMY);
         foreach (Slot s in enemy_slots) {
             if (s.get_enemy().is_dead()) {
                 s.empty();

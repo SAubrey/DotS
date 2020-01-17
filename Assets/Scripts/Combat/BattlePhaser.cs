@@ -146,8 +146,8 @@ public class BattlePhaser : MonoBehaviour {
 
     private void advance_phase() {
         c.formation.rotate_actioned_player_groups();
-        c.get_active_bat().reset_all_actions(); // reset movement/attacks
-        enemy_brain.reset_all_actions(); 
+        c.get_active_bat().post_phase(); // reset movement/attacks
+        enemy_brain.post_phase(); 
         phase++;
     }
 
@@ -167,9 +167,35 @@ public class BattlePhaser : MonoBehaviour {
 
     private void save_enemies_to_map() {
         // Save enemies on battle field into map cell storage.
-        Vector3 pos = c.get_disc().pos;
-        MapCell mc = c.tile_mapper.get_cell((int)pos.x, (int)pos.y);
+        MapCell mc = c.tile_mapper.get_cell(c.get_disc().pos);
         mc.save_enemies(c.formation.get_all_full_slots(Unit.ENEMY));
+    }
+
+    private void check_end_conditions() {
+        if (mini_retreating) {
+            post_phases(false, true);
+        }
+        else if (!enemy_units_on_field) { // player won
+            c.get_disc().change_var(Storeable.EXPERIENCE, 1);
+            MapCell mc = c.tile_mapper.get_cell(c.get_disc().pos);
+            mc.clear_enemies();
+            post_phases(true);
+        } 
+        else if (enemy_won) {
+            // create some kind of waypoint on map to indicate recovery?
+            post_phases(true);
+        } 
+    }
+
+    // Called by Unity button. 
+    public void retreat() {
+        save_enemies_to_map();
+        // Move unit back to previous space
+        c.tile_mapper.move_player(c.get_disc().prev_pos);
+        // Penalize retreat.
+        c.get_disc().change_var(Storeable.UNITY, -1);
+        
+        post_phases(true, false);
     }
 
     /*
@@ -206,38 +232,9 @@ public class BattlePhaser : MonoBehaviour {
             phaseT.text = "Phase " + phase;
 
             if (_phase > 3) {
-                if (!check_end_conditions()) 
-                    post_phases(false);
-                else
-                    post_phases(true);
+                check_end_conditions();
             }
         }
-    }
-
-    // Called by Unity button. 
-    public void retreat() {
-        save_enemies_to_map();
-        // Move unit back to previous space
-        c.tile_mapper.move_player(c.get_disc().prev_pos);
-        // Penalize retreat.
-        c.get_disc().change_var(Storeable.UNITY, -1);
-        
-        post_phases(true, false);
-    }
-
-    private bool check_end_conditions() {
-        if (mini_retreating)
-            post_phases(false, true);
-        else if (!enemy_units_on_field) // player won
-            c.get_disc().change_var(Storeable.EXPERIENCE, 1);
-        else if (enemy_won) {
-            // create some kind of waypoint on map to indicate recovery?
-
-        } else {
-            return false;
-        }
-        post_phases(true);
-        return true;
     }
 
     private bool enemy_won {

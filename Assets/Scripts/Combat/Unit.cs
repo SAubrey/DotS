@@ -53,30 +53,59 @@ public class Unit {
     public int movement_range = 1;
     public int attack_range = 1;
     public int max_num_actions = 2;
-    public int num_actions;
+    public int _num_actions;
+    public int num_actions {
+        get { return _num_actions; }
+        set {
+            if (value < _num_actions) 
+                has_acted_in_stage = true;
+
+            _num_actions = value;
+            if (_num_actions >= max_num_actions) {
+                has_acted_in_stage = false;
+            }
+        }
+    }
+    public bool out_of_actions { get { return num_actions <= 0; } }
+    public bool has_acted_in_stage = false;
     public bool attack_set = false;
 
     public List<bool> attributes = new List<bool>();
 
     protected int type; // Player or Enemy
-    protected int ID;
+    protected int ID; // Unique code for the particular unit type.
     protected string name;
     protected Slot slot = null;
     protected bool dead = false; // Used to determine what to remove in the Battalion.
     private bool placed = false;
-     // unique identifier for looking up drawn attack lines and aggregating attacks.
+    // Unique identifier for looking up drawn attack lines and aggregating attacks.
     public int attack_id;
 
     public virtual int take_damage(int dmg) { return 0; }
     public virtual int calc_dmg_taken(int dmg) { return 0; }
     public virtual float calc_hp_remaining(int dmg) { return 0; }
     public virtual int get_post_dmg_state(int dmg_after_def) { return 0; }
+    protected void init(string name, int att, int style, int atr1, int atr2, int atr3) {
+        create_attribute_list(num_attributes);
+        this.name = name;
+        attack_dmg = att;
+        combat_style = style;
+        attack_range = style == MELEE ? 1 : 9;
+        num_actions = max_num_actions;
+
+        if (atr1 >= 0)
+            attributes[atr1] = true;
+        if (atr2 >= 0)
+            attributes[atr2] = true;
+        if (atr3 >= 0)
+            attributes[atr3] = true;
+    }
     
     protected void move(Slot end) {
         slot.empty();
         end.fill(this);
         //end.fill(slot.empty());
-        has_moved = true;
+        num_actions--;
         end.get_group().validate_unit_order();
     }
 
@@ -84,8 +113,8 @@ public class Unit {
         if (!can_move(s) || !s.get_unit().can_move(slot))
             return false;
 
-        s.get_unit().has_moved = true;
-        has_moved = true;
+        s.get_unit().num_actions--;
+        num_actions--;
         Unit u = s.empty();
         slot.fill(u);
         s.fill(this);
@@ -94,7 +123,7 @@ public class Unit {
 
     public int attack() {
         attack_set = false;
-        has_acted = true;
+        num_actions--;
         return attack_dmg;
     }
 
@@ -114,7 +143,7 @@ public class Unit {
                      slot.col, slot.row, end.col, end.row);
 
         return (attacking_self || melee_vs_flying 
-                || out_of_range || has_acted) ? false : true;
+                || out_of_range || out_of_actions) ? false : true;
     }
 
     public bool can_move(Slot dest) {
@@ -125,7 +154,7 @@ public class Unit {
         if (dest.has_unit)
             opposite_unit = dest.get_unit().type != type;
 
-        if (has_acted_in_stage || opposite_unit || out_of_range)
+        if (out_of_actions || has_acted_in_stage || opposite_unit || out_of_range)
             return false;
         return true;
     }
@@ -136,37 +165,21 @@ public class Unit {
         return (dx + dy <= range) ? true : false;
     }
 
-    public bool has_acted_in_stage = false;
-    private bool _has_acted;
-    public bool has_acted {
-        get { return _has_acted; }
-        set {
-            _has_acted = value;
-            has_acted_in_stage = _has_acted;
-        }
-    }
-
-    private bool _has_moved;
-    public bool has_moved {
-        get { return _has_moved; }
-        set {
-            _has_moved = value;
-            has_acted_in_stage = _has_moved;
-        }
-    }
-
     // Called at the end of a battle phase.
-    public void reset_actions() {
-        has_acted = false;
-        has_moved = false;
+    public void post_phase() {
+        num_actions = max_num_actions;
         has_acted_in_stage = false;
         attack_set = false;
-        num_actions = max_num_actions;
+        
+        if (get_slot() != null) {
+            slot.update_healthbar();
+        }
     }
 
     public bool is_melee() {
         return (combat_style == MELEE) ? true : false;
     }
+
     public bool is_range() {
         return (combat_style == RANGE) ? true : false;
     }
@@ -177,9 +190,6 @@ public class Unit {
 
     public bool is_playerunit() {
         return (type == PLAYER) ? true : false;
-    }
-    public Unit get_unit() {
-        return this;
     }
 
     public int get_type() {

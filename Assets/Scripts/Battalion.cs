@@ -40,10 +40,10 @@ public class Battalion {
         units[roll].RemoveAt(0);
     }
 
-    public void reset_all_actions() {
+    public void post_phase() {
         foreach (int type in units.Keys) {
             for (int i = 0; i < units[type].Count; i++) {
-                units[type][i].reset_actions();
+                units[type][i].post_phase();
             }
         }
     }

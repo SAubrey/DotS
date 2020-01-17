@@ -38,17 +38,17 @@ public class PlayerPanel : UnitPanel {
         bool combat_staging = (bp.range_stage && punit.is_range()) || 
                                 (bp.combat_stage);
 
-
-        if (!punit.has_moved && !punit.has_acted_in_stage && 
+        if (bp.movement_stage)
+            enable_rotateB();
+        if (!punit.out_of_actions && !punit.has_acted_in_stage && 
             (bp.movement_stage || ranging)) {
             enable_moveB();
-            enable_rotateB();
         } else if (bp.init_placement_stage) {
             enable_returnB();
         } 
 
         bool is_first_slot_in_group = slot.get_group().get_highest_player_slot() == slot;
-        if (!punit.has_acted_in_stage && !punit.has_acted && 
+        if (!punit.has_acted_in_stage && !punit.out_of_actions && 
             combat_staging && is_first_slot_in_group) {
             attackB.interactable = true;
             defB.interactable = true;

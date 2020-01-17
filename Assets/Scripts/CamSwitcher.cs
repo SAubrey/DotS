@@ -10,6 +10,7 @@ public class CamSwitcher : MonoBehaviour {
     public Camera menuCam;
     public GameObject menu_canvas;
     public Camera battleCam;
+    //public Camera battleUICam;
     public GameObject battle_canvas;
     public GameObject battleUI_canvas;
     public Camera mapCam;
@@ -92,7 +93,7 @@ public class CamSwitcher : MonoBehaviour {
             mapCam.enabled = active;
             mapUI_canvas.SetActive(active);
             if (active) {
-                mapCam.transform.SetPositionAndRotation(new Vector3(10, 10, -1), Quaternion.identity);
+                mapCam.transform.SetPositionAndRotation(new Vector3(10, 10, -14), Quaternion.identity);
                 set_active(BATTLE, false);
                 set_active(MENU, false);
             }

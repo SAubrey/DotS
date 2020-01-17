@@ -82,14 +82,14 @@ public class Controller : MonoBehaviour {
         active_disc = type;
         map_ui.load_stats(get_disc());
         map_ui.load_stats(city);
-
-        if (get_active_bat().in_battle) {
-            if (get_active_bat().mini_retreating) {
-                enemy_loader.load_existing_enemies(tile_mapper.get_enemies(get_disc().pos));
-            } else { // Resume battle as it was.
-                formation.load_board(active_disc);
-            }
-        }
+        
+        //if (get_active_bat().in_battle) {
+            //if (get_active_bat().mini_retreating) {
+                //enemy_loader.load_existing_enemies(tile_mapper.get_enemies(get_disc().pos));
+            //} else { // Resume battle as it was.
+                //formation.load_board(active_disc);
+           // }
+        //}
     }
 
     public void rotate_disc() {

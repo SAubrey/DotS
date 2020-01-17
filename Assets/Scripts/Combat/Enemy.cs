@@ -44,23 +44,13 @@ public class Enemy : Unit {
     private Slot target = null; // player unit to be moved towards and attacked
 
     protected void init(string name, int att, int hp, int xp, int style, int atr1, int atr2, int atr3) {
-        create_attribute_list(num_attributes);
+        base.init(name, att, style, atr1, atr2, atr3);
+        
         type = ENEMY;
-        this.name = name;
         attack_dmg = att;
         max_health = hp;
         health = hp;
         this.xp = xp;
-        combat_style = style;
-        attack_range = style == MELEE ? 1 : 9;
-
-
-        if (atr1 >= 0)
-            attributes[atr1] = true;
-        if (atr2 >= 0)
-            attributes[atr2] = true;
-        if (atr3 >= 0)
-            attributes[atr3] = true;
     }
 
     public static Enemy create_enemy(int ID) {
@@ -105,7 +95,7 @@ public class Enemy : Unit {
     }
 
     public bool can_target(Slot punit) {
-        if (punit.get_unit() == null) 
+        if (!punit.has_punit) 
             return false;
 
         bool melee_vs_flying = combat_style == Unit.MELEE && 

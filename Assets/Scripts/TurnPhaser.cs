@@ -42,6 +42,10 @@ public class TurnPhaser : MonoBehaviour {
         disable_mineB();
     }
 
+    public void advance_stage() {
+        stage++;
+    }
+
     private void pre_phase() {
         // Disable next turn button
         disable_mineB();
@@ -85,9 +89,16 @@ public class TurnPhaser : MonoBehaviour {
         if (pulled_combat_card) { // If a combat travel card was pulled.
             enemy_loader.load(cell.tier, tc.type, tc.enemies);
             cs.set_active(CamSwitcher.BATTLE, true);
+            
         } else if (cell.has_enemies) { // Someone retreated from here.
-            enemy_loader.load_existing_enemies(cell.get_enemies());
+            if (cell.get_enemies().Count > 0) { // either mini retreat or 
+                enemy_loader.load_existing_enemies(cell.get_enemies());
+
+            } else { //Resume battle exactly as it was.
+                c.formation.load_board(c.active_disc);
+            }
             cs.set_active(CamSwitcher.BATTLE, true);
+
         } else {
             Debug.Log("doing nothing");
             // other actions
@@ -100,9 +111,7 @@ public class TurnPhaser : MonoBehaviour {
     }
 
     private void finish_phase() {
-        if (pulled_combat_card) {
-            pulled_combat_card = false;
-        }
+        pulled_combat_card = false;
         cs.set_active(CamSwitcher.MAP, true);
         player++;
         pre_phase();
@@ -119,9 +128,6 @@ public class TurnPhaser : MonoBehaviour {
         }   
     }
 
-    public void advance_stage() {
-        stage++;
-    }
     // Stage and player adjustment happen internally only. 
     // advance_stage is the only externally accessible way to advance.
     private int _stage = 0;

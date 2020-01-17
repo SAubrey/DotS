@@ -87,8 +87,18 @@ public class MapCell {
         return enemies;
     }
 
+    private bool _has_enemies = false;
     public bool has_enemies { 
-        get { return get_enemies().Count > 0; }
+        get { 
+            return (get_enemies().Count > 0 || _has_enemies) ? true : false;
+        } 
+        set {
+            if (get_enemies().Count > 0) {
+                _has_enemies = true;
+            } else {
+                _has_enemies = value;
+            }
+        }
     }
 
     public void clear_enemies() {

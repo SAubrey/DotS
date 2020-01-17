@@ -98,7 +98,7 @@ public class TileMapper : MonoBehaviour {
 
     void Start() {
         c = GameObject.Find("Controller").GetComponent<Controller>();
-        tm = GameObject.Find("Tilemap").GetComponent<Tilemap>();
+        tm = GameObject.Find("MapTilemap").GetComponent<Tilemap>();
         cs = c.cam_switcher;
         tp = c.turn_phaser;
         rand = new System.Random();
@@ -149,6 +149,8 @@ public class TileMapper : MonoBehaviour {
         Vector3 pos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
 
         if (tp.moving) {
+            //Debug.Log(Input.mousePosition);
+            Debug.Log(Camera.main.ScreenToWorldPoint(Input.mousePosition));
             if (move_player(pos)) {
                 tp.advance_stage(); // Movement stage to action
             }
@@ -224,25 +226,6 @@ public class TileMapper : MonoBehaviour {
         }
     }
 
-    public void set_tile_color(Tilemap tmap, int x, int y, Color color) {
-        Vector3Int vec = new Vector3Int(x, y, 0);
-        tmap.SetTileFlags(vec, TileFlags.None);
-        tmap.SetColor(vec, color);
-    }
-/*
-    public int check_tile_tier(int x, int y) {
-        x = Math.Abs(x);
-        y = Math.Abs(y);
-        if (x <= 5 && y <= 5) {
-            return 1;
-        } else if (x <= 8 && y <= 8) {
-            return 2;
-        } else if (x > 8 && y > 8) {
-            return 3;
-        }
-        return 0;
-    }
- */
     public TileBase get_tile(float x, float y) {
         if (x >= 0 && y >= 0) 
             return tm.GetTile(new Vector3Int((int)x, (int)y, 0));

@@ -29,8 +29,9 @@ public class Slot : MonoBehaviour {
     public Image attfgI, attbgI;
     public Text deffgT, defbgT;
     public Image deffgI, defbgI;
-
     public Text hpfgT, hpbgT;
+    public Color attfgI_c;
+    public Color deffgI_c;
 
 
     [HideInInspector]
@@ -156,6 +157,8 @@ public class Slot : MonoBehaviour {
             float red = ((float)get_enemy().health / (float)get_enemy().max_health);
             healthbar.fillRect.GetComponent<Image>().color = new Color(1, red, red, 1);
         }
+
+        update_images();
         hpfgT.text = healthbar.value + " / " + healthbar.maxValue;
         hpbgT.text = hpfgT.text;
         attfgT.text = get_unit().attack_dmg.ToString();
@@ -165,8 +168,12 @@ public class Slot : MonoBehaviour {
     }
 
     private void update_images() {
-        if (get_unit().has_acted) {
-            
+        if (get_unit().out_of_actions) {
+            attfgI.color = Color.white;
+            deffgI.color = Color.white;
+        } else {
+            attfgI.color = attfgI_c;
+            deffgI.color = deffgI_c;
         }
     }
 

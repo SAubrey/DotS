@@ -63,6 +63,7 @@ public class AttackQueuer : MonoBehaviour {
                 yield return new WaitForSeconds(WAIT_TIME / 2);
             }
         } while(attacks != null);
+        yield return new WaitForSeconds(WAIT_TIME / 2);
         post_battle();
     }
 
@@ -109,7 +110,6 @@ public class AttackQueuer : MonoBehaviour {
         GameObject hs = GameObject.Instantiate(hit_splat_prefab);
         hs.transform.SetParent(FieldPanel.transform, false); 
         HitSplat hs_script = hs.GetComponent<HitSplat>();
-        Debug.Log("state?" + state);
         hs_script.init(dmg, state, end_slot);
         // create XP hitsplat here if end unit is enemy?
     }
@@ -181,7 +181,6 @@ public class AttackQueue {
     // Used when a player rescinds a planned attack.
     public void remove_attack(int attack_id, LineDrawer ld) {
         Attack a = find_attack(attack_id);
-        Debug.Log("is the attack found?" + a);
         if (a != null) {
             a.get_start_unit().attack_set = false;
             groupings[a.get_end_unit()].Remove(a);

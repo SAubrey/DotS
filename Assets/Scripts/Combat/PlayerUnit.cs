@@ -15,7 +15,7 @@ public class PlayerUnit : Unit {
     public bool defending {
         get { return _defending; }
         set {
-            if (value && !has_acted) {
+            if (value && !out_of_actions) {
                 _defending = true;
                 slot.show_defensive(true);
             } else {
@@ -28,27 +28,11 @@ public class PlayerUnit : Unit {
     protected void init(string name, int att, int def, int res, 
             int mvmt_range, int style,
             int atr1=-1, int atr2=-1, int atr3=-1) {
-        create_attribute_list(num_attributes);
+        base.init(name, att, style, atr1, atr2, atr3);
         type = PLAYER;
-        this.name = name;
-        attack_dmg = att;
         defense = def;
         resilience = res;
-
-        num_actions = max_num_actions;
         movement_range = mvmt_range;
-        combat_style = style;
-        attack_range = style == MELEE ? 1 : 9;
-
-        //this.sc_cost = sc_cost;
-        //mineral_cost = m_cost;
-
-        if (atr1 >= 0)
-            attributes[atr1] = true;
-        if (atr2 >= 0)
-            attributes[atr2] = true;
-        if (atr3 >= 0)
-            attributes[atr3] = true;
     }
 
     public static PlayerUnit create_punit(int ID) {
@@ -84,7 +68,7 @@ public class PlayerUnit : Unit {
             slot.c.get_active_bat().add_dead_unit(this);
         }
         if (defending) {
-            has_acted = true;
+            num_actions--;
             defending = false; // Defense only works on first attack this way.
         }
         return state;
@@ -94,7 +78,7 @@ public class PlayerUnit : Unit {
         if (!can_move(end))
             return false;
         if (end.get_punit() != null) {
-            if (!end.get_punit().has_moved) {
+            if (!end.get_punit().out_of_actions) {
                 return swap_places(end);
             }
         } else {

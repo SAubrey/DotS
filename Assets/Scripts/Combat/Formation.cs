@@ -175,6 +175,8 @@ public class Formation : MonoBehaviour {
                 }
             }
         }
+        MapCell mc = c.tile_mapper.get_cell(c.get_disc().pos);
+        mc.has_enemies = true;
     }
 
     public void load_board(string discipline) {
@@ -193,9 +195,9 @@ public class Formation : MonoBehaviour {
             foreach (Group group in groups[row].Values) {
                 if (group.is_empty)
                     continue;
-                if (group.get(0).get_unit().has_acted) {
+                //if (group.get(0).get_unit().out_of_actions) {
                     group.rotate_units();
-                }
+                //}
             }
         }
     }

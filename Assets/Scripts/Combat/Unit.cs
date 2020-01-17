@@ -52,6 +52,8 @@ public class Unit {
     public int combat_style;
     public int movement_range = 1;
     public int attack_range = 1;
+    public int max_num_actions = 2;
+    public int num_actions;
     public bool attack_set = false;
 
     public List<bool> attributes = new List<bool>();
@@ -65,15 +67,15 @@ public class Unit {
      // unique identifier for looking up drawn attack lines and aggregating attacks.
     public int attack_id;
 
-    public virtual int calc_dmg_taken(int dmg) { return 0; }
-    public virtual int get_post_dmg_state(int dmg) { return 0; }
-    public virtual float get_post_dmg_hp(int dmg) { return 0; }
     public virtual int take_damage(int dmg) { return 0; }
+    public virtual int calc_dmg_taken(int dmg) { return 0; }
+    public virtual float calc_hp_remaining(int dmg) { return 0; }
+    public virtual int get_post_dmg_state(int dmg_after_def) { return 0; }
     
     protected void move(Slot end) {
-        //slot.empty();
-        //end.fill(this);
-        end.fill(slot.empty());
+        slot.empty();
+        end.fill(this);
+        //end.fill(slot.empty());
         has_moved = true;
         end.get_group().validate_unit_order();
     }
@@ -140,7 +142,7 @@ public class Unit {
         get { return _has_acted; }
         set {
             _has_acted = value;
-            has_acted_in_stage = true;
+            has_acted_in_stage = _has_acted;
         }
     }
 
@@ -149,15 +151,17 @@ public class Unit {
         get { return _has_moved; }
         set {
             _has_moved = value;
-            has_acted_in_stage = true;
+            has_acted_in_stage = _has_moved;
         }
     }
 
+    // Called at the end of a battle phase.
     public void reset_actions() {
         has_acted = false;
         has_moved = false;
         has_acted_in_stage = false;
         attack_set = false;
+        num_actions = max_num_actions;
     }
 
     public bool is_melee() {

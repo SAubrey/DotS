@@ -13,16 +13,26 @@ public class Selector : MonoBehaviour {
     private AttackQueuer aq;
     private LineDrawer line_drawer;
     private UnitPanelManager unit_panel_man;
-    public bool selecting_target = false;
+    public bool _selecting_target = false;
+    public bool selecting_target {
+        get { return _selecting_target; }
+        set {
+            _selecting_target = value;
+            //if (!_selecting_target)
+                //c.unit_panel_man.player_panel.attB_pressed = false;
+            //else
+               // c.unit_panel_man.player_panel.attB_pressed = true;
+        }
+    }
     private bool _selecting_move = false;
     public bool selecting_move {
         get { return _selecting_move; }
         set { 
             _selecting_move = value;
-            if (!value)
-                c.unit_panel_man.player_panel.depress_moveB();
-            else
-                c.unit_panel_man.player_panel.press_moveB();
+            //if (!value)
+                //c.unit_panel_man.player_panel.moveB_pressed = false;
+            //else
+              //  c.unit_panel_man.player_panel.moveB_pressed = false;
         }
     }
     public Slot selected_slot;
@@ -36,6 +46,18 @@ public class Selector : MonoBehaviour {
         aq = c.attack_queuer;
         line_drawer = c.line_drawer;
         unit_panel_man = c.unit_panel_man;
+    }
+
+    void Update() {
+        if (Input.GetKeyDown(KeyCode.A)) {
+            if (selected_slot != null) {
+                c.unit_panel_man.player_panel.attack();
+            }
+        } else if (Input.GetKeyDown(KeyCode.D)) {
+            if (selected_slot != null) {
+                c.unit_panel_man.player_panel.defend();
+            }
+        }
     }
 
     // Called only by slot buttons. 
@@ -75,12 +97,21 @@ public class Selector : MonoBehaviour {
         // ---Attack---
         if (selecting_target) { 
             selecting_target = false;
-            Slot highest_enemy_slot = slot.get_group().get_highest_enemy_slot();
+
+            // Range units can attack units not in the front slot.
+            Slot highest_enemy_slot;
+            if (selected_slot.get_punit().is_range())
+                highest_enemy_slot = slot;
+            else
+                highest_enemy_slot = slot.get_group().get_highest_enemy_slot();
+
             if (highest_enemy_slot != null) {
                 bool successful_att = aq.attempt_attack(selected_slot, highest_enemy_slot);
-                if (successful_att) return;
+                if (successful_att)
+                    return;
             }
-            c.unit_panel_man.player_panel.depress_attackB();
+            // Failed to attack.
+            //c.unit_panel_man.player_panel.;
 
         // ---Move---
         } else if (selecting_move) { 
@@ -119,14 +150,14 @@ public class Selector : MonoBehaviour {
 
     private void select(Slot slot) {
         selected_slot = slot;
-        selected_slot.show_selection();
+        selected_slot.show_selection(true);
         unit_panel_man.show(slot);
         f.clear_placement_selection();
     }
 
     public void deselect() {
         if (selected_slot != null) {
-            selected_slot.show_no_selection();
+            selected_slot.show_selection(false);
             unit_panel_man.close(Unit.PLAYER);
             selected_slot = null;
             selecting_target = false;

@@ -38,13 +38,13 @@ public class MapScroller : MonoBehaviour {
             verify_movement(h, v);
         }
         
-        if (Input.GetKey(KeyCode.UpArrow) || Input.GetKey(KeyCode.W))
+        if (Input.GetKey(KeyCode.UpArrow))
             verify_movement(0, scale * -ARROW_TRANS);
-         else if (Input.GetKey(KeyCode.DownArrow) || Input.GetKey(KeyCode.S)) 
+         else if (Input.GetKey(KeyCode.DownArrow)) 
             verify_movement(0, scale * ARROW_TRANS);
-         else if (Input.GetKey(KeyCode.LeftArrow) || Input.GetKey(KeyCode.A)) 
+         else if (Input.GetKey(KeyCode.LeftArrow)) 
             verify_movement(scale * ARROW_TRANS, 0);
-         else if (Input.GetKey(KeyCode.RightArrow) || Input.GetKey(KeyCode.D)) 
+         else if (Input.GetKey(KeyCode.RightArrow)) 
             verify_movement(scale * -ARROW_TRANS, 0);
     }
 

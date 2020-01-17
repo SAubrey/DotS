@@ -10,8 +10,7 @@ public class PlayerPanel : UnitPanel {
     public Button attackB;
     public Button defB;
     public Button upB, downB, leftB, rightB;
-    private bool attB_pressed = false;
-    private bool defB_pressed = false;
+
     public Text DefT;
     public Text ResT;
 
@@ -33,7 +32,6 @@ public class PlayerPanel : UnitPanel {
         disable_defB();
         disable_moveB();
         disable_returnB();
-        depress_moveB();
         disable_rotateB();
 
         bool ranging = bp.range_stage && punit.is_range();
@@ -56,78 +54,73 @@ public class PlayerPanel : UnitPanel {
             defB.interactable = true;
         }
     
-        if (punit.attack_set)
-            press_attackB(); // show cancel attack
-        else
-            depress_attackB(); // show that an attack has not been selected
-
-        if (punit.defending)
-            press_defB();
-        else
-            depress_defB();
+        attB_pressed = punit.attack_set;
+        defB_pressed = punit.defending;
+        moveB_pressed = false;
     }
 
     public void attack() {
         if (!bp.targeting)
             return;
-        reset_buttons(1);
-        Debug.Log(bp.targeting);
-        toggle_attackB();
-        if (slot.get_punit().attack_set) {
-            aq.get_player_queue().remove_attack(slot.get_punit().attack_id, c.line_drawer);
-            selector.selecting_target = false;
-        } else {
-            selector.selecting_target = !selector.selecting_target;
-        }
+        attB_pressed = !attB_pressed;
     }
 
     public void defend() {
         if (!bp.targeting)
             return;
-        reset_buttons(2);
-
-        toggle_defB();
-        slot.get_punit().defend();
+        defB_pressed = !defB_pressed;
     }
 
     public void move() {
-        reset_buttons(3);
-        selector.selecting_move = !selector.selecting_move;
-        if (selector.selecting_move) {
-            press_moveB();
-        } else
-            depress_moveB();
+        moveB_pressed = !moveB_pressed;
     }
 
-    public override void close() {
-        base.close();
-        disable_returnB();
-    }
-
-    private void reset_buttons(int except) {
-        if (except != 1 && attB_pressed) 
-            attack();
-        if (except != 2 && defB_pressed)
-            defend();
-        if (except != 3 && selector.selecting_move)
-            move();
-    }
-
-    private void toggle_attackB() {
-        attB_pressed = !attB_pressed;
-        if (attB_pressed) {
-            press_attackB();
-        } else {
-            depress_attackB();
+    // If any one of the following buttons are pressed,
+    // the others will then not be.
+    private bool _attB_pressed = false;
+    public bool attB_pressed {
+        get { return _attB_pressed; }
+        set {
+            if (_attB_pressed == value)
+                return;
+            _attB_pressed = value;
+            set_press_attackB(value);
+            if (_attB_pressed) {
+                defB_pressed = false;
+                moveB_pressed = false;
+            } else {
+                if (slot.get_punit().attack_set) {
+                    aq.get_player_queue().remove_attack(slot.get_punit().attack_id, c.line_drawer);
+                } 
+            }
+            // Disable the attack no matter the presssed state.
+            selector.selecting_target = _attB_pressed;
         }
     }
-
-    private void toggle_defB() {
-        defB_pressed = !defB_pressed;
-        if (defB_pressed) {
-            press_defB();
-        } else {
-            depress_defB();
+    private bool _defB_pressed = false;
+    public bool defB_pressed {
+        get { return _defB_pressed; }
+        set {
+            _defB_pressed = value;
+            set_press_defB(value);
+            if (_defB_pressed) {
+                attB_pressed = false;
+                moveB_pressed = false;
+            } 
+            slot.get_punit().defending = defB_pressed;
+        }
+    }
+    private bool _moveB_pressed = false;
+    public bool moveB_pressed {
+        get { return _moveB_pressed; }
+        set {
+            _moveB_pressed = value; 
+            set_press_moveB(value);
+            if (_moveB_pressed) {
+                attB_pressed = false;
+                defB_pressed = false;
+            } 
+            selector.selecting_move = moveB_pressed;
         }
     }
 
@@ -138,78 +131,75 @@ public class PlayerPanel : UnitPanel {
         DefT.text = punit.defense.ToString();
     }
 
-    public void press_attackB() {
-        attackB.image.color = Controller.GREY;
-        attB_pressed = true;
+    private void set_press_attackB(bool pressed) {
+        if (pressed)
+            attackB.image.color = Controller.GREY;
+        else
+            attackB.image.color = Color.white;
     }
 
-    public void depress_attackB() {
-        attackB.image.color = Color.white;
-        attB_pressed = false;
+    private void set_press_defB(bool pressed) {
+        if (pressed)
+            defB.image.color = Controller.GREY;
+        else
+            defB.image.color = Color.white;
     }
 
-     public void press_defB() {
-        defB.image.color = Controller.GREY;
-        defB_pressed = true;
+    private void set_press_moveB(bool pressed) {
+        if (pressed)
+            moveB.image.color = Controller.GREY;
+        else
+            moveB.image.color = Color.white;
     }
 
-    public void depress_defB() {
-        defB.image.color = Color.white;
-        defB_pressed = false;
-    }
-
-    public void press_moveB() {
-        moveB.image.color = Controller.GREY;
-
-    }
-
-    public void depress_moveB() {
-        moveB.image.color = Color.white;
+    public override void close() {
+        base.close();
+        disable_returnB();
     }
 
     // TOGGLES
-    public void enable_rotateB() {
+    private void enable_rotateB() {
         upB.interactable = true;
         downB.interactable = true;
         leftB.interactable = true;
         rightB.interactable = true;
     }
 
-    public void disable_rotateB() {
+    private void disable_rotateB() {
         upB.interactable = false;
         downB.interactable = false;
         leftB.interactable = false;
         rightB.interactable = false;
     }
-    public void enable_returnB() {
+    private void enable_returnB() {
         returnB.interactable = true;
     }
 
-    public void disable_returnB() {
+    private void disable_returnB() {
         returnB.interactable = false;
     }
 
-    public void enable_attackB() {
+    private void enable_attackB() {
         attackB.interactable = true;
     }
 
-    public void disable_attackB() {
+    private void disable_attackB() {
         attackB.interactable = false;
     }
 
-    public void enable_defB() {
+    private void enable_defB() {
         defB.interactable = true;
     }
 
-    public void disable_defB() {
+    private void disable_defB() {
         defB.interactable = false;
     }
 
-    public void enable_moveB() {
+    private void enable_moveB() {
         moveB.interactable = true;
     }
 
-    public void disable_moveB() {
+    private void disable_moveB() {
         moveB.interactable = false;
     }
 }

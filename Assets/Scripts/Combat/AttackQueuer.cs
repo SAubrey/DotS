@@ -101,8 +101,8 @@ public class AttackQueuer : MonoBehaviour {
         c.get_active_bat().post_battle();
         c.enemy_brain.clear_dead_enemies();
         reset();
-        c.battle_phaser.post_battle(); // after reset
         c.line_drawer.clear();
+        c.battle_phaser.post_battle(); // after reset
     }
 
     private void create_hitsplat(int dmg, int state, Slot end_slot) {

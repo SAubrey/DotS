@@ -11,7 +11,19 @@ public class PlayerUnit : Unit {
     public float resilience;
     private float injury_thresh;
     public bool injured = false;
-    public bool defending = false;
+    private bool _defending = false;
+    public bool defending {
+        get { return _defending; }
+        set {
+            if (value && !has_acted) {
+                _defending = true;
+                slot.show_defensive(true);
+            } else {
+                _defending = false;
+                slot.show_defensive(false);
+            }
+        }
+    }
 
     protected void init(string name, int att, int def, int res, 
             int mvmt_range, int style,
@@ -23,6 +35,7 @@ public class PlayerUnit : Unit {
         defense = def;
         resilience = res;
 
+        num_actions = max_num_actions;
         movement_range = mvmt_range;
         combat_style = style;
         attack_range = style == MELEE ? 1 : 9;
@@ -55,9 +68,10 @@ public class PlayerUnit : Unit {
        battle sequence in Battalion
        final damage = (attack power + flank damage) - defense
        */ 
-    public override int take_damage(int dmg) {
-        int state = get_post_dmg_state(calc_dmg_taken(dmg));
-        slot.update_healthbar(get_post_dmg_hp(dmg));
+    public override int take_damage(int raw_dmg) {
+        int dmg_after_def = calc_dmg_taken(raw_dmg);
+        int state = get_post_dmg_state(dmg_after_def);
+        slot.update_healthbar(calc_hp_remaining(dmg_after_def));
 
         if (state == INJURED) {
             injured = true;
@@ -95,26 +109,20 @@ public class PlayerUnit : Unit {
         return dmg > 0 ? dmg : 0;
     }
 
+    public override float calc_hp_remaining(int dmg) {
+        float damaged_hp = resilience - dmg;
+        return damaged_hp;
+    }
+
     // Passed damage should have already accounted for possible defense reduction.
-    public override int get_post_dmg_state(int dmg) {
-        float damaged_resilience = resilience - dmg;
+    public override int get_post_dmg_state(int dmg_after_def) {
+        float damaged_resilience = resilience - dmg_after_def;
         if (damaged_resilience <= 0) {
             return DEAD;
         } else if (damaged_resilience < (resilience / 2f)) {
             return INJURED;
         }
         return ALIVE;
-    }
-
-    public override float get_post_dmg_hp(int dmg) {
-        float damaged_hp = resilience - dmg;
-        return damaged_hp;
-    }
-
-    public void defend() {
-        if (!has_acted) {
-            defending = !defending;
-        }
     }
 }
 

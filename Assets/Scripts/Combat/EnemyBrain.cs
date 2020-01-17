@@ -135,7 +135,6 @@ public class EnemyBrain : MonoBehaviour{
         List<Slot> enemy_slots = f.get_highest_full_slots(Unit.ENEMY);
         foreach (Slot s in enemy_slots) {
             if (s.get_enemy().is_dead()) {
-                s.show_no_selection();
                 s.empty();
             }
         }

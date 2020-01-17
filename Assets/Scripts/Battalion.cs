@@ -100,6 +100,15 @@ public class Battalion {
     }
 
     public void post_battle() {
+        remove_expired_units();
+        foreach (Slot s in c.formation.get_all_full_slots(Unit.PLAYER)) {
+            s.update_healthbar();
+            if (s.get_punit().defending)
+                s.get_punit().defending = false;
+        }
+    }
+ 
+    private void remove_expired_units() {
         // Remove duplicates. Don't injure a dead unit.
         foreach (PlayerUnit du in dead_units) {
             foreach (PlayerUnit iu in injured_units) {

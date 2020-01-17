@@ -7,7 +7,6 @@ public class LineDrawer : MonoBehaviour {
     public GameObject FieldPanel;
     public Dictionary<int, Line> lines = new Dictionary<int, Line>();
 
-
     public void draw_line(Unit start_u, Vector3 start_pos, Vector3 end_pos, int id) {
         if (start_u == null) {
             return;

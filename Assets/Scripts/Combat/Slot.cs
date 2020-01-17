@@ -34,9 +34,9 @@ public class Slot : MonoBehaviour {
 
 
     [HideInInspector]
-    public int col; // LEFT, MID, RIGHT
+    public int col;
     [HideInInspector]
-    public int row; // FRONT, MID, REAR
+    public int row;
     public int num; // Hierarchy in group. 0, 1, 2
     public Group group;
     private bool _disabled = false;
@@ -48,7 +48,6 @@ public class Slot : MonoBehaviour {
         col = group.col;
         row = group.row;
         button = GetComponent<Button>();
-        //toggle_healthbar(false);
 
         face_text_to_cam();
         f = c.formation;
@@ -77,8 +76,8 @@ public class Slot : MonoBehaviour {
         }
         set_sprite(PlayerUnit.EMPTY);
         set_namefg_T("");
-        show_no_selection();
-        toggle_healthbar(!healthbar.enabled);
+        show_selection(false);
+        toggle_healthbar(false);
         if (validate)
             group.validate_unit_order();
         return removed_unit;
@@ -91,12 +90,13 @@ public class Slot : MonoBehaviour {
         }
         if (u.is_playerunit()) {
             unit = u as PlayerUnit;
-            set_up_healthbar((int)get_punit().resilience);
+            int hp = (int)get_punit().resilience;
+            set_up_healthbar(hp, hp);
         } else if (u.is_enemy()) {
             unit = u as Enemy;
-            set_up_healthbar(get_enemy().max_health);
+            set_up_healthbar(get_enemy().health, get_enemy().max_health);
         }
-        toggle_healthbar(!healthbar.enabled);
+        toggle_healthbar(true);
         set_namefg_T(unit.get_name());
         unit.set_slot(this);
     }
@@ -124,48 +124,14 @@ public class Slot : MonoBehaviour {
         get { return _disabled; }
         set { 
             _disabled = value;
-            toggle_healthbar(!healthbar.enabled);
+            toggle_healthbar(_disabled);
             button.interactable = !_disabled;
         }
     }
 
-    public void show_selection() {
-        if (img != null)
-            img.color = Color.gray;
-    }
-
-    public void show_no_selection() {
-        if (img == null)
-            return;
-        if (num == 0)
-            img.color =  Color.white;
-        else
-            img.color = unselected_not_front;
-    }
-
-    public void show_dead() {
-        if (img != null)
-            img.color = dead;
-    }
-
-    public void show_injured() {
-        if (img != null)
-            img.color = injured;
-    }
-
-    public void show_offensive() {
-        if (img != null)
-            img.color = new Color(1, 0.2f, 0.2f, 1);
-    }
-
-    public void show_defensive() {
-        if (img != null)
-            img.color = Color.blue;
-    }
-
-    public void set_up_healthbar(int max_hp) {
+    public void set_up_healthbar(int hp, int max_hp) {
         healthbar.maxValue = max_hp;
-        healthbar.value = healthbar.maxValue;
+        healthbar.value = hp;
 
         // Adjust width based on max hp.
         RectTransform t = healthbar.transform as RectTransform;
@@ -173,7 +139,15 @@ public class Slot : MonoBehaviour {
         update_healthbar(max_hp);
     }
 
-    public void update_healthbar(float hp) {
+    public void update_healthbar(float hp=-255) {
+        if (hp == -255) {
+            if (has_punit) {
+                hp = get_punit().resilience;
+            } else {
+                hp = get_enemy().health;
+            }
+        }
+        
         healthbar.value = hp;
         if (unit.is_playerunit()) {
             if (healthbar.value < healthbar.maxValue / 2)
@@ -188,6 +162,12 @@ public class Slot : MonoBehaviour {
         attbgT.text = attfgT.text;
         deffgT.text = get_unit().defense.ToString();
         defbgT.text = deffgT.text;
+    }
+
+    private void update_images() {
+        if (get_unit().has_acted) {
+            
+        }
     }
 
     public void toggle_healthbar(bool state) {
@@ -239,6 +219,31 @@ public class Slot : MonoBehaviour {
 
     public bool is_type(int type) {
         return group.type == type;
+    }
+
+    public void show_selection(bool showing) {
+        if (img != null) {
+            img.color = showing? Color.gray : Color.white;
+        }
+    }
+
+    public void show_dead() {
+        if (img != null)
+            img.color = dead;
+    }
+
+    public void show_injured() {
+        if (img != null)
+            img.color = injured;
+    }
+
+    public void show_offensive() {
+        if (img != null)
+            img.color = new Color(1, 0.2f, 0.2f, 1);
+    }
+
+    public void show_defensive(bool defending) {
+        healthbar_fill.color = defending ? Color.blue : Color.white;
     }
 
     public PlayerUnit get_punit() {

@@ -114,12 +114,6 @@ public class Enemy : Unit {
             return false; 
         return true;
     }
-    
-    public override int calc_dmg_taken(int dmg) {
-        // adjust for defensive attributes?
-        int final_dmg = dmg;
-        return final_dmg > 0 ? final_dmg : 0;
-    }
 
     public override int take_damage(int dmg) {
         health -= dmg;
@@ -132,16 +126,22 @@ public class Enemy : Unit {
         return health <= 0 ? DEAD : INJURED;
     }
 
+    public override int calc_dmg_taken(int dmg) {
+        // adjust for defensive attributes?
+        int final_dmg = dmg;
+        return final_dmg > 0 ? final_dmg : 0;
+    }
+
+    public override float calc_hp_remaining(int dmg) {
+        float damaged_hp = health - dmg;
+        return damaged_hp;
+    }
+
     public override int get_post_dmg_state(int dmg) {
         if (health - dmg <= 0)
             return DEAD;
         else 
             return INJURED;
-    }
-
-    public override float get_post_dmg_hp(int dmg) {
-        float damaged_hp = health - dmg;
-        return damaged_hp;
     }
 
     public void clear_target() {

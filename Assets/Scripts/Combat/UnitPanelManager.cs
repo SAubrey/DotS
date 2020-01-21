@@ -17,8 +17,11 @@ public class UnitPanelManager : MonoBehaviour {
         }
     }
 
-    public void close(int unit_type) {
-        if (unit_type == Unit.PLAYER) {
+    public void close(int unit_type=-1) {
+        if (unit_type == -1) {
+            player_panel.close();
+            enemy_panel.close();
+        } else if (unit_type == Unit.PLAYER) {
             player_panel.close();
         } else {
             enemy_panel.close();

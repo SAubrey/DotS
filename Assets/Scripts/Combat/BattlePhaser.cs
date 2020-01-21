@@ -141,7 +141,7 @@ public class BattlePhaser : MonoBehaviour {
     public void post_battle() {
         if (stage == ASSESSMENT) advance_phase();
         can_skip = true;
-        check_end_conditions();
+        check_finished();
     }
 
     private void advance_phase() {
@@ -151,14 +151,19 @@ public class BattlePhaser : MonoBehaviour {
         phase++;
     }
 
-    private void post_phases(bool finished, bool mini_retreating=false) {
-        if (finished) {
+    private void post_phases() {
+        if (battle_finished) {
             c.get_active_bat().in_battle = false;
+            if (player_won) {
+                c.get_disc().change_var(Storeable.EXPERIENCE, 1);
+                MapCell mc = c.tile_mapper.get_cell(c.get_disc().pos);
+                mc.clear_enemies();
+            }
         } else {
             if (mini_retreating) { // Fall back and regroup.
                 c.get_active_bat().mini_retreating = true;
                 save_enemies_to_map();
-            } else // Save the board exactly as is.
+            } else // Save the board exactly as is to resume next turn.
                 c.formation.save_board(c.get_disc_name());
         }
         reset();
@@ -171,31 +176,17 @@ public class BattlePhaser : MonoBehaviour {
         mc.save_enemies(c.formation.get_all_full_slots(Unit.ENEMY));
     }
 
-    private void check_end_conditions() {
-        if (mini_retreating) {
-            post_phases(false, true);
-        }
-        else if (!enemy_units_on_field) { // player won
-            c.get_disc().change_var(Storeable.EXPERIENCE, 1);
-            MapCell mc = c.tile_mapper.get_cell(c.get_disc().pos);
-            mc.clear_enemies();
-            post_phases(true);
-        } 
-        else if (enemy_won) {
-            // create some kind of waypoint on map to indicate recovery?
-            post_phases(true);
-        } 
-    }
-
     // Called by Unity button. 
     public void retreat() {
+        if (!player_units_on_field || player_won)
+            return;
         save_enemies_to_map();
         // Move unit back to previous space
         c.tile_mapper.move_player(c.get_disc().prev_pos);
         // Penalize retreat.
         c.get_disc().change_var(Storeable.UNITY, -1);
         
-        post_phases(true, false);
+        post_phases();
     }
 
     /*
@@ -232,13 +223,14 @@ public class BattlePhaser : MonoBehaviour {
             phaseT.text = "Phase " + phase;
 
             if (_phase > 3) {
-                check_end_conditions();
+                post_phases();
             }
         }
     }
 
-    private bool enemy_won {
-        get { return !player_units_on_field && !units_in_reserve; }
+    private void check_finished() {
+        if (battle_finished)
+            post_phases();
     }
 
     private bool units_in_reserve {
@@ -249,13 +241,19 @@ public class BattlePhaser : MonoBehaviour {
         get { return c.formation.get_all_full_slots(Unit.PLAYER).Count > 0; }
     } 
 
-    private bool enemy_units_on_field { 
-        get { return c.formation.get_all_full_slots(Unit.ENEMY).Count > 0; }
+    private bool player_won { 
+        get { return c.formation.get_all_full_slots(Unit.ENEMY).Count <= 0; }
     } 
 
-    private bool mini_retreating {
-        get { return units_in_reserve && !player_units_on_field; }
+    private bool enemy_won {
+        get { return !player_units_on_field && !units_in_reserve; }
     }
+
+    private bool mini_retreating {
+        get { return !player_units_on_field && units_in_reserve; }
+    }
+
+    private bool battle_finished { get { return (player_won || enemy_won); } }
 
     private bool _can_skip = false;
     public bool can_skip {

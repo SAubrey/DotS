@@ -18,12 +18,23 @@ public class MapCell {
     public const string SETTLEMENT = "Settlement";
     public const string RUNE_GATE = "Rune Gate";
 
+    public const int PLAINS_ID = 0;
+    public const int FOREST_ID = 1;
+    public const int RUINS_ID = 2;
+    public const int CLIFF_ID = 3;
+    public const int CAVE_ID = 4;
+    public const int STAR_ID = 5;
+    public const int TITRUM_ID = 6;
+    public const int LUSH_LAND_ID = 7;
+    public const int MIRE_ID = 8;
+    public const int MOUNTAIN_ID = 9;
+    public const int SETTLEMENT_ID = 10;
+    public const int RUNE_GATE_ID = 11;
+
     public static MapCell create_cell(int tier, Tile tile, Pos pos) {
         MapCell mc = null;
-        //Debug.Log(tile.ToString());
         string[] splits = tile.ToString().Split('_');
 
-        //Debug.Log(splits.Length);
         string name = splits[0];
         if (name == PLAINS) {
             mc = new Plains(tier, tile, pos);
@@ -50,7 +61,7 @@ public class MapCell {
         } else if (name == RUNE_GATE) {
             mc = new RuneGate(tier, tile, pos);
         } else {
-            mc = new MapCell(tier, tile, pos);
+            mc = new MapCell(tier, tile, pos, 0);
         }
         return mc;
     }
@@ -60,14 +71,18 @@ public class MapCell {
     public int tier;
     public bool discovered = false;
     public string name;
+    public int ID;
     public int minerals = 0;
     public int star_crystals = 0;
+    public bool no_travel_card = false;
     private List<Enemy> enemies = new List<Enemy>();
+    
 
-    public MapCell(int tier, Tile tile, Pos pos) {
+    public MapCell(int tier, Tile tile, Pos pos, int ID) {
         this.tile = tile;
         this.tier = tier;
         this.pos = pos;
+        this.ID = ID;
     }
 
     public void discover() {
@@ -79,7 +94,7 @@ public class MapCell {
         foreach (Slot es in enemy_slots) {
             enemies.Add(es.get_enemy());
         }
-        Debug.Log("Saved " + enemies.Count + " enemies.");
+        Debug.Log("Saved " + enemies.Count + " enemies at " + pos.x + ", " + pos.y);
     }
 
     public List<Enemy> get_enemies() {
@@ -107,71 +122,74 @@ public class MapCell {
 }
 
 public class Plains : MapCell {
-    public Plains(int tier, Tile tile, Pos pos) : base(tier, tile, pos) {
+    public Plains(int tier, Tile tile, Pos pos) : base(tier, tile, pos, PLAINS_ID) {
         name = PLAINS;
     }
 }
 
 public class Forest : MapCell {
-    public Forest(int tier, Tile tile, Pos pos) : base(tier, tile, pos) {
+    public Forest(int tier, Tile tile, Pos pos) : base(tier, tile, pos, FOREST_ID) {
         name = FOREST;
     }
 }
 
 public class Ruins : MapCell {
-    public Ruins(int tier, Tile tile, Pos pos) : base(tier, tile, pos) {
+    public Ruins(int tier, Tile tile, Pos pos) : base(tier, tile, pos, RUINS_ID) {
         name = RUINS;
     }
 }
 
 public class Cliff : MapCell {
-    public Cliff(int tier, Tile tile, Pos pos) : base(tier, tile, pos) {
+    public Cliff(int tier, Tile tile, Pos pos) : base(tier, tile, pos, CLIFF_ID) {
         name = CLIFF;
     }
 }
 
 public class Cave : MapCell {
-    public Cave(int tier, Tile tile, Pos pos) : base(tier, tile, pos) {
+    public Cave(int tier, Tile tile, Pos pos) : base(tier, tile, pos, CAVE_ID) {
         name = CAVE;
     }
 }
 
 public class Star : MapCell {
-    public Star(int tier, Tile tile, Pos pos) : base(tier, tile, pos) {
+    public Star(int tier, Tile tile, Pos pos) : base(tier, tile, pos, STAR_ID) {
         name = STAR;
         star_crystals = 18;
+        no_travel_card = true;
     }
 }
 
 public class Titrum : MapCell {
-    public Titrum(int tier, Tile tile, Pos pos) : base(tier, tile, pos) {
+    public Titrum(int tier, Tile tile, Pos pos) : base(tier, tile, pos, TITRUM_ID) {
         name = TITRUM;
         minerals = 24;
     }
 }
 public class LushLand : MapCell {
-    public LushLand(int tier, Tile tile, Pos pos) : base(tier, tile, pos) {
+    public LushLand(int tier, Tile tile, Pos pos) : base(tier, tile, pos, LUSH_LAND_ID) {
         name = LUSH_LAND;
+        no_travel_card = true;
     }
 }
 public class Mire : MapCell {
-    public Mire(int tier, Tile tile, Pos pos) : base(tier, tile, pos) {
+    public Mire(int tier, Tile tile, Pos pos) : base(tier, tile, pos, MIRE_ID) {
         name = MIRE;
     }
 }
 public class Mountain : MapCell {
-    public Mountain(int tier, Tile tile, Pos pos) : base(tier, tile, pos) {
+    public Mountain(int tier, Tile tile, Pos pos) : base(tier, tile, pos, MOUNTAIN_ID) {
         name = MOUNTAIN;
         minerals = 21;
     }
 }
 public class Settlement : MapCell {
-    public Settlement(int tier, Tile tile, Pos pos) : base(tier, tile, pos) {
+    public Settlement(int tier, Tile tile, Pos pos) : base(tier, tile, pos, SETTLEMENT_ID) {
         name = SETTLEMENT;
+        no_travel_card = true;
     }
 }
 public class RuneGate : MapCell {
-    public RuneGate(int tier, Tile tile, Pos pos) : base(tier, tile, pos) {
+    public RuneGate(int tier, Tile tile, Pos pos) : base(tier, tile, pos, RUNE_GATE_ID) {
         name = RUNE_GATE;
     }
 }

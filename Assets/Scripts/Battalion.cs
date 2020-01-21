@@ -118,11 +118,12 @@ public class Battalion {
         }
         remove_dead_units();
         remove_injured_units();
+        validate_all_punits(); // validate *after* removing units.
     }
 
     private void remove_dead_units() {
         foreach (PlayerUnit du in dead_units) {
-            du.get_slot().empty();
+            du.get_slot().empty(false);
             units[du.get_ID()].Remove(du);
         }
         dead_units.Clear();
@@ -130,10 +131,17 @@ public class Battalion {
 
     private void remove_injured_units() {
         foreach (PlayerUnit du in injured_units) {
-            //if ()
-            du.get_slot().empty();
+            du.get_slot().empty(false);
         }
         injured_units.Clear();
+    }
+
+    
+    private void validate_all_punits() {
+        List<Group> punit_groups = c.formation.get_all_nonempty_groups(Unit.PLAYER);
+        foreach (Group g in punit_groups) {
+            g.validate_unit_order();
+        }
     }
 
     public void add_units(int type, int count) {

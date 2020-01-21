@@ -47,8 +47,8 @@ public class Unit {
     // Attack styles
     public const int MELEE = 1;
     public const int RANGE = 2;
-    public int attack_dmg;
-    public int defense;
+    protected int attack_dmg;
+    protected int defense;
     public int combat_style;
     public int movement_range = 1;
     public int attack_range = 1;
@@ -57,8 +57,10 @@ public class Unit {
     public int num_actions {
         get { return _num_actions; }
         set {
-            if (value < _num_actions) 
+            if (value < _num_actions) {
+                slot.update_images();
                 has_acted_in_stage = true;
+            }
 
             _num_actions = value;
             if (_num_actions >= max_num_actions) {
@@ -85,6 +87,8 @@ public class Unit {
     public virtual int calc_dmg_taken(int dmg) { return 0; }
     public virtual float calc_hp_remaining(int dmg) { return 0; }
     public virtual int get_post_dmg_state(int dmg_after_def) { return 0; }
+    public virtual int get_attack_dmg() { return attack_dmg; }
+    public virtual int get_defense() { return defense; }
     protected void init(string name, int att, int style, int atr1, int atr2, int atr3) {
         create_attribute_list(num_attributes);
         this.name = name;
@@ -174,6 +178,14 @@ public class Unit {
         if (get_slot() != null) {
             slot.update_healthbar();
         }
+    }
+
+    public int get_raw_attack_dmg() {
+        return attack_dmg;
+    }
+    
+    public int get_raw_defense() {
+        return defense;
     }
 
     public bool is_melee() {

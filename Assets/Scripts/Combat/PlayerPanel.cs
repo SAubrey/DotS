@@ -127,8 +127,8 @@ public class PlayerPanel : UnitPanel {
     private void update_text(PlayerUnit punit) {
         set_name(punit.get_name());
         ResT.text = punit.resilience.ToString();
-        AttT.text = punit.attack_dmg.ToString();
-        DefT.text = punit.defense.ToString();
+        AttT.text = punit.get_raw_attack_dmg().ToString();
+        DefT.text = punit.get_raw_defense().ToString();
     }
 
     private void set_press_attackB(bool pressed) {

@@ -118,6 +118,15 @@ public class Group : MonoBehaviour {
                 rotate(LEFT);
         }
     }
+    
+    public int get_num_of_same_units_in_group(int unit_ID) {
+        int num_grouped = 0;
+        foreach (Slot s in slots) {
+            if (s.get_unit().get_ID() == unit_ID)
+                num_grouped++;
+        }
+        return num_grouped;
+    }
 
     public void set_type(int type) {
         set_color(type);

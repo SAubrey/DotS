@@ -11,7 +11,7 @@ public class EnemyPanel : UnitPanel {
 
         Enemy enemy = slot.get_enemy();
         set_name(enemy.get_name());
-        AttT.text = enemy.attack_dmg.ToString();
+        AttT.text = enemy.get_raw_attack_dmg().ToString();
         XpT.text = enemy.xp.ToString();
         HpT.text = (enemy.health + " / " + enemy.max_health);
     }

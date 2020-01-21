@@ -87,6 +87,29 @@ public class PlayerUnit : Unit {
         return true;
     }
 
+    // Accounts for additional attribute damage.
+    public override int get_attack_dmg() {
+        int sum_dmg = attack_dmg;
+        if (attributes[Unit.GROUPING_1]) {
+            int num_same_units_in_group = 
+            slot.get_group().get_num_of_same_units_in_group(ID);
+            for (int i = 0; i < num_same_units_in_group - 1; i++) {
+                sum_dmg += (1 + defense);
+            }
+        }
+        
+        Debug.Log(sum_dmg);
+        return sum_dmg;
+    }
+
+    // Accounts for additional attribute defense.
+    public override int get_defense() {
+        int sum_dmg = defense;
+
+
+        return sum_dmg;
+    }
+
     public override int calc_dmg_taken(int dmg) {
         if (defending)
             dmg -= defense;

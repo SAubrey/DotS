@@ -13,16 +13,10 @@ public class EnemyLoader : MonoBehaviour {
     public static int RARE_THRESH = 90;
     public static int MAX_ROLL = 100;
 
-    public const int PLAINS = 0;
-    public const int FOREST = 1;
-    public const int TITRUM = 2;
-    public const int CLIFF = 3;
-    public const int MOUNTAIN = 4;
-    public const int CAVE = 5;
 
-    public const int T1 = 0;
-    public const int T2 = 1;
-    public const int T3 = 2;
+    public const int T1 = 1;
+    public const int T2 = 2;
+    public const int T3 = 3;
 
     private Formation f;
     public System.Random rand;
@@ -83,19 +77,20 @@ public class EnemyLoader : MonoBehaviour {
         make_biome(cliff_tiers);
         make_biome(mountain_tiers);
         make_biome(cave_tiers);
+        //make_biome(mire_tiers);
 
-        biomes.Add(PLAINS, plains_tiers);
-        biomes.Add(FOREST, forest_tiers);
-        biomes.Add(TITRUM, titrum_tiers);
-        biomes.Add(CLIFF, cliff_tiers);
-        biomes.Add(MOUNTAIN, mountain_tiers);
-        biomes.Add(CAVE, cave_tiers);
+        biomes.Add(MapCell.PLAINS_ID, plains_tiers);
+        biomes.Add(MapCell.FOREST_ID, forest_tiers);
+        biomes.Add(MapCell.TITRUM_ID, titrum_tiers);
+        biomes.Add(MapCell.CLIFF_ID, cliff_tiers);
+        biomes.Add(MapCell.MOUNTAIN_ID, mountain_tiers);
+        biomes.Add(MapCell.CAVE_ID, cave_tiers);
 
         populate_biomes();
     }
 
     private void make_biome(List<List<List<int>>> biome_tiers) {
-        for (int i = 0; i <= 2; i++) { // for each tier
+        for (int i = 0; i <= T3; i++) { // for each tier
             List<List<int>> rarities = new List<List<int>>();
             for (int j = 0; j <= 2; j++) { // for each rarity
                 rarities.Add(new List<int>());
@@ -126,7 +121,7 @@ public class EnemyLoader : MonoBehaviour {
     }
 
     private int roll_rarity() {
-        int rarity = rand.Next(0, MAX_ROLL + 1);
+        int rarity = rand.Next(0, MAX_ROLL);
         if (rarity < UNCOMMON_THRESH) 
             return Enemy.COMMON;
         else if (rarity < RARE_THRESH)
@@ -136,8 +131,18 @@ public class EnemyLoader : MonoBehaviour {
     }
 
     private int pick_enemy(int biome, int tier, int rarity) {
+        Debug.Log(biome + ", " + tier + ", " + rarity);
         List<int> candidates = biomes[biome][tier][rarity];
+
+
+        // Try lower rarities if one is missing. (There should always be a common)
+        for (int i = 0; i < rarity; i++) {
+            candidates = biomes[biome][tier][rarity - i];
+            if (candidates.Count > 0)
+                break;
+        }
         int r = rand.Next(0, candidates.Count);
+        Debug.Log("count: " + candidates.Count + " rand result: " + r);
         return biomes[biome][tier][rarity][r];
     }
 
@@ -166,42 +171,63 @@ public class EnemyLoader : MonoBehaviour {
     }
 
     private void populate_biomes() {
-        biomes[PLAINS][T1][Enemy.COMMON].Add(Enemy.GALTSA);
-        biomes[PLAINS][T1][Enemy.COMMON].Add(Enemy.GREM);
-        biomes[PLAINS][T1][Enemy.UNCOMMON].Add(Enemy.ENDU);
-        biomes[PLAINS][T1][Enemy.COMMON].Add(Enemy.KOROTE);
-        biomes[PLAINS][T2][Enemy.COMMON].Add(Enemy.MOLNER);
-        biomes[PLAINS][T2][Enemy.COMMON].Add(Enemy.ETUENA);
-        biomes[PLAINS][T2][Enemy.UNCOMMON].Add(Enemy.CLYPTE);
-        biomes[PLAINS][T2][Enemy.RARE].Add(Enemy.GOLIATH);
+        biomes[MapCell.PLAINS_ID][T1][Enemy.COMMON].Add(Enemy.GALTSA);
+        biomes[MapCell.PLAINS_ID][T1][Enemy.COMMON].Add(Enemy.GREM);
+        biomes[MapCell.PLAINS_ID][T1][Enemy.UNCOMMON].Add(Enemy.ENDU);
+        biomes[MapCell.PLAINS_ID][T1][Enemy.COMMON].Add(Enemy.KOROTE);
+        biomes[MapCell.PLAINS_ID][T2][Enemy.COMMON].Add(Enemy.MOLNER);
+        biomes[MapCell.PLAINS_ID][T2][Enemy.COMMON].Add(Enemy.ETUENA);
+        biomes[MapCell.PLAINS_ID][T2][Enemy.UNCOMMON].Add(Enemy.CLYPTE);
+        biomes[MapCell.PLAINS_ID][T2][Enemy.RARE].Add(Enemy.GOLIATH);
+        biomes[MapCell.PLAINS_ID][T3][Enemy.COMMON].Add(Enemy.GALTSA); //false
 
-        biomes[FOREST][T1][Enemy.COMMON].Add(Enemy.KVERM);
-        biomes[FOREST][T1][Enemy.UNCOMMON].Add(Enemy.LATU);
-        biomes[FOREST][T1][Enemy.COMMON].Add(Enemy.EKE_TU);
-        biomes[FOREST][T1][Enemy.COMMON].Add(Enemy.OETEM);
-        biomes[FOREST][T2][Enemy.COMMON].Add(Enemy.EKE_FU);
-        biomes[FOREST][T2][Enemy.UNCOMMON].Add(Enemy.EKE_SHI_AMI);
-        biomes[FOREST][T2][Enemy.RARE].Add(Enemy.EKE_LORD);
-        biomes[FOREST][T2][Enemy.UNCOMMON].Add(Enemy.KETEMCOL);
+        biomes[MapCell.FOREST_ID][T1][Enemy.COMMON].Add(Enemy.KVERM);
+        biomes[MapCell.FOREST_ID][T1][Enemy.UNCOMMON].Add(Enemy.LATU);
+        biomes[MapCell.FOREST_ID][T1][Enemy.COMMON].Add(Enemy.EKE_TU);
+        biomes[MapCell.FOREST_ID][T1][Enemy.COMMON].Add(Enemy.OETEM);
+        biomes[MapCell.FOREST_ID][T2][Enemy.COMMON].Add(Enemy.EKE_FU);
+        biomes[MapCell.FOREST_ID][T2][Enemy.UNCOMMON].Add(Enemy.EKE_SHI_AMI);
+        biomes[MapCell.FOREST_ID][T2][Enemy.RARE].Add(Enemy.EKE_LORD);
+        biomes[MapCell.FOREST_ID][T2][Enemy.UNCOMMON].Add(Enemy.KETEMCOL);
+        biomes[MapCell.FOREST_ID][T3][Enemy.COMMON].Add(Enemy.KVERM);//false
 
-        biomes[TITRUM][T1][Enemy.COMMON].Add(Enemy.MAHUKIN);
-        biomes[TITRUM][T1][Enemy.UNCOMMON].Add(Enemy.DRONGO);
-        biomes[TITRUM][T2][Enemy.COMMON].Add(Enemy.MAHEKET);
-        biomes[TITRUM][T2][Enemy.UNCOMMON].Add(Enemy.CALUTE);
-        biomes[TITRUM][T2][Enemy.UNCOMMON].Add(Enemy.ETALKET);
-        biomes[TITRUM][T2][Enemy.RARE].Add(Enemy.MUATEM);
+        biomes[MapCell.TITRUM_ID][T1][Enemy.COMMON].Add(Enemy.MAHUKIN);
+        biomes[MapCell.TITRUM_ID][T1][Enemy.UNCOMMON].Add(Enemy.DRONGO);
+        biomes[MapCell.TITRUM_ID][T2][Enemy.COMMON].Add(Enemy.MAHEKET);
+        biomes[MapCell.TITRUM_ID][T2][Enemy.UNCOMMON].Add(Enemy.CALUTE);
+        biomes[MapCell.TITRUM_ID][T2][Enemy.UNCOMMON].Add(Enemy.ETALKET);
+        biomes[MapCell.TITRUM_ID][T2][Enemy.RARE].Add(Enemy.MUATEM);
+        biomes[MapCell.TITRUM_ID][T3][Enemy.COMMON].Add(Enemy.MAHUKIN);//false
 
-        biomes[MOUNTAIN][T2][Enemy.COMMON].Add(Enemy.DRAK);
-        biomes[MOUNTAIN][T2][Enemy.COMMON].Add(Enemy.ZERRKU);
-        biomes[MOUNTAIN][T2][Enemy.COMMON].Add(Enemy.GOKIN);
-        biomes[CLIFF][T1][Enemy.COMMON].Add(Enemy.DRAK);
-        biomes[CLIFF][T1][Enemy.COMMON].Add(Enemy.ZERRKU);
-        biomes[CLIFF][T1][Enemy.COMMON].Add(Enemy.GOKIN);
+        biomes[MapCell.MOUNTAIN_ID][T2][Enemy.COMMON].Add(Enemy.DRAK);
+        biomes[MapCell.MOUNTAIN_ID][T2][Enemy.COMMON].Add(Enemy.ZERRKU);
+        biomes[MapCell.MOUNTAIN_ID][T2][Enemy.COMMON].Add(Enemy.GOKIN);
+        biomes[MapCell.MOUNTAIN_ID][T3][Enemy.COMMON].Add(Enemy.DRAK);// false?
+        biomes[MapCell.MOUNTAIN_ID][T3][Enemy.COMMON].Add(Enemy.ZERRKU);
+        biomes[MapCell.MOUNTAIN_ID][T3][Enemy.COMMON].Add(Enemy.GOKIN);
 
-        biomes[CAVE][0][Enemy.COMMON].Add(Enemy.TAJAQAR);
-        biomes[CAVE][0][Enemy.COMMON].Add(Enemy.TAJAERO);
-        biomes[CAVE][0][Enemy.RARE].Add(Enemy.TERRA_QUAL);
-        biomes[CAVE][0][Enemy.UNCOMMON].Add(Enemy.DUALE);
+        biomes[MapCell.CLIFF_ID][T1][Enemy.COMMON].Add(Enemy.DRAK);
+        biomes[MapCell.CLIFF_ID][T1][Enemy.COMMON].Add(Enemy.ZERRKU);
+        biomes[MapCell.CLIFF_ID][T1][Enemy.COMMON].Add(Enemy.GOKIN);
+        biomes[MapCell.CLIFF_ID][T2][Enemy.COMMON].Add(Enemy.DRAK);
+        biomes[MapCell.CLIFF_ID][T2][Enemy.COMMON].Add(Enemy.ZERRKU);
+        biomes[MapCell.CLIFF_ID][T2][Enemy.COMMON].Add(Enemy.GOKIN);
+        biomes[MapCell.CLIFF_ID][T3][Enemy.COMMON].Add(Enemy.DRAK);//false
+        biomes[MapCell.CLIFF_ID][T3][Enemy.COMMON].Add(Enemy.ZERRKU);
+        biomes[MapCell.CLIFF_ID][T3][Enemy.COMMON].Add(Enemy.GOKIN);
+
+        biomes[MapCell.CAVE_ID][T1][Enemy.COMMON].Add(Enemy.TAJAQAR);
+        biomes[MapCell.CAVE_ID][T1][Enemy.COMMON].Add(Enemy.TAJAERO);
+        biomes[MapCell.CAVE_ID][T1][Enemy.RARE].Add(Enemy.TERRA_QUAL);
+        biomes[MapCell.CAVE_ID][T1][Enemy.UNCOMMON].Add(Enemy.DUALE);
+        biomes[MapCell.CAVE_ID][T2][Enemy.COMMON].Add(Enemy.TAJAQAR);
+        biomes[MapCell.CAVE_ID][T2][Enemy.COMMON].Add(Enemy.TAJAERO);
+        biomes[MapCell.CAVE_ID][T2][Enemy.RARE].Add(Enemy.TERRA_QUAL);
+        biomes[MapCell.CAVE_ID][T2][Enemy.UNCOMMON].Add(Enemy.DUALE);
+        biomes[MapCell.CAVE_ID][T3][Enemy.COMMON].Add(Enemy.TAJAQAR);//false
+        biomes[MapCell.CAVE_ID][T3][Enemy.COMMON].Add(Enemy.TAJAERO);
+        biomes[MapCell.CAVE_ID][T3][Enemy.RARE].Add(Enemy.TERRA_QUAL);
+        biomes[MapCell.CAVE_ID][T3][Enemy.UNCOMMON].Add(Enemy.DUALE);
     }
 
     private int _spawn_column = 4;

@@ -35,7 +35,9 @@ public class MapUI : MonoBehaviour {
     public Text b_equimares;
 
     public Text bat_text;
+    public Text map_cellT;
     public IDictionary<string, Text> disc_inv = new Dictionary<string, Text>();
+    public Button next_stageB;
 
 
     Controller c;
@@ -108,5 +110,13 @@ public class MapUI : MonoBehaviour {
     public void toggle_inv_panel() {
         inv_panel_active = !inv_panel_active;
         invP.SetActive(inv_panel_active);
+    }
+
+    public void update_cell_text(string tile_name) {
+        map_cellT.text = tile_name;
+    }
+
+    public void activate_next_stageB(bool state) {
+        next_stageB.interactable = state;
     }
 }

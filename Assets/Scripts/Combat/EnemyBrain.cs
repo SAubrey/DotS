@@ -135,8 +135,16 @@ public class EnemyBrain : MonoBehaviour{
         List<Slot> enemy_slots = f.get_all_full_slots(Unit.ENEMY);
         foreach (Slot s in enemy_slots) {
             if (s.get_enemy().is_dead()) {
-                s.empty();
+                s.empty(false);
             }
+        }
+        validate_all_enemies();
+    }
+
+    private void validate_all_enemies() {
+        List<Group> enemy_groups = f.get_all_nonempty_groups(Unit.ENEMY);
+        foreach (Group g in enemy_groups) {
+            g.validate_unit_order();
         }
     }
 }

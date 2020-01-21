@@ -75,7 +75,6 @@ public class Storeable : MonoBehaviour {
     }
 
     public void update_text_fields(string type, int value) {
-        //city_ui = 
         map_ui.update_stat_text(type, self, value);
         city_ui.update_stat_text(type, self, value);
     }

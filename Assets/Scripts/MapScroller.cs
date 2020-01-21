@@ -9,11 +9,7 @@ public class MapScroller : MonoBehaviour {
     private const float MAP_MIN_X = 0;
     private const float MAP_MAX_X = 20f;
     private const float MAP_MIN_Y = 0;
-    private const float MAP_MAX_Y = 20f;/*
-    private const float BATTLE_MIN_X = -45f;
-    private const float BATTLE_MAX_X = 56f;
-    private const float BATTLE_MIN_Y = -20f;
-    private const float BATTLE_MAX_Y = 27f;*/
+    private const float MAP_MAX_Y = 20f;
     private const float BATTLE_MIN_X = -2000f;
     private const float BATTLE_MAX_X = 2100f;
     private const float BATTLE_MIN_Y = -1600f;

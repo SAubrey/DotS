@@ -13,6 +13,7 @@ public class Selector : MonoBehaviour {
     private AttackQueuer aq;
     private LineDrawer line_drawer;
     private UnitPanelManager unit_panel_man;
+    private PlayerPanel player_panel;
     public bool _selecting_target = false;
     public bool selecting_target {
         get { return _selecting_target; }
@@ -46,27 +47,32 @@ public class Selector : MonoBehaviour {
         aq = c.attack_queuer;
         line_drawer = c.line_drawer;
         unit_panel_man = c.unit_panel_man;
+        player_panel = unit_panel_man.player_panel;
     }
 
     void Update() {
+        if (Input.GetKeyDown(KeyCode.Space)) {
+            if (bp.adv_stageB.interactable)
+                bp.advance_stage();
+        }
         if (selected_slot == null)
             return;
 
+        // Unit actions requiring a selected unit.
         if (Input.GetKeyDown(KeyCode.A)) {
-            unit_panel_man.player_panel.attack();
+            if (player_panel.attackB.interactable)
+                player_panel.attack();
         } else if (Input.GetKeyDown(KeyCode.D)) {
-            unit_panel_man.player_panel.defend();
+            if (player_panel.defB.interactable)
+                player_panel.defend();
         } else if (Input.GetKeyDown(KeyCode.R)) {
-            if (unit_panel_man.player_panel.returnB.interactable)
+            if (player_panel.returnB.interactable)
                 return_unit();
         } else if (Input.GetKeyDown(KeyCode.S)) {
-            unit_panel_man.player_panel.move();
-        } else if (Input.GetKeyDown(KeyCode.Space)) {
-            if (bp.adv_stageB.interactable)
-                bp.advance_stage();
+            if (player_panel.moveB.interactable)
+                player_panel.move();
         } else if (Input.GetKeyDown(KeyCode.Escape) || Input.GetKeyDown(KeyCode.X)) {
-            if (unit_panel_man.player_panel.panel.activeSelf)
-                unit_panel_man.player_panel.close();
+            unit_panel_man.close();
         }
     }
 
@@ -76,6 +82,7 @@ public class Selector : MonoBehaviour {
     public void handle_slot(Slot slot) {
         if (cs.current_cam != CamSwitcher.BATTLE)
             return;
+        
         // Attempting to attack or move. Do not select a new slot upon failure.
         bool selection_taking_action = selected_slot != null && 
             (selecting_target || selecting_move);
@@ -167,7 +174,7 @@ public class Selector : MonoBehaviour {
     public void deselect() {
         if (selected_slot != null) {
             selected_slot.show_selection(false);
-            unit_panel_man.close(Unit.PLAYER);
+            unit_panel_man.close();
             selected_slot = null;
             selecting_target = false;
             selecting_move = false;
@@ -195,7 +202,7 @@ public class Selector : MonoBehaviour {
         Slot s = selected_slot;
         deselect();
         s.empty();
-        bp.check_all_units_placed();
+        bp.check_all_units_placed(); // Can we move past placement?
         bat_loader.load_text(c.get_active_bat());
     }
 }

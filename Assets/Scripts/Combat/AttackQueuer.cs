@@ -256,7 +256,7 @@ public class Attack {
     }
 
     public int get_raw_dmg() {
-        return get_start_unit().attack_dmg + calc_dir_dmg();
+        return get_start_unit().get_attack_dmg() + calc_dir_dmg();
     }
 
     /* Accout for additional flank or rear damage.

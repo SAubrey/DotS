@@ -161,13 +161,13 @@ public class Slot : MonoBehaviour {
         update_images();
         hpfgT.text = healthbar.value + " / " + healthbar.maxValue;
         hpbgT.text = hpfgT.text;
-        attfgT.text = get_unit().attack_dmg.ToString();
+        attfgT.text = get_unit().get_raw_attack_dmg().ToString();
         attbgT.text = attfgT.text;
-        deffgT.text = get_unit().defense.ToString();
+        deffgT.text = get_unit().get_raw_defense().ToString();
         defbgT.text = deffgT.text;
     }
 
-    private void update_images() {
+    public void update_images() {
         if (get_unit().out_of_actions) {
             attfgI.color = Color.white;
             deffgI.color = Color.white;

@@ -25,6 +25,7 @@ public class Controller : MonoBehaviour {
     public LineDrawer line_drawer;
     public EnemyBrain enemy_brain;
     public CityUIManager city_ui;
+    public TravelCardManager travel_card_manager;
 
     public Discipline astra;
     public Discipline martial;
@@ -38,6 +39,10 @@ public class Controller : MonoBehaviour {
     public IDictionary<string, Discipline> discs = new Dictionary<string, Discipline>();
 
     void Awake() {
+        discs.Add(ASTRA, astra);
+        discs.Add(MARTIAL, martial);
+        discs.Add(ENDURA, endura);
+
         // Public classes that all other classes will grab from initially.
         formation = GameObject.Find("Formation").GetComponent<Formation>();
         turn_phaser = GameObject.Find("TurnPhaser").GetComponent<TurnPhaser>();
@@ -55,10 +60,8 @@ public class Controller : MonoBehaviour {
         line_drawer = GameObject.Find("LineDrawer").GetComponent<LineDrawer>();
         enemy_brain = GameObject.Find("EnemyBrain").GetComponent<EnemyBrain>();
         city_ui = GameObject.Find("CityUIManager").GetComponent<CityUIManager>();
-
-        discs.Add(ASTRA, astra);
-        discs.Add(MARTIAL, martial);
-        discs.Add(ENDURA, endura);
+        travel_card_manager = GameObject.Find("TravelCardPanel").GetComponent<TravelCardManager>();
+        
     }
 
     void Start() {

@@ -89,9 +89,6 @@ public class TileMapper : MonoBehaviour {
     };
 
     public Dictionary<int, List<int>> bags = new Dictionary<int, List<int>>();
-    public List<int> t1_bag = new List<int>();
-    public List<int> t2_bag = new List<int>();
-    public List<int> t3_bag = new List<int>();
     
     public Dictionary<Pos, MapCell> map = new Dictionary<Pos, MapCell>();
     public Vector3 center_point;
@@ -103,9 +100,9 @@ public class TileMapper : MonoBehaviour {
         tp = c.turn_phaser;
         rand = new System.Random();
 
-        bags.Add(1, t1_bag);
-        bags.Add(2, t2_bag);
-        bags.Add(3, t3_bag);
+        bags.Add(1, new List<int>() );
+        bags.Add(2, new List<int>() );
+        bags.Add(3, new List<int>() );
         bag_counters.Add(1, t1_bag_count);
         bag_counters.Add(2, t2_bag_count);
         bag_counters.Add(3, t3_bag_count);
@@ -175,6 +172,8 @@ public class TileMapper : MonoBehaviour {
             tm.SetTile(new Vector3Int(x, y, 0), cell.tile);
         }
         c.get_disc().pos = pos;
+        c.map_ui.update_cell_text(cell.name);
+        c.get_active_bat().in_battle = cell.has_enemies;
         return true;
     }
 
@@ -305,7 +304,8 @@ public class TileMapper : MonoBehaviour {
     void create_tile(int tier, int x, int y) {
         Pos pos = new Pos(x, y);
         Tile tile = grab_tile(tier);
-        map.Add(pos, new MapCell(tier, tile, pos));
+        //map.Add(pos, new MapCell(tier, tile, pos));
+        map.Add(pos, MapCell.create_cell(tier, tile, pos));
         place_tile(tm, shadow, pos.x, pos.y);
     }
 }

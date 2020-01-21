@@ -19,6 +19,7 @@ public class TurnPhaser : MonoBehaviour {
     private Controller c;
     private TravelDeck td;
     private TileMapper tm;
+    private TravelCardManager tcm;
     private CamSwitcher cs;
     private Selector selector;
     private EnemyLoader enemy_loader;
@@ -37,9 +38,10 @@ public class TurnPhaser : MonoBehaviour {
         enemy_loader = c.enemy_loader;
         tm = c.tile_mapper;
         td = c.travel_deck;
+        tcm = c.travel_card_manager;
 
         advance_stage();
-        disable_mineB();
+        pre_phase();
     }
 
     public void advance_stage() {
@@ -49,8 +51,7 @@ public class TurnPhaser : MonoBehaviour {
     private void pre_phase() {
         // Disable next turn button
         disable_mineB();
-        pos = c.get_disc().pos;
-        cell = tm.map[new Pos((int)pos.x, (int)pos.y)];
+        cell = tm.get_cell(c.get_disc().pos);
         if (check_mineable(cell)) 
             enable_mineB();
     }
@@ -60,8 +61,6 @@ public class TurnPhaser : MonoBehaviour {
     }
 
     private void travel_card() {
-        Debug.Log("travel card stage");
-        // Draw and display card.
         cell = tm.get_cell(c.get_disc().pos);
 
         if (cell.discovered) {
@@ -69,15 +68,19 @@ public class TurnPhaser : MonoBehaviour {
             advance_stage(); // No travel card, enter action.
         } else {
             cell.discover();
-            if (cell.name != MapCell.RUINS && cell.name != MapCell.CAVE) {
+            if (!cell.no_travel_card) {
 
                 // DRAW CARD
-                tc = td.draw_card(cell.tier);
+                tc = td.draw_card(cell.tier, cell.ID);
+                tcm.set_card(c.get_disc_name(), tc);
                 td.display_card(tc);
 
                 if (tc.type == TravelCard.COMBAT) {
                     handle_combat_card(tc);
                 } 
+            } else {
+                // Activate voluntary end turn button.
+                c.map_ui.activate_next_stageB(true);
             }
         }
         // Show resources available on cell / buildings
@@ -85,16 +88,16 @@ public class TurnPhaser : MonoBehaviour {
 
     // Called by the close button of the travel card. 
     private void action() {
-        Debug.Log("action stage");
-        if (pulled_combat_card) { // If a combat travel card was pulled.
-            enemy_loader.load(cell.tier, tc.type, tc.enemies);
+        if (tc.follow_rule(TravelCard.ENTER_COMBAT)) { // If a combat travel card was pulled.
+            //enemy_loader.load(cell.tier, tc.type, tc.enemies);
+            enemy_loader.load(cell.ID, cell.tier, tc.enemies);
             cs.set_active(CamSwitcher.BATTLE, true);
             
         } else if (cell.has_enemies) { // Someone retreated from here.
             if (cell.get_enemies().Count > 0) { // either mini retreat or 
                 enemy_loader.load_existing_enemies(cell.get_enemies());
 
-            } else { //Resume battle exactly as it was.
+            } else { // Resume battle exactly as it was.
                 c.formation.load_board(c.active_disc);
             }
             cs.set_active(CamSwitcher.BATTLE, true);
@@ -106,6 +109,7 @@ public class TurnPhaser : MonoBehaviour {
             if (check_mineable(cell)) {
                 enable_mineB();
             } 
+            c.map_ui.activate_next_stageB(true);
         } 
             //if () check then enable build button
     }
@@ -119,13 +123,7 @@ public class TurnPhaser : MonoBehaviour {
 
     private void handle_combat_card(TravelCard tc) {
         pulled_combat_card = true;
-        c.get_active_bat().in_battle = true;
-
-        if (tc.ID == TravelDeck.ATT1_1) {
-
-        } else if (tc.ID == TravelDeck.ATT4_1) { // ambush!
-            // 
-        }   
+        c.get_active_bat().in_battle = true; 
     }
 
     // Stage and player adjustment happen internally only. 
@@ -138,6 +136,7 @@ public class TurnPhaser : MonoBehaviour {
             if (_stage == MOVEMENT) {
 
                 // Don't move if resuming battle.
+                Debug.Log(c.get_active_bat().in_battle);
                 if (c.get_active_bat().in_battle) {
                     stage = ACTION; // Bypasses travel card and action.
                 } else
@@ -145,9 +144,11 @@ public class TurnPhaser : MonoBehaviour {
             }
             else if (_stage == TRAVEL_CARD) {
                 moving = false;
+                Debug.Log("travel card stage");
                 travel_card();
             }
             else if (_stage == ACTION) {
+                Debug.Log("action stage");
                 action();
             }
             else if (_stage > ACTION) {
@@ -164,7 +165,7 @@ public class TurnPhaser : MonoBehaviour {
             _player = value;
             c.rotate_disc();
             if (_player > c.num_discs) {
-                _player = 0;
+                _player = 1;
                 c.advance_turn();
             }
         }
@@ -198,10 +199,10 @@ public class TurnPhaser : MonoBehaviour {
     }
 
     private void enable_mineB() {
-        mineB.enabled = true;
+        mineB.interactable = true;
     }
 
-    private void disable_mineB() {
-        mineB.enabled = false;
+    public void disable_mineB() {
+        mineB.interactable = false;
     }
 }

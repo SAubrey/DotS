@@ -145,6 +145,21 @@ public class Formation : MonoBehaviour {
         return units;
     }
 
+    public List<Group> get_all_nonempty_groups(int unit_type) {
+        List<Group> gs = new List<Group>();
+        foreach (int col in groups.Keys) {
+            foreach (Group group in groups[col].Values) {
+                if (unit_type == Unit.ENEMY && group.has_enemy) {
+                    gs.Add(group);
+                } else if (unit_type == Unit.PLAYER && group.has_punit) {
+                    gs.Add(group);
+                }
+            }
+        }
+        return gs;
+    }
+
+
     public void clear_battlefield() {
         foreach (int col in groups.Keys) {
             foreach (int row in groups[col].Keys) {

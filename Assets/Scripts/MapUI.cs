@@ -36,8 +36,10 @@ public class MapUI : MonoBehaviour {
 
     public Text bat_text;
     public Text map_cellT;
+    public Text battle_discT;
     public IDictionary<string, Text> disc_inv = new Dictionary<string, Text>();
     public Button next_stageB;
+    public Button rune_gateB;
 
 
     Controller c;
@@ -96,6 +98,8 @@ public class MapUI : MonoBehaviour {
             bat_text.text = "Endura";
             bat_text.color = endura_color;
         }
+            battle_discT.text = bat_text.text;
+            battle_discT.color = bat_text.color;
     }
 
     public void toggle_city_panel() {
@@ -111,12 +115,16 @@ public class MapUI : MonoBehaviour {
         inv_panel_active = !inv_panel_active;
         invP.SetActive(inv_panel_active);
     }
-
+ 
     public void update_cell_text(string tile_name) {
         map_cellT.text = tile_name;
     }
 
     public void activate_next_stageB(bool state) {
         next_stageB.interactable = state;
+    }
+
+    public void activate_rune_gateB(bool state) {
+        rune_gateB.interactable = state;
     }
 }

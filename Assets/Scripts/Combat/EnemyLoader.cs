@@ -134,15 +134,16 @@ public class EnemyLoader : MonoBehaviour {
         Debug.Log(biome + ", " + tier + ", " + rarity);
         List<int> candidates = biomes[biome][tier][rarity];
 
-
         // Try lower rarities if one is missing. (There should always be a common)
-        for (int i = 0; i < rarity; i++) {
-            candidates = biomes[biome][tier][rarity - i];
+        for (int i = 0; i < 3; i++) {
+            candidates = biomes[biome][tier][rarity];
             if (candidates.Count > 0)
                 break;
+            rarity--;
         }
         int r = rand.Next(0, candidates.Count);
-        Debug.Log("count: " + candidates.Count + " rand result: " + r);
+        Debug.Log("candidates: " + candidates.Count + ". " +
+             biome + ", " + tier + ", " + rarity + ", " + r);
         return biomes[biome][tier][rarity][r];
     }
 

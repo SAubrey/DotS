@@ -74,7 +74,8 @@ public class MapCell {
     public int ID;
     public int minerals = 0;
     public int star_crystals = 0;
-    public bool no_travel_card = false;
+    public bool has_travel_card = true;
+    public bool has_rune_gate = false;
     private List<Enemy> enemies = new List<Enemy>();
     
 
@@ -105,7 +106,7 @@ public class MapCell {
     private bool _has_enemies = false;
     public bool has_enemies { 
         get { 
-            return (get_enemies().Count > 0 || _has_enemies) ? true : false;
+            return (get_enemies().Count > 0 || _has_enemies);
         } 
         set {
             if (get_enemies().Count > 0) {
@@ -115,6 +116,7 @@ public class MapCell {
             }
         }
     }
+
 
     public void clear_enemies() {
         enemies.Clear();
@@ -155,7 +157,7 @@ public class Star : MapCell {
     public Star(int tier, Tile tile, Pos pos) : base(tier, tile, pos, STAR_ID) {
         name = STAR;
         star_crystals = 18;
-        no_travel_card = true;
+        has_travel_card = false;
     }
 }
 
@@ -168,7 +170,7 @@ public class Titrum : MapCell {
 public class LushLand : MapCell {
     public LushLand(int tier, Tile tile, Pos pos) : base(tier, tile, pos, LUSH_LAND_ID) {
         name = LUSH_LAND;
-        no_travel_card = true;
+        has_travel_card = false;
     }
 }
 public class Mire : MapCell {
@@ -185,7 +187,7 @@ public class Mountain : MapCell {
 public class Settlement : MapCell {
     public Settlement(int tier, Tile tile, Pos pos) : base(tier, tile, pos, SETTLEMENT_ID) {
         name = SETTLEMENT;
-        no_travel_card = true;
+        has_travel_card = false;
     }
 }
 public class RuneGate : MapCell {

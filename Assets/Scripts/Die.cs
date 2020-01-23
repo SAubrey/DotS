@@ -14,11 +14,8 @@ public class Die : MonoBehaviour {
     private const float MAX_SIDE_CHANGE_TIME = .1f;
     private float current_max_side_change_time = MAX_SIDE_CHANGE_TIME;
     private float side_change_time = 0;
-    private int last_side;
+    private int current_side;
     public TravelCardManager tcm;
-
-    void Start() {
-    }
 
     // Rolls at a constant period for a random number of sides.
     void Update() {
@@ -26,14 +23,13 @@ public class Die : MonoBehaviour {
             side_change_time += Time.deltaTime;
 
             if (side_change_time > current_max_side_change_time) {
-                if (current_num_side_changes < num_side_changes - 1) {
+                if (current_num_side_changes < num_side_changes) {
                     display_side(get_rand_side(anim_sides));
                 } else {
-                    display_side(last_side);
                     finish_roll();
                 }
 
-                current_max_side_change_time *= 1.05f; // Deaccelerate.
+                current_max_side_change_time *= 1.07f; // Deaccelerate.
                 side_change_time = 0;
             }
         }
@@ -41,11 +37,11 @@ public class Die : MonoBehaviour {
 
     // Immediately returns the last side, animates, 
     // then lets TCM knows it's done.
-    public int roll(int sides) {
-        num_side_changes = Random.Range(5, 15);
-        last_side = get_rand_side(sides);
+    public void roll(int sides) {
+        num_side_changes = Random.Range(9, 15);
+        //last_side = get_rand_side(sides);
         animate_roll(sides);
-        return last_side;
+        //return last_side;
     }
 
     private int get_rand_side(int sides) {
@@ -53,6 +49,7 @@ public class Die : MonoBehaviour {
     }
 
     private void display_side(int roll) {
+        current_side = roll;
         read_outT.text = roll.ToString();
         current_num_side_changes++;
     }
@@ -64,9 +61,9 @@ public class Die : MonoBehaviour {
 
     private void finish_roll() {
         animating = false;
+        side_change_time = 0;
         current_num_side_changes = 0;
         current_max_side_change_time = MAX_SIDE_CHANGE_TIME;
-        tcm.finish_roll(last_side);
-
+        tcm.finish_roll(current_side);
     }
 }

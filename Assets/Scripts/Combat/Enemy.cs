@@ -154,7 +154,7 @@ public class Enemy : Unit {
 public class Galtsa : Enemy {
     public Galtsa() {
         ID = GALTSA;
-        init("Galtsa", 2, 2, 2, MELEE, CHARGE, GROUPING_3, 0);
+        init("Galtsa", 2, 2, 2, MELEE, CHARGE, GROUPING_2, 0);
     }
 }
 public class Grem : Enemy {
@@ -178,7 +178,7 @@ public class Korote : Enemy {
 public class Molner : Enemy {
     public Molner() {
         ID = MOLNER;
-        init("Molner", 2, 2, 2, MELEE, FLANKING, GROUPING_4, CHARGE);
+        init("Molner", 2, 2, 2, MELEE, FLANKING, GROUPING_2, CHARGE);
     }
 }
 public class Etuena : Enemy {
@@ -220,13 +220,13 @@ public class Eke_tu : Enemy {
 public class Oetem : Enemy {
     public Oetem() {
         ID = OETEM;
-        init("Oetem", 4, 3, 3, MELEE, GROUPING_3, 0, 0);
+        init("Oetem", 4, 3, 3, MELEE, GROUPING_2, 0, 0);
     }
 }
 public class Eke_fu : Enemy {
     public Eke_fu() {
         ID = EKE_FU;
-        init("Eke Fu", 3, 2, 2, MELEE, GROUPING_4, FLANKING, 0);
+        init("Eke Fu", 3, 2, 2, MELEE, GROUPING_2, FLANKING, 0);
     }
 }
 public class Eke_shi_ami : Enemy {
@@ -262,7 +262,7 @@ public class Drongo : Enemy {
 public class Maheket : Enemy {
     public Maheket() {
         ID = MAHEKET;
-        init("Maheket", 3, 3, 5, MELEE, ARMOR_2, GROUPING_3, 0);
+        init("Maheket", 3, 3, 5, MELEE, ARMOR_2, GROUPING_2, 0);
     }
 }
 public class Calute : Enemy {
@@ -298,7 +298,7 @@ public class Zerrku : Enemy {
 public class Gokin : Enemy {
     public Gokin() {
         ID = GOKIN;
-        init("Gokin", 2, 2, 2, MELEE, FLANKING, GROUPING_3, 0);
+        init("Gokin", 2, 2, 2, MELEE, FLANKING, GROUPING_2, 0);
     }
 }
 public class Tajaqar : Enemy {

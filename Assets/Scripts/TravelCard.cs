@@ -21,7 +21,7 @@ public class TravelCard {
     public const int OFF_GUARD = 2; // att3, 2 units in reserve.
     public const int BLESSING1 = 3;
 
-    public const int GIVE_RESOURCES = 4;
+    public const int AFFECT_RESOURCES = 4;
 
     public const int FOG = 10;
 
@@ -40,7 +40,7 @@ public class TravelCard {
     public int type;
     private Dictionary<int, bool> rules = new Dictionary<int, bool>();
     private static int[] RULE_FIELDS = { ENTER_COMBAT, CHARGE, AMBUSH, OFF_GUARD,
-        BLESSING1, GIVE_RESOURCES, FOG, };
+        BLESSING1, AFFECT_RESOURCES, FOG, };
 
 
     public TravelCard(int id, int type, Sprite sprite) {
@@ -66,8 +66,19 @@ public class TravelCard {
     public virtual void action(TravelCardManager tcm) {
     }
 
-    public virtual void use_roll_result(int result) {
+    public virtual void use_roll_result(int result, Controller c) {
 
+    }
+
+    public IEnumerator adjust_resources(Controller c) {
+
+        Discipline disc = c.get_disc();
+        foreach (KeyValuePair<string, int> r in consequence) {
+            if (r.Value > 0) {
+                disc.change_var(r.Key, r.Value, true);
+                yield return new WaitForSecondsRealtime(0.5f);
+            }
+        }
     }
 }
 
@@ -137,7 +148,7 @@ public class Chance1_1 : Chance {
         die_num_sides = 6;
     }
 
-    public override void use_roll_result(int result) {
+    public override void use_roll_result(int result, Controller c) {
         if (result % 2 == 0) {
             set_rule(ENTER_COMBAT, true);
         }
@@ -149,8 +160,8 @@ public class Chance2_1 : Chance {
         this.enemies = 0;
     }
 
-    public override void use_roll_result(int result) {
-        set_rule(GIVE_RESOURCES, true);
+    public override void use_roll_result(int result, Controller c) {
+        set_rule(AFFECT_RESOURCES, true);
         if (result >= 13) {
             consequence[Storeable.MINERALS] = 1;
             consequence[Storeable.STAR_CRYSTALS] = 3;
@@ -158,6 +169,7 @@ public class Chance2_1 : Chance {
             // lose 2 unity
             consequence[Storeable.UNITY] = -2;
         }
+        adjust_resources(c);
     }
 }
 
@@ -167,7 +179,7 @@ public class Chance3_1 : Chance {
         die_num_sides = 6;
     }
 
-    public override void use_roll_result(int result) {
+    public override void use_roll_result(int result, Controller c) {
         if (result % 2 == 1) {
             set_rule(ENTER_COMBAT, true);
         }
@@ -181,6 +193,7 @@ public class CaveCard : TravelCard {
 }
 public class Cave1_1 : CaveCard {
     public Cave1_1(Sprite sprite) : base(TravelDeck.CAVE1_1, sprite) {
+        set_rule(AFFECT_RESOURCES, true);
         enemies = 5;
         consequence[Storeable.MINERALS] = 4;
         consequence[Storeable.STAR_CRYSTALS] = 4;
@@ -189,6 +202,7 @@ public class Cave1_1 : CaveCard {
 
 public class Cave2_1 : CaveCard {
     public Cave2_1(Sprite sprite) : base(TravelDeck.CAVE2_1, sprite) {
+        set_rule(AFFECT_RESOURCES, true);
         enemies = 7;
         consequence[Storeable.STAR_CRYSTALS] = 2;
         // 1 equipment
@@ -214,6 +228,7 @@ public class RuinsCard : TravelCard {
 
 public class Ruins1_1 : RuinsCard {
     public Ruins1_1(Sprite sprite) : base(TravelDeck.RUINS1_1, sprite) {
+        set_rule(AFFECT_RESOURCES, true);
         consequence[Storeable.ARELICS] = 3;
         // +1 seeker unit 
         //c.get_active_bat().add_units(PlayerUnit.SEEKER, 1);
@@ -230,6 +245,7 @@ public class Ruins2_1 : RuinsCard {
 public class Ruins3_1 : RuinsCard {
     public Ruins3_1(Sprite sprite) : base(TravelDeck.RUINS3_1, sprite) {
         set_rule(ENTER_COMBAT, true);
+        set_rule(AFFECT_RESOURCES, true);
         enemies = 5;
         consequence[Storeable.ERELICS] = 2;
         consequence[Storeable.MRELICS] = 2;
@@ -255,6 +271,10 @@ public class Location1_1 : LocationCard {
     public Location1_1(Sprite sprite) : base(TravelDeck.LOCATION1_1, sprite) {
         // rune gate activated with 10 SC.
     }
+
+    public override void action(TravelCardManager tcm) {
+        tcm.c.tile_mapper.build_rune_gate(tcm.c.get_disc().get_Pos());
+    }
 }
 
 public class Location2_1 : LocationCard {
@@ -267,7 +287,7 @@ public class Location2_1 : LocationCard {
 
 public class Location3_1 : LocationCard {
     public Location3_1(Sprite sprite) : base(TravelDeck.LOCATION3_1, sprite) {
-        
+        set_rule(AFFECT_RESOURCES, true);
         consequence[Storeable.ARELICS] = 1;
         consequence[Storeable.ERELICS] = 1;
         consequence[Storeable.MRELICS] = 1;
@@ -275,7 +295,7 @@ public class Location3_1 : LocationCard {
 
     public override void action(TravelCardManager tcm) {
         if (true) {
-            // give reward
+            // AFFECT reward
         }
     }
 }
@@ -287,12 +307,14 @@ public class Event : TravelCard {
 
 public class Event1_1 : Event {
     public Event1_1(Sprite sprite) : base(TravelDeck.EVENT1_1, sprite) {
+        set_rule(AFFECT_RESOURCES, true);
         consequence[Storeable.ARELICS] = 1;
     }
 }
 
 public class Event2_1 : Event {
     public Event2_1(Sprite sprite) : base(TravelDeck.EVENT2_1, sprite) {
+        set_rule(AFFECT_RESOURCES, true);
         consequence[Storeable.STAR_CRYSTALS] = 2;
     }
 }
@@ -306,12 +328,14 @@ public class Event3_1 : Event {
 }
 public class Event4_1 : Event {
     public Event4_1(Sprite sprite) : base(TravelDeck.EVENT4_1, sprite) {
+        set_rule(AFFECT_RESOURCES, true);
         consequence[Storeable.UNITY] = -1;
     }
 }
 
 public class Event5_1 : Event {
     public Event5_1(Sprite sprite) : base(TravelDeck.EVENT5_1, sprite) {
+        set_rule(AFFECT_RESOURCES, true);
         consequence[Storeable.MINERALS] = 2;
         consequence[Storeable.UNITY] = -2;
     }

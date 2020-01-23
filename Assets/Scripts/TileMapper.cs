@@ -92,6 +92,7 @@ public class TileMapper : MonoBehaviour {
     
     public Dictionary<Pos, MapCell> map = new Dictionary<Pos, MapCell>();
     public Vector3 center_point;
+    public bool waiting_for_second_gate { get; set; } = false;
 
     void Start() {
         c = GameObject.Find("Controller").GetComponent<Controller>();
@@ -143,11 +144,8 @@ public class TileMapper : MonoBehaviour {
     }
 
     private void handle_left_click() {
-        Vector3 pos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-
         if (tp.moving) {
-            //Debug.Log(Input.mousePosition);
-            Debug.Log(Camera.main.ScreenToWorldPoint(Input.mousePosition));
+            Vector3 pos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
             if (move_player(pos)) {
                 tp.advance_stage(); // Movement stage to action
             }
@@ -158,7 +156,10 @@ public class TileMapper : MonoBehaviour {
         Discipline d = c.get_disc();
         int x = (int)pos.x;
         int y = (int)pos.y;
-        if (get_tile(pos.x, pos.y) == null || 
+        if (waiting_for_second_gate) {
+
+        }
+        else if (get_tile(pos.x, pos.y) == null || 
                 !check_adjacent(x, y, 
                 (int)d.pos.x, (int)d.pos.y)) {
             return false;
@@ -167,6 +168,15 @@ public class TileMapper : MonoBehaviour {
         MapCell cell = map[new Pos(x, y)];
         if (cell.discovered) {
             Debug.Log("was discovered");
+            if (cell.has_rune_gate) {
+                if (waiting_for_second_gate) {
+                    // move to gate
+                    waiting_for_second_gate = false;
+                    c.map_ui.activate_rune_gateB(false);
+                } else {
+                    c.map_ui.activate_rune_gateB(true);
+                }
+            }
         } else { // Not discovered, draw tile
             tm.SetTile(new Vector3Int(x, y, 0), null); // clear shadow
             tm.SetTile(new Vector3Int(x, y, 0), cell.tile);
@@ -174,6 +184,9 @@ public class TileMapper : MonoBehaviour {
         c.get_disc().pos = pos;
         c.map_ui.update_cell_text(cell.name);
         c.get_active_bat().in_battle = cell.has_enemies;
+        Debug.Log("setting in_battle to " + c.get_active_bat().in_battle + "for " + c.get_disc_name()
+            + " at " + x + ", " + y);
+        
         return true;
     }
 
@@ -301,12 +314,18 @@ public class TileMapper : MonoBehaviour {
         }
     }
 
-    void create_tile(int tier, int x, int y) {
+    public void create_tile(int tier, int x, int y) {
         Pos pos = new Pos(x, y);
         Tile tile = grab_tile(tier);
         //map.Add(pos, new MapCell(tier, tile, pos));
         map.Add(pos, MapCell.create_cell(tier, tile, pos));
         place_tile(tm, shadow, pos.x, pos.y);
+    }
+
+    public void build_rune_gate(Pos pos) {
+        MapCell mc = map[pos];
+        mc.has_rune_gate = true;
+        c.map_ui.activate_rune_gateB(true);
     }
 }
 

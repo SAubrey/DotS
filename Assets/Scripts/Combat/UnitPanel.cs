@@ -8,7 +8,9 @@ public class UnitPanel : MonoBehaviour {
     public GameObject panel;
     public Text AttT;
     public Text unit_name;
+    
     public Slot slot;
+    public PlayerUnit punit;
     private Camera cam;
 
     public virtual void update_panel(Slot slot) {}
@@ -16,7 +18,7 @@ public class UnitPanel : MonoBehaviour {
     void Awake() {
         selector = GameObject.Find("Selector").GetComponent<Selector>();
         bp = GameObject.Find("BattlePhaser").GetComponent<BattlePhaser>();
-         cam = GameObject.Find("BattleCamera").GetComponent<Camera>();
+        cam = GameObject.Find("BattleCamera").GetComponent<Camera>();
     }
 
     public void reposition(Slot slot) {
@@ -32,6 +34,8 @@ public class UnitPanel : MonoBehaviour {
         if (panel.activeSelf) {
             panel.SetActive(false); 
             selector.deselect();
+            slot = null;
+            punit = null;
         }
     }
 
@@ -43,6 +47,9 @@ public class UnitPanel : MonoBehaviour {
     public void show_panel(Slot slot) {
         if (slot != null) {
             this.slot = slot;
+            if (slot.has_punit) {
+                this.punit = slot.get_punit();
+            }
             update_panel(slot);
             panel.SetActive(true); 
             reposition(slot);

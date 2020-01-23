@@ -40,13 +40,6 @@ public class Battalion {
         units[roll].RemoveAt(0);
     }
 
-    public void post_phase() {
-        foreach (int type in units.Keys) {
-            for (int i = 0; i < units[type].Count; i++) {
-                units[type][i].post_phase();
-            }
-        }
-    }
     public void reset_all_stage_actions() {
         foreach (int type in units.Keys) {
             for (int i = 0; i < units[type].Count; i++) {
@@ -105,6 +98,15 @@ public class Battalion {
             s.update_healthbar();
             if (s.get_punit().defending)
                 s.get_punit().defending = false;
+
+        }
+    }
+
+    public void post_phase() {
+        foreach (int type in units.Keys) {
+            for (int i = 0; i < units[type].Count; i++) {
+                units[type][i].post_phase();
+            }
         }
     }
  

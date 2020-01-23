@@ -119,13 +119,15 @@ public class Group : MonoBehaviour {
         }
     }
     
-    public int get_num_of_same_units_in_group(int unit_ID) {
+    public int get_num_of_same_active_units_in_group(int unit_ID) {
         int num_grouped = 0;
         foreach (Slot s in slots) {
-            if (s.get_unit().get_ID() == unit_ID)
+            if (!s.has_unit)
+                continue;
+            if (s.get_unit().get_ID() == unit_ID && !s.get_unit().out_of_actions)
                 num_grouped++;
         }
-        return num_grouped;
+        return num_grouped--; // exclude first slot
     }
 
     public void set_type(int type) {
@@ -152,7 +154,6 @@ public class Group : MonoBehaviour {
             img.enabled = !_disabled;
             foreach (Slot s in slots)
                 s.disabled = _disabled;
-
         }
     }
 
@@ -168,9 +169,7 @@ public class Group : MonoBehaviour {
         slots[i].fill(u);
     }
     public Slot get(int i) {
-        if (slots[i] != null)
-            return slots[i];
-        return null;
+        return slots[i];
     }
 
     public Slot get_highest_empty_slot() {

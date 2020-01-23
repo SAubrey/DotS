@@ -90,32 +90,40 @@ public class PlayerUnit : Unit {
     // Accounts for additional attribute damage.
     public override int get_attack_dmg() {
         int sum_dmg = attack_dmg;
-        if (attributes[Unit.GROUPING_1]) {
-            int num_same_units_in_group = 
-            slot.get_group().get_num_of_same_units_in_group(ID);
-            for (int i = 0; i < num_same_units_in_group - 1; i++) {
-                sum_dmg += (1 + defense);
-            }
+        if ((attributes[Unit.GROUPING_1] || attributes[Unit.GROUPING_2])
+                && attribute_active) {
+            sum_dmg += ((1 + attack_dmg) * (get_grouped_units()));
         }
-        
-        Debug.Log(sum_dmg);
+        Debug.Log("Sum grouping dmg:" + sum_dmg);
         return sum_dmg;
     }
 
     // Accounts for additional attribute defense.
     public override int get_defense() {
-        int sum_dmg = defense;
+        int sum_def = defense;
+         if ((attributes[Unit.GROUPING_1] || attributes[Unit.GROUPING_2])
+                && attribute_active) {
+            sum_def += ((1 + defense) * (get_grouped_units()));
+        }
+        Debug.Log("Sum grouping def:" + sum_def);
+        return sum_def;
+    }
 
-
-        return sum_dmg;
+    private int get_grouped_units() {
+        int grouped_units = slot.get_group().get_num_of_same_active_units_in_group(ID);
+        if (attributes[Unit.GROUPING_1] && grouped_units > 1) {
+            grouped_units = 1;
+        }
+        return grouped_units;
     }
 
     public override int calc_dmg_taken(int dmg) {
         if (defending)
-            dmg -= defense;
+            dmg -= get_defense();
         return dmg > 0 ? dmg : 0;
     }
 
+    // Passed damage should have already accounted for possible defense reduction.
     public override float calc_hp_remaining(int dmg) {
         float damaged_hp = resilience - dmg;
         return damaged_hp;
@@ -131,12 +139,41 @@ public class PlayerUnit : Unit {
         }
         return ALIVE;
     }
+
+    // FOr area of effect attributes, effect the slot and do slot checks
+    // at damage calculation time rather than on the player.
+    /*
+    This parent class version does boolean checks for aspects
+    that apply to all player units.
+    */
+    public virtual bool can_activate_attribute() {
+        if (passive_attribute || out_of_actions || has_acted_in_stage)
+            return false;
+        return true;
+    }
+
+    public override void set_attribute_active(bool state) {
+        if (state && can_activate_attribute()) {
+            Debug.Log("turning attr on");
+            attribute_active = true;
+        } else {
+            attribute_active = false;
+            Debug.Log("turning attr off");
+        }
+    }
 }
 
 public class Warrior : PlayerUnit {
     public Warrior() {
         init("Warrior", 1, 1, 3, 1, MELEE, GROUPING_1);
         ID = WARRIOR;
+        attribute_requires_action = true;
+    }
+
+    public override bool can_activate_attribute() {
+        if (!base.can_activate_attribute())
+            return false;
+        return true;
     }
 }
 

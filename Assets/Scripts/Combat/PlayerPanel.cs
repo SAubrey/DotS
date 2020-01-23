@@ -4,11 +4,11 @@ using UnityEngine.UI;
 public class PlayerPanel : UnitPanel {
     Controller c;
     AttackQueuer aq;
-        // Player exclusive
     public Button returnB;
     public Button moveB;
     public Button attackB;
     public Button defB;
+    public Button attributeB;
     public Button upB, downB, leftB, rightB;
 
     public Text DefT;
@@ -33,6 +33,7 @@ public class PlayerPanel : UnitPanel {
         disable_moveB();
         disable_returnB();
         disable_rotateB();
+        disable_attributeB();
 
         bool ranging = bp.range_stage && punit.is_range();
         bool combat_staging = (bp.range_stage && punit.is_range()) || 
@@ -41,7 +42,7 @@ public class PlayerPanel : UnitPanel {
         if (bp.movement_stage)
             enable_rotateB();
         if (!punit.out_of_actions && !punit.has_acted_in_stage && 
-            (bp.movement_stage || ranging)) {
+                (bp.movement_stage || ranging)) {
             enable_moveB();
         } else if (bp.init_placement_stage) {
             enable_returnB();
@@ -49,13 +50,23 @@ public class PlayerPanel : UnitPanel {
 
         bool is_first_slot_in_group = slot.get_group().get_highest_player_slot() == slot;
         if (!punit.has_acted_in_stage && !punit.out_of_actions && 
-            combat_staging && is_first_slot_in_group) {
-            attackB.interactable = true;
-            defB.interactable = true;
+                combat_staging && is_first_slot_in_group) {
+            if (punit.get_raw_attack_dmg() > 0)
+                attackB.interactable = true;
+            if (punit.get_raw_defense() > 0)                
+                defB.interactable = true;
+            if (punit.can_activate_attribute()) {
+                attributeB.interactable = true;
+            }
         }
-    
-        attB_pressed = punit.attack_set;
-        defB_pressed = punit.defending;
+
+        // Determine pressed buttons
+        Debug.Log(punit.is_attribute_active());
+        set_press_defB(punit.attack_set);
+        set_press_defB(punit.defending);
+        if (attB_pressed || defB_pressed) {
+            set_press_attributeB(punit.is_attribute_active());
+        }
         moveB_pressed = false;
     }
 
@@ -75,6 +86,11 @@ public class PlayerPanel : UnitPanel {
         moveB_pressed = !moveB_pressed;
     }
 
+    // If successful, the button will stay pressed.
+    public void attribute() {
+        attributeB_pressed = !attributeB_pressed;
+    }
+
     // If any one of the following buttons are pressed,
     // the others will then not be.
     private bool _attB_pressed = false;
@@ -88,10 +104,15 @@ public class PlayerPanel : UnitPanel {
             if (_attB_pressed) {
                 defB_pressed = false;
                 moveB_pressed = false;
+                if (punit.attribute_requires_action)
+                    attributeB_pressed = false;
             } else {
-                if (slot.get_punit().attack_set) {
-                    aq.get_player_queue().remove_attack(slot.get_punit().attack_id, c.line_drawer);
+                if (punit.attack_set) {
+                    aq.get_player_queue().remove_attack(punit.attack_id, c.line_drawer);
                 } 
+                if (attributeB_pressed && punit.attribute_requires_action) {
+                    attributeB_pressed = false;
+                }
             }
             // Disable the attack no matter the presssed state.
             selector.selecting_target = _attB_pressed;
@@ -106,8 +127,12 @@ public class PlayerPanel : UnitPanel {
             if (_defB_pressed) {
                 attB_pressed = false;
                 moveB_pressed = false;
-            } 
-            slot.get_punit().defending = defB_pressed;
+                if (punit.attribute_requires_action)
+                    attributeB_pressed = false;
+            } else if (attributeB_pressed && punit.attribute_requires_action) {
+                attributeB_pressed = false;
+            }
+            punit.defending = defB_pressed;
         }
     }
     private bool _moveB_pressed = false;
@@ -124,6 +149,29 @@ public class PlayerPanel : UnitPanel {
         }
     }
 
+    private bool _attributeB_pressed = false;
+    public bool attributeB_pressed {
+        get { return _attributeB_pressed; }
+        set {
+            if (!attB_pressed && !defB_pressed) {
+                _attributeB_pressed = false;
+                set_press_attributeB(false);
+                punit.set_attribute_active(false);
+                return;
+            }
+            // Stay unpressed if the attribute cannot be activated.
+            if (!punit.can_activate_attribute()) {
+                _attributeB_pressed = false;
+                set_press_attributeB(false);
+                return;
+            } 
+
+            _attributeB_pressed = value;
+            set_press_attributeB(value);
+            punit.set_attribute_active(value);
+        }
+    }
+
     private void update_text(PlayerUnit punit) {
         set_name(punit.get_name());
         ResT.text = punit.resilience.ToString();
@@ -132,24 +180,19 @@ public class PlayerPanel : UnitPanel {
     }
 
     private void set_press_attackB(bool pressed) {
-        if (pressed)
-            attackB.image.color = Controller.GREY;
-        else
-            attackB.image.color = Color.white;
+        attackB.image.color = pressed ? Controller.GREY : Color.white;
     }
 
     private void set_press_defB(bool pressed) {
-        if (pressed)
-            defB.image.color = Controller.GREY;
-        else
-            defB.image.color = Color.white;
+        defB.image.color = pressed ? Controller.GREY : Color.white;
     }
 
     private void set_press_moveB(bool pressed) {
-        if (pressed)
-            moveB.image.color = Controller.GREY;
-        else
-            moveB.image.color = Color.white;
+        moveB.image.color = pressed ? Controller.GREY : Color.white;
+    }
+
+    private void set_press_attributeB(bool pressed) {
+        attributeB.image.color = pressed ? Controller.GREY : Color.white;
     }
 
     public override void close() {
@@ -201,5 +244,13 @@ public class PlayerPanel : UnitPanel {
 
     private void disable_moveB() {
         moveB.interactable = false;
+    }
+
+    private void enable_attributeB() {
+        attributeB.interactable = true;
+    }
+
+    private void disable_attributeB() {
+        attributeB.interactable = false;
     }
 }

@@ -16,35 +16,39 @@ public class Unit {
     public const int FLYING = 2;
     public const int GROUPING_1 = 3;
     public const int GROUPING_2 = 4;
-    public const int GROUPING_3 = 5;
-    public const int GROUPING_4 = 6;
-    public const int STALK = 7;
-    public const int PIERCING_BOLT = 8;
-    public const int ARCING_STRIKE = 9;
-    public const int AGGRESSIVE = 10;
-    public const int ARMOR_1 = 11;
-    public const int ARMOR_2 = 12;
-    public const int ARMOR_3 = 13;
-    public const int ARMOR_4 = 14;
-    public const int ARMOR_5 = 15;
-    public const int TERROR_1 = 16;
-    public const int TERROR_2 = 17;
-    public const int TERROR_3 = 18;
-    public const int TARGET_RANGE = 19;
-    public const int TARGET_HEAVY = 20;
-    public const int STUN = 21;
-    public const int WEAKNESS_POLEARM = 22;
-    public const int DEVASTATING_BLOW = 23;
-    public const int TARGET_CENTERFOLD = 24;
+    public const int STALK = 5;
+    public const int PIERCING_BOLT = 6;
+    public const int ARCING_STRIKE = 7;
+    public const int AGGRESSIVE = 8;
+    public const int ARMOR_1 = 9;
+    public const int ARMOR_2 = 10;
+    public const int ARMOR_3 = 11;
+    public const int ARMOR_4 = 12;
+    public const int ARMOR_5 = 13;
+    public const int TERROR_1 = 14;
+    public const int TERROR_2 = 15;
+    public const int TERROR_3 = 16;
+    public const int TARGET_RANGE = 17;
+    public const int TARGET_HEAVY = 18;
+    public const int STUN = 19;
+    public const int WEAKNESS_POLEARM = 20;
+    public const int DEVASTATING_BLOW = 21;
+    public const int TARGET_CENTERFOLD = 22;
 
     // Allied attributes
-    public const int INSPIRE = 25;
-    public const int HARVEST = 26;
-    public const int COUNTER_CHARGE = 27;
+    public const int INSPIRE = 23;
+    public const int HARVEST = 24;
+    public const int COUNTER_CHARGE = 25;
 
-    protected int num_attributes = 28;
+    // Attribute fields
+    protected int num_attributes = 26;
+    public List<bool> attributes = new List<bool>();
+    //public bool grouping_active = false;
+    protected bool attribute_active = false;
+    public bool attribute_requires_action = false; // alters button behavior.
+    public bool passive_attribute = false;
 
-    // Attack styles
+    // Combat fields
     public const int MELEE = 1;
     public const int RANGE = 2;
     protected int attack_dmg;
@@ -72,16 +76,15 @@ public class Unit {
     public bool has_acted_in_stage = false;
     public bool attack_set = false;
 
-    public List<bool> attributes = new List<bool>();
-
     protected int type; // Player or Enemy
     protected int ID; // Unique code for the particular unit type.
     protected string name;
+    // Unique identifier for looking up drawn attack lines and aggregating attacks.
+    public int attack_id;
+
     protected Slot slot = null;
     protected bool dead = false; // Used to determine what to remove in the Battalion.
     private bool placed = false;
-    // Unique identifier for looking up drawn attack lines and aggregating attacks.
-    public int attack_id;
 
     public virtual int take_damage(int dmg) { return 0; }
     public virtual int calc_dmg_taken(int dmg) { return 0; }
@@ -89,6 +92,8 @@ public class Unit {
     public virtual int get_post_dmg_state(int dmg_after_def) { return 0; }
     public virtual int get_attack_dmg() { return attack_dmg; }
     public virtual int get_defense() { return defense; }
+    public virtual void set_attribute_active(bool state) {}
+
     protected void init(string name, int att, int style, int atr1, int atr2, int atr3) {
         create_attribute_list(num_attributes);
         this.name = name;
@@ -128,7 +133,20 @@ public class Unit {
     public int attack() {
         attack_set = false;
         num_actions--;
+        if (attributes[GROUPING_1] && is_attribute_active()){
+            foreach (Slot s in slot.get_group().get_full_slots()) {
+                s.get_unit().num_actions--;
+            }
+        }
         return attack_dmg;
+    }
+
+    public bool can_attack() {
+        return (attack_dmg > 0 && !out_of_actions);
+    }
+
+    public bool can_defend() {
+        return (defense > 0 && !out_of_actions);
     }
 
     protected void create_attribute_list(int num_attributes) {
@@ -178,6 +196,12 @@ public class Unit {
         if (get_slot() != null) {
             slot.update_healthbar();
         }
+
+        set_attribute_active(false);
+    }
+
+    public bool is_attribute_active() {
+        return attribute_active;
     }
 
     public int get_raw_attack_dmg() {

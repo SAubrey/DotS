@@ -170,7 +170,6 @@ GameObject:
   - component: {fileID: 2420745464445342588}
   - component: {fileID: 2420745464445342589}
   - component: {fileID: 2420745464445342590}
-  - component: {fileID: 2420745464445342591}
   m_Layer: 5
   m_Name: DecB
   m_TagString: Untagged
@@ -292,30 +291,6 @@ MonoBehaviour:
         m_CallState: 2
     m_TypeName: UnityEngine.UI.Button+ButtonClickedEvent, UnityEngine.UI, Version=1.0.0.0,
       Culture=neutral, PublicKeyToken=null
---- !u!132 &2420745464445342591
-GUIText:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2420745464445342561}
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Text: <
-  m_Anchor: 0
-  m_Alignment: 0
-  m_PixelOffset: {x: 0, y: 0}
-  m_LineSpacing: 1
-  m_TabSize: 4
-  m_Font: {fileID: 12800000, guid: c2a087f6949f3fe44b93dafe6bd0e3a2, type: 3}
-  m_Material: {fileID: 0}
-  m_FontSize: 40
-  m_FontStyle: 0
-  m_Color:
-    serializedVersion: 2
-    rgba: 4294967295
-  m_PixelCorrect: 1
-  m_RichText: 1
 --- !u!1 &2420745464997224680
 GameObject:
   m_ObjectHideFlags: 0
@@ -486,7 +461,6 @@ GameObject:
   - component: {fileID: 2420745465634119896}
   - component: {fileID: 2420745465634119897}
   - component: {fileID: 2420745465634119898}
-  - component: {fileID: 2420745465634119899}
   m_Layer: 5
   m_Name: IncB
   m_TagString: Untagged
@@ -608,30 +582,6 @@ MonoBehaviour:
         m_CallState: 2
     m_TypeName: UnityEngine.UI.Button+ButtonClickedEvent, UnityEngine.UI, Version=1.0.0.0,
       Culture=neutral, PublicKeyToken=null
---- !u!132 &2420745465634119899
-GUIText:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2420745465634119901}
-  m_Enabled: 0
-  serializedVersion: 3
-  m_Text: 
-  m_Anchor: 0
-  m_Alignment: 0
-  m_PixelOffset: {x: 0, y: 0}
-  m_LineSpacing: 1
-  m_TabSize: 4
-  m_Font: {fileID: 12800000, guid: c2a087f6949f3fe44b93dafe6bd0e3a2, type: 3}
-  m_Material: {fileID: 0}
-  m_FontSize: 46
-  m_FontStyle: 0
-  m_Color:
-    serializedVersion: 2
-    rgba: 4282861383
-  m_PixelCorrect: 1
-  m_RichText: 1
 --- !u!1 &2420745465773383552
 GameObject:
   m_ObjectHideFlags: 0

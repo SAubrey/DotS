@@ -5,6 +5,7 @@ using UnityEngine;
 public class Discipline : Storeable {
     public GameObject piece;
     public Battalion bat;
+    public TravelCard travel_card;
     void Start() {
         c = GameObject.Find("Controller").GetComponent<Controller>();
         bat = new Battalion();

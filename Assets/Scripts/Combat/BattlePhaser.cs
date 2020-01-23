@@ -155,7 +155,8 @@ public class BattlePhaser : MonoBehaviour {
         if (battle_finished) {
             c.get_active_bat().in_battle = false;
             if (player_won) {
-                c.get_disc().change_var(Storeable.EXPERIENCE, 1);
+                c.get_disc().travel_card.adjust_resources(c);
+                // If enemies were stored to resume battle, clear them out.
                 MapCell mc = c.tile_mapper.get_cell(c.get_disc().pos);
                 mc.clear_enemies();
             }

@@ -12,21 +12,10 @@ public class TravelCardManager : MonoBehaviour {
     private TravelCard tc;
     public Controller c;
 
-    public Dictionary<string, TravelCard> discipline_cards =
-         new Dictionary<string, TravelCard>(); 
-
     void Start() {
         c = GameObject.Find("Controller").GetComponent<Controller>();
         set_continueB(true);
         set_rollB(false);
-    }
-
-    public void set_card(string disc_name, TravelCard tc) {
-        if (!discipline_cards.ContainsKey(disc_name)) {
-            discipline_cards.Add(disc_name, tc);
-        } else {
-            discipline_cards[disc_name] = tc;
-        }
     }
 
     // Called by button only.
@@ -36,8 +25,8 @@ public class TravelCardManager : MonoBehaviour {
 
     public void finish_roll(int result) {
         set_continueB(true);
-        set_rollB(false);
-        tc.use_roll_result(result);
+        //set_rollB(false);
+        tc.use_roll_result(result, c);
     }
 
     public void set_up_roll(TravelCard tc, int num_sides) {
@@ -45,10 +34,9 @@ public class TravelCardManager : MonoBehaviour {
         this.num_sides = num_sides;
         set_continueB(false);
         set_rollB(true);
-
     }
 
-    private void set_rollB(bool state) {
+    public void set_rollB(bool state) {
         rollB.interactable = state;
         Text t = rollB.GetComponentInChildren<Text>();
         if (state) {

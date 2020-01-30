@@ -24,7 +24,7 @@ public class Die : MonoBehaviour {
 
             if (side_change_time > current_max_side_change_time) {
                 if (current_num_side_changes < num_side_changes) {
-                    display_side(get_rand_side(anim_sides));
+                    display_side(get_rand_side(current_side, anim_sides));
                 } else {
                     finish_roll();
                 }
@@ -39,13 +39,15 @@ public class Die : MonoBehaviour {
     // then lets TCM knows it's done.
     public void roll(int sides) {
         num_side_changes = Random.Range(9, 15);
-        //last_side = get_rand_side(sides);
         animate_roll(sides);
-        //return last_side;
     }
 
-    private int get_rand_side(int sides) {
-        return (int)Random.Range(1, sides + 1);
+    private int get_rand_side(int current_side, int sides) {
+        int roll;
+        do {
+            roll = Random.Range(1, sides + 1);
+        } while (roll == current_side);
+        return roll;
     }
 
     private void display_side(int roll) {

@@ -13,6 +13,15 @@ public class EnemyLoader : MonoBehaviour {
     public static int RARE_THRESH = 90;
     public static int MAX_ROLL = 100;
 
+    // Spawning zones - 2 x,y coordinates from low to high.
+    private Zone front_first_zone = new Zone(4, 7, 6, 7);
+    private Zone front_second_zone = new Zone(4, 8, 6, 8);
+    private Zone rear_first_zone = new Zone(4, 3, 6, 3);
+    private Zone rear_second_zone = new Zone(4, 4, 6, 4);
+    private Zone right_first_zone = new Zone(7, 4, 7, 6);
+    private Zone right_second_zone = new Zone(8, 4, 8, 6);
+    private Zone left_first_zone = new Zone(3, 4, 3, 6);
+    private Zone left_second_zone = new Zone(2, 4, 2, 6);
 
     public const int T1 = 1;
     public const int T2 = 2;
@@ -20,7 +29,6 @@ public class EnemyLoader : MonoBehaviour {
 
     private Formation f;
     public System.Random rand;
-    private int enemy_row = 7;
 
     public Sprite galtsa, grem, endu, korote, molner, etuena, clypte, goliath, kverm,
         latu, eke_tu, oetem, eke_fu, eke_shi_ami, eke_lord, ketemcol, mahukin, drongo, maheket,
@@ -100,7 +108,14 @@ public class EnemyLoader : MonoBehaviour {
     }
 
     private void reset() {
-        spawn_column = 0;
+        front_first_zone.reset();
+        front_second_zone.reset();
+        rear_first_zone.reset();
+        rear_second_zone.reset();
+        right_first_zone.reset();
+        right_second_zone.reset();
+        left_first_zone.reset();
+        left_second_zone.reset();
     }
 
     public void load(int biome, int tier, int quantity) {
@@ -147,23 +162,39 @@ public class EnemyLoader : MonoBehaviour {
         return biomes[biome][tier][rarity][r];
     }
 
-    private bool slot_enemy(Enemy enemy) {
-        bool success = false;
-        if (enemy.attributes[Enemy.FLANKING]) { // If flanking, place in rear.
-            if (fill_slot(enemy, 5, 3)) {
-                success = true;
-            } else {
-                success = fill_slot(enemy, 6 - spawn_column, enemy_row);
-            }
-        } else {
-            success = fill_slot(enemy, 6 - spawn_column, enemy_row);
-        }
-        spawn_column++;
-        return success;
+    private void slot_enemy(Enemy enemy) {
+        Zone zone = get_appropriate_zone(enemy);
+        if (fill_slot(enemy, zone.get_spawn_pos()))
+            zone.increment_pos();
     }
 
-    private bool fill_slot(Enemy enemy, int col, int row) {
-        Slot s = f.get_group(col, row).get_highest_empty_slot();
+    private bool spawn_left = false;
+    private Zone get_appropriate_zone(Enemy enemy) {
+        Zone zone = front_first_zone;
+        if (enemy.attributes[Enemy.FLANKING]) {
+            spawn_left = !spawn_left;
+            zone = spawn_left ? left_first_zone : right_first_zone;
+        }
+        else if (enemy.attributes[Enemy.STALK]) {
+            zone = rear_first_zone.full ? rear_second_zone : rear_first_zone;
+        }
+        else if (enemy.is_range()) {
+            if (front_second_zone.full) {
+                spawn_left = !spawn_left;
+                zone = spawn_left ? left_second_zone : right_second_zone;
+            } else
+                zone = front_second_zone;
+        } else {
+            if (front_first_zone.full) {
+                spawn_left = !spawn_left;
+                zone = spawn_left ? right_first_zone : left_first_zone;   
+            }
+        }
+        return zone;
+    }
+
+    private bool fill_slot(Enemy enemy, Pos pos) {
+        Slot s = f.get_group(pos.x, pos.y).get_highest_empty_slot();
         if (s != null) {
             s.fill(enemy);
             return true;
@@ -230,12 +261,51 @@ public class EnemyLoader : MonoBehaviour {
         biomes[MapCell.CAVE_ID][T3][Enemy.RARE].Add(Enemy.TERRA_QUAL);
         biomes[MapCell.CAVE_ID][T3][Enemy.UNCOMMON].Add(Enemy.DUALE);
     }
+}
 
-    private int _spawn_column = 4;
-    public int spawn_column {
-        get { return _spawn_column % 3; }
-        set {
-            _spawn_column = value;
+public class Zone {
+    public Pos low;
+    public Pos high;
+    //public Pos current_pos;
+    public bool increments_horizontally = false;
+    int _col = 0;
+    int col {
+        get { return _col; }
+        set { _col = value % 3; }
+    }
+    int _row = 0;
+    int row {
+        get { return _row; }
+        set { _row = value % 3; }
+    }
+    int enemies_slotted = 0;
+    public bool full {
+        get { return (enemies_slotted >= 9); } 
+    }
+
+    public Zone(int low_col, int low_row, int high_col, int high_row) {
+        low = new Pos(low_col, low_row);
+        high = new Pos(high_col, high_row);
+        if (high_row - low_row == 0) {
+            increments_horizontally = true;
+        }
+    }
+
+    public Pos get_spawn_pos() {
+        return new Pos(low.x + col, low.y + row);
+    }
+
+    public void reset() {
+        col = 0;
+        row = 0;
+    }
+
+    public void increment_pos() {
+        enemies_slotted++;
+        if (increments_horizontally) {
+            col++;
+        } else {
+            row++;
         }
     }
 }

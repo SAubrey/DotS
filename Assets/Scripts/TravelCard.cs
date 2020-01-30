@@ -74,7 +74,7 @@ public class TravelCard {
 
         Discipline disc = c.get_disc();
         foreach (KeyValuePair<string, int> r in consequence) {
-            if (r.Value > 0) {
+            if (r.Value != 0) {
                 disc.change_var(r.Key, r.Value, true);
                 yield return new WaitForSecondsRealtime(0.5f);
             }

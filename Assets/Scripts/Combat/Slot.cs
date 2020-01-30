@@ -8,13 +8,12 @@ public class Slot : MonoBehaviour {
     public Image img;
     public Controller c;
     private Formation f;
-    //public GameObject unit_panel;
     private Camera cam;
 
     // --VISUAL-- 
     public Text namefg_T;
     public Text namebg_T;
-    public Color unselected_not_front;
+    public Color unselected_color;
     public Color dead;
     public Color injured;
     private Color transparent = new Color(0, 0, 0, 0);
@@ -33,7 +32,6 @@ public class Slot : MonoBehaviour {
     public Color attfgI_c;
     public Color deffgI_c;
 
-
     [HideInInspector]
     public int col;
     [HideInInspector]
@@ -42,6 +40,7 @@ public class Slot : MonoBehaviour {
     public Group group;
     private bool _disabled = false;
     public Button button;
+    public bool has_active_bonus = false;
     
     void Awake() {
         c = GameObject.Find("Controller").GetComponent<Controller>();
@@ -76,7 +75,7 @@ public class Slot : MonoBehaviour {
             unit = null;
         }
         set_sprite(PlayerUnit.EMPTY);
-        set_namefg_T("");
+        set_nameT("");
         show_selection(false);
         toggle_healthbar(false);
         if (validate)
@@ -85,20 +84,16 @@ public class Slot : MonoBehaviour {
     }
 
     private void set_unit(Unit u) {
-        if (u == null) {
-            Debug.Log("! Not setting null unit");
+        if (u == null) 
             return;
-        }
         if (u.is_playerunit()) {
             unit = u as PlayerUnit;
-            int hp = (int)get_punit().resilience;
-            set_up_healthbar(hp, hp);
         } else if (u.is_enemy()) {
             unit = u as Enemy;
-            set_up_healthbar(get_enemy().health, get_enemy().max_health);
         }
         toggle_healthbar(true);
-        set_namefg_T(unit.get_name());
+        update_UI();
+        set_nameT(unit.get_name());
         unit.set_slot(this);
     }
 
@@ -130,26 +125,31 @@ public class Slot : MonoBehaviour {
         }
     }
 
-    public void set_up_healthbar(int hp, int max_hp) {
-        healthbar.maxValue = max_hp;
-        healthbar.value = hp;
-
+    public void size_healthbar(float max_hp) {
         // Adjust width based on max hp.
         RectTransform t = healthbar.transform as RectTransform;
         t.sizeDelta = new Vector2(healthbar_inc_width * max_hp, t.sizeDelta.y);
-        update_healthbar(max_hp);
     }
 
-    public void update_healthbar(float hp=-255) {
-        if (hp == -255) {
-            if (has_punit) {
-                hp = get_punit().resilience;
-            } else {
-                hp = get_enemy().health;
-            }
-        }
-        
+    // Updated when a boost is removed or applied,
+    // or an attribute is activated or deactivated.
+    public void update_UI() {
+        update_healthbar();
+        update_attack();
+        update_defense();
+
+        update_images();
+    }
+
+    public void update_healthbar() {
+        float hp = get_unit().health; // This will already include the boost but not the bonus.
+        float hp_boost = get_unit().get_stat_boost(Unit.HEALTH_BOOST) 
+            + get_unit().get_bonus_health();
+
+        healthbar.maxValue = get_unit().max_health + hp_boost;
         healthbar.value = hp;
+        size_healthbar(healthbar.maxValue);
+
         if (unit.is_playerunit()) {
             if (healthbar.value < healthbar.maxValue / 2)
                 healthbar.fillRect.GetComponent<Image>().color = injured;
@@ -157,14 +157,50 @@ public class Slot : MonoBehaviour {
             float red = ((float)get_enemy().health / (float)get_enemy().max_health);
             healthbar.fillRect.GetComponent<Image>().color = new Color(1, red, red, 1);
         }
-
-        update_images();
-        hpfgT.text = healthbar.value + " / " + healthbar.maxValue;
+        
+        hpfgT.text = build_health_string();
         hpbgT.text = hpfgT.text;
-        attfgT.text = get_unit().get_raw_attack_dmg().ToString();
+    }
+
+    public string build_health_string() {
+        float hp = get_unit().health; // This will already include the boost but not the bonus.
+        float hp_boost = get_unit().get_stat_boost(Unit.HEALTH_BOOST)
+            + get_unit().get_bonus_health();
+
+        string str = hp + " / " + get_unit().max_health.ToString();
+        if (hp_boost > 0) 
+            str += "+" + hp_boost.ToString();
+        return str;
+    }
+
+    public void update_attack() {
+        attfgT.text = build_att_string();
         attbgT.text = attfgT.text;
-        deffgT.text = get_unit().get_raw_defense().ToString();
+    }
+
+    public string build_att_string() {
+        float att_boost = get_unit().get_stat_boost(Unit.ATTACK_BOOST)
+            + get_unit().get_bonus_att_dmg();
+
+        string str = get_unit().get_raw_attack_dmg().ToString();
+        if (att_boost > 0) 
+            str += "+" + att_boost.ToString();
+        return str;
+    }
+
+    public void update_defense() {
+        deffgT.text = build_def_string();
         defbgT.text = deffgT.text;
+    }
+
+    public string build_def_string() {
+        float def_boost = get_unit().get_stat_boost(Unit.DEFENSE_BOOST)
+            + get_unit().get_bonus_def();
+
+        string str = get_unit().get_raw_defense().ToString();
+        if (def_boost > 0) 
+            str += "+" + def_boost.ToString();
+        return str;
     }
 
     public void update_images() {
@@ -261,7 +297,7 @@ public class Slot : MonoBehaviour {
         return has_enemy ? unit as Enemy : null;
     }
 
-    private void set_namefg_T(string txt) {
+    private void set_nameT(string txt) {
         namefg_T.text = txt;
         namebg_T.text = txt;
     }

@@ -77,10 +77,12 @@ public class AttackQueuer : MonoBehaviour {
     private void group_attack(List<Attack> attacks) {
         int sum_dmg = 0;
         foreach (Attack a in attacks) {
-            sum_dmg += (a.get_start_unit().attack() + a.calc_dir_dmg());
+            sum_dmg += a.get_raw_dmg();
+            a.get_start_unit().attack();
         }
         Unit end_u = attacks[0].get_end_unit();
-        int state = end_u.take_damage(sum_dmg);
+        int state = end_u.take_damage(end_u.calc_dmg_taken(sum_dmg));
+
         foreach (Attack a in attacks) {
             a.post_attack(state);
             line_drawer.get_line(a.get_start_unit().attack_id).begin_fade();
@@ -226,7 +228,9 @@ public class Attack {
 
     public void attack() {
         // determine damage from flanking, rear
-        int dmg = get_start_unit().attack() + calc_dir_dmg();
+        //int dmg = get_start_unit().attack() + calc_dir_dmg();
+        get_start_unit().attack();
+        int dmg = calc_dmg_taken();
         int state = get_end_unit().take_damage(dmg);
         post_attack(state);
     }
@@ -241,7 +245,7 @@ public class Attack {
     public void post_player_attack(int state) {
         int xp = enemy.take_xp_from_death();
         if (state == Unit.DEAD && xp > 0) {
-            start.c.get_disc().change_var(Storeable.EXPERIENCE, xp);
+            start.c.get_disc().change_var(Storeable.EXPERIENCE, xp, true);
         }
     }
     public void post_enemy_attack(int state) {
@@ -252,9 +256,11 @@ public class Attack {
     }
 
     public int calc_dmg_taken() {
-        return get_end_unit().calc_dmg_taken(get_raw_dmg());
+        return get_end_unit().calc_dmg_taken(
+            get_raw_dmg(), get_start_unit().attributes[Unit.PIERCING]);
     }
 
+    // Accounts for grouping attack dmg.
     public int get_raw_dmg() {
         return get_start_unit().get_attack_dmg() + calc_dir_dmg();
     }

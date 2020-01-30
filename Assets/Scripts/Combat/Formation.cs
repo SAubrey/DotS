@@ -18,21 +18,6 @@ public class Formation : MonoBehaviour {
     public Sprite miner;
     public Sprite empty;
 
-    public Group front_left;
-    public Group front_mid;
-    public Group front_right;
-    public Group mid_left;
-    public Group mid_mid;
-    public Group mid_right;
-    public Group rear_mid;
-    
-    // Enemy spawn groups
-    public Group rear1_mid;
-    public Group front1_left;
-    public Group front1_mid;
-    public Group front1_right;
-
-
     // Button images in battle scene for highlighting selections.
     public Dictionary<int, Sprite> images = new Dictionary<int, Sprite>();
     public Image archer_img;

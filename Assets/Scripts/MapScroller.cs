@@ -24,7 +24,7 @@ public class MapScroller : MonoBehaviour {
         if (cs.current_cam == CamSwitcher.MAP) 
             check_input(-0.5f);
         else if (cs.current_cam == CamSwitcher.BATTLE) 
-            check_input(-50f);
+            check_input(-30f);
     }
 
     private void check_input(float scale) {

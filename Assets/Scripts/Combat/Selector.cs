@@ -19,10 +19,6 @@ public class Selector : MonoBehaviour {
         get { return _selecting_target; }
         set {
             _selecting_target = value;
-            //if (!_selecting_target)
-                //c.unit_panel_man.player_panel.attB_pressed = false;
-            //else
-               // c.unit_panel_man.player_panel.attB_pressed = true;
         }
     }
     private bool _selecting_move = false;
@@ -30,10 +26,6 @@ public class Selector : MonoBehaviour {
         get { return _selecting_move; }
         set { 
             _selecting_move = value;
-            //if (!value)
-                //c.unit_panel_man.player_panel.moveB_pressed = false;
-            //else
-              //  c.unit_panel_man.player_panel.moveB_pressed = false;
         }
     }
     public Slot selected_slot;

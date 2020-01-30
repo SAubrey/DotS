@@ -37,20 +37,16 @@ public class Enemy : Unit {
 
     public int xp;
     public bool xp_taken = false;
-    //public bool placed = false;
-    public int max_health;
-    public int health;
 
     private Slot target = null; // player unit to be moved towards and attacked
+    public bool defending = true;
 
-    protected void init(string name, int att, int hp, int xp, int style, int atr1, int atr2, int atr3) {
-        base.init(name, att, style, atr1, atr2, atr3);
-        
+    protected void init(string name, int att, int hp, int xp, 
+            int style, int atr1=-1, int atr2=-1, int atr3=-1) {
+        base.init(name, att, hp, style, atr1, atr2, atr3);
         type = ENEMY;
-        attack_dmg = att;
-        max_health = hp;
-        health = hp;
         this.xp = xp;
+        defending = true;
     }
 
     public static Enemy create_enemy(int ID) {
@@ -107,7 +103,7 @@ public class Enemy : Unit {
 
     public override int take_damage(int dmg) {
         health -= dmg;
-        slot.update_healthbar(health);
+        slot.update_healthbar();
 
         if (health <= 0) {
             dead = true;
@@ -116,10 +112,12 @@ public class Enemy : Unit {
         return health <= 0 ? DEAD : INJURED;
     }
 
-    public override int calc_dmg_taken(int dmg) {
+    public override int calc_dmg_taken(int dmg, bool piercing=false) {
         // adjust for defensive attributes?
-        int final_dmg = dmg;
-        return final_dmg > 0 ? final_dmg : 0;
+        if (!piercing)
+            dmg -= defense;
+
+        return dmg > 0 ? dmg : 0;
     }
 
     public override float calc_hp_remaining(int dmg) {
@@ -190,7 +188,7 @@ public class Etuena : Enemy {
 public class Clypte : Enemy {
     public Clypte() {
         ID = CLYPTE;
-        init("Clypte", 3, 5, 3, MELEE, TARGET_RANGE, 0, 0);
+        init("Clypte", 3, 5, 3, RANGE, TARGET_RANGE, 0, 0);
     }
 }
 public class Goliath : Enemy {
@@ -209,12 +207,16 @@ public class Latu : Enemy {
     public Latu() {
         ID = LATU;
         init("Latu", 3, 3, 3, MELEE, STALK, AGGRESSIVE, 0);
+        max_num_actions = 3;
+        num_actions = 3;
     }
 }
 public class Eke_tu : Enemy {
     public Eke_tu() {
         ID = EKE_TU;
         init("Eke Tu", 1, 2, 2, MELEE, TARGET_RANGE, AGGRESSIVE, 0);
+        max_num_actions = 3;
+        num_actions = 3;
     }
 }
 public class Oetem : Enemy {
@@ -232,7 +234,7 @@ public class Eke_fu : Enemy {
 public class Eke_shi_ami : Enemy {
     public Eke_shi_ami() {
         ID = EKE_SHI_AMI;
-        init("Eke Shi Ami", 3, 5, 4, MELEE, PIERCING_BOLT, STUN, TARGET_HEAVY);
+        init("Eke Shi Ami", 3, 5, 4, RANGE, PIERCING, STUN, TARGET_HEAVY);
     }
 }
 public class Eke_Lord : Enemy {
@@ -245,30 +247,36 @@ public class Ketemcol : Enemy {
     public Ketemcol() {
         ID = KETEMCOL;
         init("Ketemcol", 2, 8, 6, MELEE, ARCING_STRIKE, STUN, ARMOR_1);
+        defense = 1;
     }
 }
 public class Mahukin : Enemy {
     public Mahukin() {
         ID = MAHUKIN;
         init("Mahukin", 2, 3, 4, MELEE, ARMOR_2, GROUPING_2, 0);
+        defense = 2;
     }
 }
 public class Drongo : Enemy {
     public Drongo() {
         ID = DRONGO;
         init("Drongo", 3, 6, 6, MELEE, ARMOR_3, 0, 0);
+        defense = 3;
     }
 }
 public class Maheket : Enemy {
     public Maheket() {
         ID = MAHEKET;
         init("Maheket", 3, 3, 5, MELEE, ARMOR_2, GROUPING_2, 0);
+        defense = 2;
     }
 }
 public class Calute : Enemy {
     public Calute() {
         ID = CALUTE;
         init("Calute", 6, 6, 5, MELEE, STALK, AGGRESSIVE, 0);
+        max_num_actions = 3;
+        num_actions = 3;
     }
 }
 public class Etalket : Enemy {
@@ -281,6 +289,7 @@ public class Muatem : Enemy {
     public Muatem() {
         ID = MUATEM;
         init("Muatem", 7, 4, 12, MELEE, ARMOR_5, DEVASTATING_BLOW, 0);
+        defense = 5;
     }
 }
 public class Drak : Enemy {
@@ -292,7 +301,7 @@ public class Drak : Enemy {
 public class Zerrku : Enemy {
     public Zerrku() {
         ID = ZERRKU;
-        init("Zerrku", 3, 3, 4, MELEE, GROUPING_2, 0, 0);
+        init("Zerrku", 3, 3, 4, RANGE, GROUPING_2, 0, 0);
     }
 }
 public class Gokin : Enemy {
@@ -305,23 +314,27 @@ public class Tajaqar : Enemy {
     public Tajaqar() {
         ID = TAJAQAR;
         init("Tajaqar", 3, 3, 5, MELEE, FLANKING, ARMOR_1, GROUPING_2);
+        defense = 1;
     }
 }
 public class Tajaero : Enemy {
     public Tajaero() {
         ID = TAJAERO;
-        init("Tajaero", 3, 2, 4, MELEE, FLYING, 0, 0);
+        init("Tajaero", 3, 2, 4, RANGE, FLYING, 0, 0);
     }
 }
 public class Terra_Qual : Enemy {
     public Terra_Qual() {
         ID = TERRA_QUAL;
         init("Terra Qual", 5, 10, 12, MELEE, 0, ARCING_STRIKE, ARMOR_2);
+        defense = 2;
     }
 }
 public class Duale : Enemy {
     public Duale() {
         ID = DUALE;
-        init("Duale", 2, 6, 5, MELEE, AGGRESSIVE, FLANKING, 0);
+        init("Duale", 2, 6, 5, RANGE, AGGRESSIVE, FLANKING, 0);
+        max_num_actions = 3;
+        num_actions = 3;
     }
 }

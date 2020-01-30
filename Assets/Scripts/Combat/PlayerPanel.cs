@@ -62,11 +62,14 @@ public class PlayerPanel : UnitPanel {
 
         // Determine pressed buttons
         Debug.Log(punit.is_attribute_active());
-        set_press_defB(punit.attack_set);
+        set_press_attackB(punit.attack_set);
+        _attB_pressed = punit.attack_set;
         set_press_defB(punit.defending);
-        if (attB_pressed || defB_pressed) {
-            set_press_attributeB(punit.is_attribute_active());
-        }
+        _defB_pressed = punit.defending;
+        //if (punit.attribute_requires_action && (attB_pressed || defB_pressed)) {
+        set_press_attributeB(punit.is_attribute_active());
+        _attributeB_pressed = punit.is_attribute_active();
+        //} 
         moveB_pressed = false;
     }
 
@@ -74,6 +77,7 @@ public class PlayerPanel : UnitPanel {
         if (!bp.targeting)
             return;
         attB_pressed = !attB_pressed;
+        Debug.Log(attB_pressed);
     }
 
     public void defend() {
@@ -114,7 +118,7 @@ public class PlayerPanel : UnitPanel {
                     attributeB_pressed = false;
                 }
             }
-            // Disable the attack no matter the presssed state.
+            // Disable the attack no matter the pressed state.
             selector.selecting_target = _attB_pressed;
         }
     }
@@ -153,7 +157,8 @@ public class PlayerPanel : UnitPanel {
     public bool attributeB_pressed {
         get { return _attributeB_pressed; }
         set {
-            if (!attB_pressed && !defB_pressed) {
+            if (punit.attribute_requires_action
+                    && (!attB_pressed && !defB_pressed)) {
                 _attributeB_pressed = false;
                 set_press_attributeB(false);
                 punit.set_attribute_active(false);
@@ -172,11 +177,11 @@ public class PlayerPanel : UnitPanel {
         }
     }
 
-    private void update_text(PlayerUnit punit) {
+    public void update_text(PlayerUnit punit) {
         set_name(punit.get_name());
-        ResT.text = punit.resilience.ToString();
-        AttT.text = punit.get_raw_attack_dmg().ToString();
-        DefT.text = punit.get_raw_defense().ToString();
+        ResT.text = punit.get_slot().build_health_string();
+        AttT.text = punit.get_slot().build_att_string();
+        DefT.text = punit.get_slot().build_def_string();
     }
 
     private void set_press_attackB(bool pressed) {

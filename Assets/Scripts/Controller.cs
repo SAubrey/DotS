@@ -59,8 +59,8 @@ public class Controller : MonoBehaviour {
         unit_panel_man = GameObject.Find("UnitPanelManager").GetComponent<UnitPanelManager>();
         line_drawer = GameObject.Find("LineDrawer").GetComponent<LineDrawer>();
         enemy_brain = GameObject.Find("EnemyBrain").GetComponent<EnemyBrain>();
-        city_ui = GameObject.Find("CityUIManager").GetComponent<CityUIManager>();
         travel_card_manager = GameObject.Find("TravelCardPanel").GetComponent<TravelCardManager>();
+        city_ui = GameObject.Find("CityUIManager").GetComponent<CityUIManager>();
         
     }
 

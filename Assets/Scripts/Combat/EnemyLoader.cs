@@ -146,7 +146,6 @@ public class EnemyLoader : MonoBehaviour {
     }
 
     private int pick_enemy(int biome, int tier, int rarity) {
-        Debug.Log(biome + ", " + tier + ", " + rarity);
         List<int> candidates = biomes[biome][tier][rarity];
 
         // Try lower rarities if one is missing. (There should always be a common)
@@ -157,8 +156,8 @@ public class EnemyLoader : MonoBehaviour {
             rarity--;
         }
         int r = rand.Next(0, candidates.Count);
-        Debug.Log("candidates: " + candidates.Count + ". " +
-             biome + ", " + tier + ", " + rarity + ", " + r);
+        //Debug.Log("candidates: " + candidates.Count + ". " +
+             //biome + ", " + tier + ", " + rarity + ", " + r);
         return biomes[biome][tier][rarity][r];
     }
 
@@ -268,12 +267,12 @@ public class Zone {
     public Pos high;
     //public Pos current_pos;
     public bool increments_horizontally = false;
-    int _col = 0;
+    int _col = 1;
     int col {
         get { return _col; }
         set { _col = value % 3; }
     }
-    int _row = 0;
+    int _row = 1;
     int row {
         get { return _row; }
         set { _row = value % 3; }
@@ -296,8 +295,8 @@ public class Zone {
     }
 
     public void reset() {
-        col = 0;
-        row = 0;
+        col = 1;
+        row = 1;
     }
 
     public void increment_pos() {

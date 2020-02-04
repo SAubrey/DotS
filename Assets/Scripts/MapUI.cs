@@ -4,12 +4,15 @@ using UnityEngine;
 using UnityEngine.UI;
 
 public class MapUI : MonoBehaviour {
+
+    
     private Color astra_color = new Color(.8f, .8f, 1, 1); // Astra blue
     private Color endura_color = new Vector4(1, 1f, .8f, 1); // Endura orange
     private Color martial_color = new Color(1, .8f, .8f, 1); // Martial red
     
     public Text turn_number_t;
-    // City UI
+
+    // ---City UI---
     public GameObject cityP;
     private bool city_panel_active = true;
     public Text c_light;
@@ -20,8 +23,9 @@ public class MapUI : MonoBehaviour {
     public Text c_erelics;
     public Text c_equimares;
     public IDictionary<string, Text> city_inv = new Dictionary<string, Text>();
+    public GameObject warriorP;
 
-    // Battalion UI
+    // Battalion Resource UI
     public GameObject invP;
     private bool inv_panel_active = true;
     public Text b_light;
@@ -34,13 +38,22 @@ public class MapUI : MonoBehaviour {
     public Text b_erelics;
     public Text b_equimares;
 
+    // Battalion Unit UI
+    public GameObject unitsP;
+    private bool unitsP_active = true;
+    public Text warrior_count;
+    public Text spearman_count;
+    public Text archer_count;
+    public Text miner_count;
+    public Text inspirator_count;
+    public Dictionary<int, Text> unit_countsT = new Dictionary<int, Text>();
+
     public Text bat_text;
     public Text map_cellT;
     public Text battle_discT;
     public IDictionary<string, Text> disc_inv = new Dictionary<string, Text>();
     public Button next_stageB;
     public Button rune_gateB;
-
 
     Controller c;
     void Awake() {
@@ -65,6 +78,12 @@ public class MapUI : MonoBehaviour {
         disc_inv.Add(Storeable.MRELICS, b_mrelics);
         disc_inv.Add(Storeable.ERELICS, b_erelics);
         disc_inv.Add(Storeable.EQUIMARES, b_equimares);
+
+        unit_countsT.Add(PlayerUnit.WARRIOR, warrior_count);
+        unit_countsT.Add(PlayerUnit.SPEARMAN, spearman_count);
+        unit_countsT.Add(PlayerUnit.ARCHER, archer_count);
+        unit_countsT.Add(PlayerUnit.MINER, miner_count);
+        unit_countsT.Add(PlayerUnit.INSPIRATOR, inspirator_count);
     }
 
     public void load_stats(Storeable s) {
@@ -126,5 +145,10 @@ public class MapUI : MonoBehaviour {
 
     public void activate_rune_gateB(bool state) {
         rune_gateB.interactable = state;
+    }
+
+    public void toggle_units_panel() {
+        unitsP_active = !unitsP_active;
+        unitsP.SetActive(unitsP_active);
     }
 }

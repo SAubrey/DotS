@@ -93,6 +93,8 @@ public class CamSwitcher : MonoBehaviour {
             mapCam.enabled = active;
             mapUI_canvas.SetActive(active);
             if (active) {
+                bat_loader.load_text(c.get_active_bat());
+                // Set the camera in the middle of the map.
                 mapCam.transform.SetPositionAndRotation(new Vector3(10, 10, -14), Quaternion.identity);
                 set_active(BATTLE, false);
                 set_active(MENU, false);

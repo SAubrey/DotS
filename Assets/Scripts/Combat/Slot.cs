@@ -6,9 +6,11 @@ using UnityEngine.EventSystems;
 public class Slot : MonoBehaviour {
     private Unit unit;
     public Image img;
+    public Image unit_img;
     public Controller c;
     private Formation f;
     private Camera cam;
+    private BatLoader bl;
 
     // --VISUAL-- 
     public Text namefg_T;
@@ -16,10 +18,11 @@ public class Slot : MonoBehaviour {
     public Color unselected_color;
     public Color dead;
     public Color injured;
-    private Color transparent = new Color(0, 0, 0, 0);
+    private Color TRANSPARENT = new Color(0, 0, 0, 0);
     private Color healthbar_fill_color = new Color(1, 1, 1, .8f);
     public Color healthbar_bg_color;
     public Slider healthbar;
+    public Canvas info_canv;
     public Image healthbar_bg;
     public Image healthbar_fill;
     private int healthbar_inc_width = 15;
@@ -51,6 +54,10 @@ public class Slot : MonoBehaviour {
 
         face_text_to_cam();
         f = c.formation;
+    }
+
+    void Start() {
+        bl = c.bat_loader;
     }
 
     public void click() {
@@ -108,11 +115,19 @@ public class Slot : MonoBehaviour {
 
     public void set_sprite(int image_ID) { 
         if (has_punit) {
-            img.sprite = f.images[image_ID]; 
+            //img.sprite = bl.images[image_ID]; 
+            if (bl.unit_images.ContainsKey(image_ID)) {
+                unit_img.color = Color.white;
+                unit_img.sprite = bl.unit_images[image_ID];
+            }
         } else if (has_enemy) {
             img.sprite = c.enemy_loader.images[image_ID];
+            //unit_img.sprite = bl.unit_images[image_ID];
+            //unit_img.color = Color.white;
         } else {
-            img.sprite = f.images[image_ID];
+            img.sprite = bl.images[PlayerUnit.EMPTY]; // empty
+            unit_img.color = TRANSPARENT;
+            //unit_img.sprite = bl.unit_images[image_ID];
         }
     }
 
@@ -218,8 +233,8 @@ public class Slot : MonoBehaviour {
             healthbar_bg.color = healthbar_bg_color;
             healthbar_fill.color = healthbar_fill_color;
         } else {
-            healthbar_bg.color = transparent;
-            healthbar_fill.color = transparent;
+            healthbar_bg.color = TRANSPARENT;
+            healthbar_fill.color = TRANSPARENT;
         }
         healthbar.enabled = state;
         hpfgT.enabled = state;
@@ -309,9 +324,8 @@ public class Slot : MonoBehaviour {
     }
 
     public void face_text_to_cam() {
-        namebg_T.transform.LookAt(cam.transform);
-        namebg_T.transform.forward = namefg_T.transform.forward * -1;
-        healthbar.transform.LookAt(cam.transform);
-        healthbar.transform.forward = healthbar.transform.forward * -1;
+        info_canv.transform.LookAt(cam.transform); 
+        info_canv.transform.forward *= -1; 
+        unit_img.transform.LookAt(cam.transform);
     }
 }

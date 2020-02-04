@@ -82,6 +82,24 @@ public class Battalion {
         return i;
     }
 
+    public int count_injured(int type=-1) {
+        int i = 0;
+        if (type >= 0) {
+            foreach (PlayerUnit u in units[type]) {
+            if (u.injured) 
+                i++;      
+            }
+        } else { // Count all units.
+            for (int t = 0; t < units.Count; t++) {
+                foreach (PlayerUnit u in units[t]) {
+                    if (u.injured)
+                        i++;
+                }
+            }
+        }
+        return i;
+    }
+
     public void add_dead_unit(PlayerUnit du) {
         if (!dead_units.Contains(du)) 
             dead_units.Add(du);

@@ -47,9 +47,12 @@ public class Unit {
     public const int HARVEST = 26;
     public const int COUNTER_CHARGE = 27;
     public const int BOLSTER = 28;
+    public const int TRUE_SIGHT = 29;
+    public const int HEAL_1 = 30;
+    public const int COMBINED_EFFORT = 31;
 
     // Attribute fields
-    protected int num_attributes = 28;
+    protected int num_attributes = 31;
     public List<bool> attributes = new List<bool>();
     //public bool grouping_active = false;
     protected bool attribute_active = false;

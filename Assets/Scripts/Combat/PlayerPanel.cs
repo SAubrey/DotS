@@ -61,7 +61,6 @@ public class PlayerPanel : UnitPanel {
         }
 
         // Determine pressed buttons
-        Debug.Log(punit.is_attribute_active());
         set_press_attackB(punit.attack_set);
         _attB_pressed = punit.attack_set;
         set_press_defB(punit.defending);
@@ -77,7 +76,6 @@ public class PlayerPanel : UnitPanel {
         if (!bp.targeting)
             return;
         attB_pressed = !attB_pressed;
-        Debug.Log(attB_pressed);
     }
 
     public void defend() {

@@ -11,23 +11,6 @@ public class Formation : MonoBehaviour {
     public GameObject slot_panel;
     private Controller c;
 
-    public Sprite archer;
-    public Sprite warrior;
-    public Sprite spearman;
-    public Sprite inspiritor;
-    public Sprite miner;
-    public Sprite empty;
-
-    // Button images in battle scene for highlighting selections.
-    public Dictionary<int, Sprite> images = new Dictionary<int, Sprite>();
-    public Image archer_img;
-    public Image warrior_img;
-    public Image spearman_img;
-    public Image inspiritor_img;
-    public Image miner_img;
-
-    private IDictionary<int, Image> unit_buttons = new Dictionary<int, Image>();
-
     // Organized by column, row
     private Dictionary<int, Dictionary<int, Group>> groups = new Dictionary<int, Dictionary<int, Group>>();
 
@@ -43,20 +26,6 @@ public class Formation : MonoBehaviour {
         discipline_boards.Add(Controller.ASTRA, astra_board);
         discipline_boards.Add(Controller.ENDURA, endura_board);
         discipline_boards.Add(Controller.MARTIAL, martial_board);
-
-        images.Add(PlayerUnit.ARCHER, archer);
-        images.Add(PlayerUnit.WARRIOR, warrior);
-        images.Add(PlayerUnit.SPEARMAN, spearman);
-        images.Add(PlayerUnit.INSPIRATOR, inspiritor);
-        images.Add(PlayerUnit.MINER, miner);
-        images.Add(PlayerUnit.EMPTY, empty);
-
-        // Populate unit placement button images dictionary.
-        unit_buttons.Add(PlayerUnit.ARCHER, archer_img);
-        unit_buttons.Add(PlayerUnit.WARRIOR, warrior_img);
-        unit_buttons.Add(PlayerUnit.SPEARMAN, spearman_img);
-        unit_buttons.Add(PlayerUnit.INSPIRATOR, inspiritor_img);
-        unit_buttons.Add(PlayerUnit.MINER, miner_img);
     }
 
     void Start() {
@@ -87,17 +56,17 @@ public class Formation : MonoBehaviour {
         // Reset color of currently selected unit if one exists.
         int su = c.get_active_bat().get_selected_unit_type(); 
         if (su >= 0 && su < PlayerUnit.EMPTY) {
-            unit_buttons[su].color = Color.white;
+            c.bat_loader.unit_button_imgs[su].color = Color.white;
         }
         
         // Select and change color of new selection
         c.get_active_bat().set_selected_unit_type(ID);
-        unit_buttons[ID].color = new Color(.7f, .7f, .7f, 1);
+        c.bat_loader.unit_button_imgs[ID].color = new Color(.7f, .7f, .7f, 1);
     }
 
     public void clear_placement_selection() {
-        foreach (int unit_type in unit_buttons.Keys) {
-            unit_buttons[unit_type].color = Color.white;
+        foreach (int unit_type in c.bat_loader.unit_button_imgs.Keys) {
+            c.bat_loader.unit_button_imgs[unit_type].color = Color.white;
         }
         c.get_active_bat().clear_selected_unit_type();
     }
@@ -143,7 +112,6 @@ public class Formation : MonoBehaviour {
         }
         return gs;
     }
-
 
     public void clear_battlefield() {
         foreach (int col in groups.Keys) {

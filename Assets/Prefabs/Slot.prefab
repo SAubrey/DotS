@@ -463,6 +463,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   img: {fileID: 4785489105868869228}
+  unit_img: {fileID: 9373337439322234}
   c: {fileID: 0}
   namefg_T: {fileID: 8491087052241734174}
   namebg_T: {fileID: 3572686773247552284}
@@ -471,6 +472,7 @@ MonoBehaviour:
   injured: {r: 0.9811321, g: 0.49019608, b: 0.1527234, a: 1}
   healthbar_bg_color: {r: 0.3019608, g: 0.3019608, b: 0.3019608, a: 1}
   healthbar: {fileID: 4026611852245427417}
+  info_canv: {fileID: 5591834709159997716}
   healthbar_bg: {fileID: 9067123887818712953}
   healthbar_fill: {fileID: 1500451268176720474}
   attfgT: {fileID: 8874031103072441368}
@@ -1270,6 +1272,11 @@ PrefabInstance:
       propertyPath: m_Enabled
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 4934390524017861105, guid: 10d7d1c82a565de4aaf540056df7cdd4,
+        type: 3}
+      propertyPath: m_Layer
+      value: 9
+      objectReference: {fileID: 0}
     - target: {fileID: 5926556482120211856, guid: 10d7d1c82a565de4aaf540056df7cdd4,
         type: 3}
       propertyPath: m_Layer
@@ -1299,11 +1306,6 @@ PrefabInstance:
         type: 3}
       propertyPath: m_AnchorMax.y
       value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4934390524017861105, guid: 10d7d1c82a565de4aaf540056df7cdd4,
-        type: 3}
-      propertyPath: m_Layer
-      value: 9
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 10d7d1c82a565de4aaf540056df7cdd4, type: 3}

@@ -7,12 +7,18 @@ public class PlayerUnit : Unit {
     public const int ARCHER = 2;
     public const int MINER = 3;
     public const int INSPIRATOR = 4;
+    public const int SEEKER = 8;
     public const int VANGUARD = 5;
     public const int ARBALEST = 6;
+    public const int SKIRMISHER = 16;
     public const int PALADIN = 7;
-    public const int MENDER = 6;
-    public const int DRUMMER = 7;
-    public const int PIKEMAN = 8;
+    public const int MENDER = 9;
+    public const int DRUMMER = 10;
+    public const int PIKEMAN = 11;
+    public const int CARTER = 13;
+    public const int DRAGOON = 14;
+    public const int SCOUT = 15;
+    public const int GUARDIAN = 17;
 
     public const int EMPTY = 100; // Graphical lookup usage.
 
@@ -221,6 +227,13 @@ public class Inspirator : PlayerUnit {
     }
 }
 
+public class Seeker : PlayerUnit {
+    public Seeker() {
+        init("Seeker", 1, 1, 2, MELEE, TRUE_SIGHT);
+        ID = SEEKER;
+    }
+}
+
 
 public class Vanguard : PlayerUnit {
     public Vanguard() {
@@ -236,6 +249,38 @@ public class Arbalest : PlayerUnit {
         init("Arbalest", 3, 0, 2, RANGE, PIERCING);
         ID = ARBALEST;
         passive_attribute = true;
+    }
+}
+
+public class Mender : PlayerUnit {
+    public Mender() {
+        init("Mender", 0, 3, 4, MELEE, HEAL_1);
+        ID = MENDER;
+    }
+}
+
+public class Scout : PlayerUnit {
+    public Scout() {
+        init("Scout", 3, 0, 2, RANGE);
+        ID = SCOUT;
+        passive_attribute = true;
+    }
+}
+
+public class Carter : PlayerUnit {
+    public Carter() {
+        init("Carter", 2, 2, 4, MELEE);
+        ID = CARTER;
+        passive_attribute = true;
+        // inv increase by 6
+    }
+}
+
+public class Dragoon : PlayerUnit {
+    public Dragoon() {
+        init("Dragoon", 4, 1, 3, MELEE, GROUPING_2, PIERCING);
+        ID = DRAGOON;
+        movement_range = 2;
     }
 }
 
@@ -269,5 +314,13 @@ public class Pikeman : PlayerUnit {
         init("Pikeman", 1, 2, 2, MELEE, REACH);
         // FIX STATS
         ID = PIKEMAN;
+        passive_attribute = true;
+    }
+}
+
+public class Guardian : PlayerUnit {
+    public Guardian() {
+        init("Guardian", 3, 4, 4, MELEE, GROUPING_1, COMBINED_EFFORT);
+        ID = GUARDIAN;
     }
 }

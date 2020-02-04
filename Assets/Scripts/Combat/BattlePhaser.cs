@@ -60,7 +60,10 @@ public class BattlePhaser : MonoBehaviour {
     public void check_all_units_placed() {
         if (!init_placement_stage)
             return;
-        can_skip = units_in_reserve ? false : true;
+
+        // EDIT FOR TESTING
+        can_skip = true;
+        //can_skip = units_in_reserve ? false : true;
     }
 
     public void advance_stage() {

@@ -14,6 +14,8 @@ public class AttackQueuer : MonoBehaviour {
     private AttackQueue enemy_queue = new AttackQueue();
     private AttackQueue player_queue = new AttackQueue();
     private int attack_id = 0; // Unique identifier for each attack & line.
+    public ParticleSystem blood_ps; // prefab
+    public GameObject plane;
 
     void Start() {
         c = GameObject.Find("Controller").GetComponent<Controller>();
@@ -94,6 +96,15 @@ public class AttackQueuer : MonoBehaviour {
         int dmg = att.calc_dmg_taken();
         int state = att.get_end_unit().get_post_dmg_state(dmg);
         create_hitsplat(dmg, state, att.get_end_slot());
+        // Blood streaks
+        ParticleSystem psI = Instantiate(blood_ps);
+        ParticleSysTracker pst = psI.GetComponent<ParticleSysTracker>();
+        //psI.transform.SetParent(att.get_end_slot().transform);
+        pst.init(att.get_end_slot().transform.position);
+        //psI.collision.SetPlane(1, att.get_end_slot().transform);
+        //ParticleSystem ps = Instantiate(blood_ps);
+        //ps.transform.position = att.get_end_slot().transform.position;
+
         int attack_id = att.get_start_unit().attack_id;
         line_drawer.get_line(attack_id).begin_fade();
         att.attack();

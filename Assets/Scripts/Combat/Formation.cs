@@ -12,20 +12,19 @@ public class Formation : MonoBehaviour {
     private Controller c;
 
     // Organized by column, row
-    private Dictionary<int, Dictionary<int, Group>> groups = new Dictionary<int, Dictionary<int, Group>>();
+    private Dictionary<int, Dictionary<int, Group>> groups = 
+        new Dictionary<int, Dictionary<int, Group>>();
 
     // For saving/loading. Maintains which units are where.
-    private Dictionary<Location, Unit> astra_board = new Dictionary<Location, Unit>();
-    private Dictionary<Location, Unit> endura_board = new Dictionary<Location, Unit>();
-    private Dictionary<Location, Unit> martial_board = new Dictionary<Location, Unit>();
-    private Dictionary<string, Dictionary<Location, Unit>> discipline_boards = new Dictionary<string, Dictionary<Location, Unit>>();
+    private Dictionary<int, Dictionary<Location, Unit>> discipline_boards = 
+        new Dictionary<int, Dictionary<Location, Unit>>() {
+            { Controller.ASTRA, new Dictionary<Location, Unit>() },
+            { Controller.ENDURA, new Dictionary<Location, Unit>() },
+            { Controller.MARTIAL, new Dictionary<Location, Unit>() }
+    };
 
     void Awake() {
         c = GameObject.Find("Controller").GetComponent<Controller>();
-
-        discipline_boards.Add(Controller.ASTRA, astra_board);
-        discipline_boards.Add(Controller.ENDURA, endura_board);
-        discipline_boards.Add(Controller.MARTIAL, martial_board);
     }
 
     void Start() {
@@ -113,6 +112,12 @@ public class Formation : MonoBehaviour {
         return gs;
     }
 
+    public void reset() {
+        clear_battlefield();
+        foreach (Dictionary<Location, Unit> board in discipline_boards.Values)
+            board.Clear();
+    }
+
     public void clear_battlefield() {
         foreach (int col in groups.Keys) {
             foreach (int row in groups[col].Keys) {
@@ -131,7 +136,7 @@ public class Formation : MonoBehaviour {
         }
     }
 
-    public void save_board(string discipline) {
+    public void save_board(int discipline) {
         Dictionary <Location, Unit> d = discipline_boards[discipline];
 
         foreach (int col in groups.Keys) {
@@ -149,7 +154,7 @@ public class Formation : MonoBehaviour {
         }
     }
 
-    public void load_board(string discipline) {
+    public void load_board(int discipline) {
         Dictionary <Location, Unit> cb = discipline_boards[discipline];
         foreach (Location loc in cb.Keys) {
             groups[loc.col][loc.row].get(loc.slot_num).fill(cb[loc]);
@@ -172,7 +177,7 @@ public class Formation : MonoBehaviour {
         }
     }
 
-    public void build_t1_battlefield() {
+    private void build_t1_battlefield() {
         set_groups(4, 6, 5, 6, Group.PLAYER);
         set_groups(5, 5, 4, 4, Group.PLAYER);
 
@@ -219,13 +224,13 @@ public class Formation : MonoBehaviour {
         set_groups(9, 10, 8, 8, Group.PERIPHERY);
     }
 
-    public void build_t2_battlefield() {
+    private void build_t2_battlefield() {
         build_t1_battlefield();
         set_groups(4, 4, 4, 4, Group.PLAYER);
         set_groups(6, 6, 4, 4, Group.PLAYER);
     }
 
-    public void build_t3_battlefield() {
+    private void build_t3_battlefield() {
 
     }
 

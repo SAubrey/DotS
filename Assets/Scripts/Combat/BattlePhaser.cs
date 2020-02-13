@@ -43,7 +43,6 @@ public class BattlePhaser : MonoBehaviour {
 
     // Called at the end of 3 phases.
     public void reset() {
-        stage = PLACEMENT - 1;
         phase = 1;
         can_skip = false;
 
@@ -54,22 +53,52 @@ public class BattlePhaser : MonoBehaviour {
         combat_stage = false;
         c.formation.reset_groups_dir();
         c.formation.clear_battlefield();
-        advance_stage();
-    }
-
-    public void check_all_units_placed() {
-        if (!init_placement_stage)
-            return;
-
-        // EDIT FOR TESTING
-        can_skip = true;
-        //can_skip = units_in_reserve ? false : true;
+        stage = PLACEMENT;
     }
 
     public void advance_stage() {
         selector.deselect();
         stage = _stage + 1;
         update_advB_text();
+    }
+
+    /*
+    Outwardly, the stage number loops 0 -> num_stages once for each of a turn's 3 battle phases.
+    Inwardly, it increments without wrapping.
+    */
+    int num_stages = 8;
+    // Begin one stage less so that stage increment initializes placement.
+    private int _stage = PLACEMENT - 1; 
+    private int stage {
+        get { return _stage % num_stages; }
+        set {
+            _stage = value;
+            int phase_stage = stage;
+
+            if (phase_stage == PLACEMENT) placement();
+            else if (phase_stage == INTUITIVE) intuitive();
+            else if (phase_stage == RANGE) range();
+            else if (phase_stage == MOVEMENT1) movement1();
+            else if (phase_stage == COMBAT1) combat1();
+            else if (phase_stage == MOVEMENT2) movement2();
+            else if (phase_stage == COMBAT2) combat2();
+            else if (phase_stage == ASSESSMENT) assessment();
+
+            c.get_active_bat().reset_all_stage_actions();
+        }
+    }
+    private int _phase = 1;
+    // After 3 phases, battle yields until the next turn.
+    private int phase {
+        get { return _phase; }
+        set {
+            _phase = value; 
+            phaseT.text = "Phase " + phase;
+
+            if (_phase > 3) {
+                post_phases();
+            }
+        }
     }
 
     // ---STAGES---
@@ -158,7 +187,8 @@ public class BattlePhaser : MonoBehaviour {
         if (battle_finished) {
             c.get_active_bat().in_battle = false;
             if (player_won) {
-                c.get_disc().travel_card.adjust_resources(c);
+                StartCoroutine(c.get_disc().adjust_resources_visibly(
+                    c.get_disc().travel_card.consequence));
                 // If enemies were stored to resume battle, clear them out.
                 MapCell mc = c.tile_mapper.get_cell(c.get_disc().pos);
                 mc.clear_enemies();
@@ -168,7 +198,7 @@ public class BattlePhaser : MonoBehaviour {
                 c.get_active_bat().mini_retreating = true;
                 save_enemies_to_map();
             } else // Save the board exactly as is to resume next turn.
-                c.formation.save_board(c.get_disc_name());
+                c.formation.save_board(c.active_disc_ID);
         }
         reset();
         tp.advance_stage();
@@ -184,52 +214,13 @@ public class BattlePhaser : MonoBehaviour {
     public void retreat() {
         if (!player_units_on_field || player_won)
             return;
+
         save_enemies_to_map();
         // Move unit back to previous space
         c.tile_mapper.move_player(c.get_disc().prev_pos);
         // Penalize retreat.
-        c.get_disc().change_var(Storeable.UNITY, -1);
-        
+        c.get_disc().change_var(Storeable.UNITY, -1, true);
         post_phases();
-    }
-
-    /*
-    Outwardly, the stage number loops 0 -> num_stages once for each of a turn's 3 battle phases.
-    Inwardly, it increments without wrapping.
-    */
-    int num_stages = 8;
-    // Begin one stage less so that stage increment initializes placement.
-    private int _stage = PLACEMENT - 1; 
-    private int stage {
-        get { return _stage % num_stages; }
-        set {
-            _stage = value;
-            int phase_stage = stage;
-
-            if (phase_stage == PLACEMENT) placement();
-            else if (phase_stage == INTUITIVE) intuitive();
-            else if (phase_stage == RANGE) range();
-            else if (phase_stage == MOVEMENT1) movement1();
-            else if (phase_stage == COMBAT1) combat1();
-            else if (phase_stage == MOVEMENT2) movement2();
-            else if (phase_stage == COMBAT2) combat2();
-            else if (phase_stage == ASSESSMENT) assessment();
-
-            c.get_active_bat().reset_all_stage_actions();
-        }
-    }
-    private int _phase = 1;
-    // After 3 phases, battle yields until the next turn.
-    private int phase {
-        get { return _phase; }
-        set {
-            _phase = value; 
-            phaseT.text = "Phase " + phase;
-
-            if (_phase > 3) {
-                post_phases();
-            }
-        }
     }
 
     private void check_finished() {
@@ -264,9 +255,17 @@ public class BattlePhaser : MonoBehaviour {
         get { return _can_skip; }
         set { 
             _can_skip = value;
-            //adv_stageB.enabled = _can_skip;
             adv_stageB.interactable = _can_skip;
-            }
+        }
+    }
+
+    public void check_all_units_placed() {
+        if (!init_placement_stage)
+            return;
+
+        // EDIT FOR TESTING---------------------
+        can_skip = true;
+        //can_skip = units_in_reserve ? false : true; // use 
     }
 
     private void update_advB_text() {

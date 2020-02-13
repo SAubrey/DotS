@@ -267,12 +267,12 @@ public class Zone {
     public Pos high;
     //public Pos current_pos;
     public bool increments_horizontally = false;
-    int _col = 1;
+    int _col = 0;
     int col {
         get { return _col; }
         set { _col = value % 3; }
     }
-    int _row = 1;
+    int _row = 0;
     int row {
         get { return _row; }
         set { _row = value % 3; }
@@ -287,7 +287,9 @@ public class Zone {
         high = new Pos(high_col, high_row);
         if (high_row - low_row == 0) {
             increments_horizontally = true;
-        }
+            col = 1;
+        } else
+            row = 1;
     }
 
     public Pos get_spawn_pos() {
@@ -295,8 +297,12 @@ public class Zone {
     }
 
     public void reset() {
-        col = 1;
-        row = 1;
+        col = 0;
+        row = 0;
+        if (increments_horizontally)
+            col = 1;
+        else
+            row = 1;
     }
 
     public void increment_pos() {

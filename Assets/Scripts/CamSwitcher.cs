@@ -10,7 +10,6 @@ public class CamSwitcher : MonoBehaviour {
     public Camera menuCam;
     public GameObject menu_canvas;
     public Camera battleCam;
-    //public Camera battleUICam;
     public GameObject battle_canvas;
     public GameObject battleUI_canvas;
     public Camera mapCam;
@@ -18,11 +17,11 @@ public class CamSwitcher : MonoBehaviour {
     public GameObject mapUI_canvas;
 
     public GameObject pause_panel;
-    private bool paused = false;
     
     private Controller c;
     private BatLoader bat_loader;
 
+    private bool paused = false;
     public int current_cam = MAP;
     
     void Start() {
@@ -37,15 +36,8 @@ public class CamSwitcher : MonoBehaviour {
             cycle();
         } else if (Input.GetKeyDown(KeyCode.Escape)) {
             if (current_cam == MAP) {
-                if (paused == true) {
-                    pause_panel.SetActive(false);
-                    paused = false;
-                } else {
-                    pause_panel.SetActive(true);
-                    paused = true;
-                }
+                toggle_paused();
             }
-            
         }
     }
 
@@ -87,6 +79,7 @@ public class CamSwitcher : MonoBehaviour {
             if (active) {
                 set_active(MAP, false);
                 set_active(BATTLE, false);
+                c.check_button_states();
             }
         } else if (screen == MAP) {
             map_canvas.SetActive(active);

@@ -109,11 +109,11 @@ public class CityUIManager : MonoBehaviour {
 
 
     // ---Hire units UI---
-    public void update_stat_text(string field, string calling_class, int val) {
+    public void update_stat_text(string field, int caller, int val) {
         Text t = null;
-        if (calling_class == "city") {
+        if (caller == Controller.CITY) {
             city_inv.TryGetValue(field, out t);
-        } else if (calling_class == c.active_disc) {
+        } else if (caller == c.active_disc_ID) {
             disc_inv.TryGetValue(field, out t);
         }
         if (t != null) {

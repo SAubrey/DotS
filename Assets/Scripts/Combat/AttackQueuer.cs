@@ -65,7 +65,6 @@ public class AttackQueuer : MonoBehaviour {
                 yield return new WaitForSeconds(WAIT_TIME / 2);
             }
         } while(attacks != null);
-        yield return new WaitForSeconds(WAIT_TIME / 2);
         post_battle();
     }
 
@@ -96,15 +95,7 @@ public class AttackQueuer : MonoBehaviour {
         int dmg = att.calc_dmg_taken();
         int state = att.get_end_unit().get_post_dmg_state(dmg);
         create_hitsplat(dmg, state, att.get_end_slot());
-        // Blood streaks
-        ParticleSystem psI = Instantiate(blood_ps);
-        ParticleSysTracker pst = psI.GetComponent<ParticleSysTracker>();
-        //psI.transform.SetParent(att.get_end_slot().transform);
-        pst.init(att.get_end_slot().transform.position);
-        //psI.collision.SetPlane(1, att.get_end_slot().transform);
-        //ParticleSystem ps = Instantiate(blood_ps);
-        //ps.transform.position = att.get_end_slot().transform.position;
-
+        
         int attack_id = att.get_start_unit().attack_id;
         line_drawer.get_line(attack_id).begin_fade();
         att.attack();
@@ -125,6 +116,11 @@ public class AttackQueuer : MonoBehaviour {
         HitSplat hs_script = hs.GetComponent<HitSplat>();
         hs_script.init(dmg, state, end_slot);
         // create XP hitsplat here if end unit is enemy?
+
+        // Blood streaks
+        ParticleSystem psI = Instantiate(blood_ps);
+        ParticleSysTracker pst = psI.GetComponent<ParticleSysTracker>();
+        pst.init(end_slot.transform.position);
     }
 
     private void reset() {

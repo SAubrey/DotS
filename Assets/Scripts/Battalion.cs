@@ -3,35 +3,49 @@ using UnityEngine;
 
 public class Battalion {
 
-    public string player;
+    public int ID;
     public Controller c;
+    public IDictionary<int, List<PlayerUnit>> units = 
+        new Dictionary<int, List<PlayerUnit>>() { };
+    private List<PlayerUnit> dead_units = new List<PlayerUnit>();
+    private List<PlayerUnit> injured_units = new List<PlayerUnit>();
     public int mine_qty;
     // Unit selected for placement in battle view
     private int selected_unit_type;
-    private List<PlayerUnit> dead_units = new List<PlayerUnit>();
-    private List<PlayerUnit> injured_units = new List<PlayerUnit>();
     public bool in_battle = false;
     public bool mini_retreating = false;
     
-    public IDictionary<int, List<PlayerUnit>> units = new Dictionary<int, List<PlayerUnit>>() {
-        {PlayerUnit.WARRIOR, new List<PlayerUnit>()},
-        {PlayerUnit.SPEARMAN, new List<PlayerUnit>()},
-        {PlayerUnit.ARCHER, new List<PlayerUnit>()},
-        {PlayerUnit.MINER, new List<PlayerUnit>()},
-        {PlayerUnit.INSPIRATOR, new List<PlayerUnit>()},
-    };
-    
-    public Battalion() {
+    public Battalion(Controller c, int ID) {
+        this.c = c;
+        this.ID = ID;
+
+        foreach (int unit_type in PlayerUnit.unit_types) {
+            units.Add(unit_type, new List<PlayerUnit>());
+        }
+
         add_units(PlayerUnit.ARCHER, 3);
         add_units(PlayerUnit.WARRIOR, 2);
         add_units(PlayerUnit.SPEARMAN, 2);
         add_units(PlayerUnit.INSPIRATOR, 1);
         add_units(PlayerUnit.MINER, 1);
-
-        if (player == Controller.ENDURA) {
+        
+        if (ID == Controller.ENDURA) {
             mine_qty = 4;
         } else {
             mine_qty = 3;
+        }
+    }
+
+    public void add_units(int type, int count) {
+        //Debug.Log(type);
+        foreach (int k in units.Keys) {
+          //  Debug.Log(k);
+           // Debug.Log(units[k]);
+        }
+        for (int i = 0; i < count; i++) {
+            if (units.ContainsKey(type)) {
+                units[type].Add(PlayerUnit.create_punit(type));
+            }
         }
     }
 
@@ -68,8 +82,8 @@ public class Battalion {
         int i = 0;
         if (type >= 0) {
             foreach (PlayerUnit u in units[type]) {
-            if (!u.is_placed() && !u.injured) 
-                i++;      
+                if (!u.is_placed() && !u.injured) 
+                    i++;      
             }
         } else { // Count all units.
             for (int t = 0; t < units.Count; t++) {
@@ -100,6 +114,25 @@ public class Battalion {
         return i;
     }
 
+    
+    public int count_healthy(int type=-1) {
+        int i = 0;
+        if (type >= 0) {
+            foreach (PlayerUnit u in units[type]) {
+                if (!u.injured) 
+                    i++;      
+            }
+        } else { // Count all units.
+            for (int t = 0; t < units.Count; t++) {
+                foreach (PlayerUnit u in units[t]) {
+                    if (!u.is_placed() && !u.injured)
+                        i++;
+                }
+            }
+        }
+        return i;
+    }
+
     public void add_dead_unit(PlayerUnit du) {
         if (!dead_units.Contains(du)) 
             dead_units.Add(du);
@@ -113,10 +146,10 @@ public class Battalion {
     public void post_battle() {
         remove_expired_units();
         foreach (Slot s in c.formation.get_all_full_slots(Unit.PLAYER)) {
+            s.get_unit().health = s.get_unit().max_health;
             s.update_healthbar();
             if (s.get_punit().defending)
                 s.get_punit().defending = false;
-
         }
     }
 
@@ -161,12 +194,6 @@ public class Battalion {
         List<Group> punit_groups = c.formation.get_all_nonempty_groups(Unit.PLAYER);
         foreach (Group g in punit_groups) {
             g.validate_unit_order();
-        }
-    }
-
-    public void add_units(int type, int count) {
-        for (int i = 0; i < count; i++) {
-            units[type].Add(PlayerUnit.create_punit(type));
         }
     }
 

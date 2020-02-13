@@ -1,15 +1,21 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
-public class Controller : MonoBehaviour {
-    public const string ASTRA = "astra"; // must be strings
-    public const string ENDURA = "endura";
-    public const string MARTIAL = "martial";
+public class Controller : MonoBehaviour, ISaveLoad {
+    public const int ASTRA = 0;
+    public const int ENDURA = 1;
+    public const int MARTIAL = 2;
+    public const int CITY = 4;
+
+    public const string TILE_MAPPER = "TileMapper";
+    public const string CONTROLLER = "Controller";
+    public const string TRAVEL_DECK = "TravelDeck";
 
     // UI CONSTANTS
     public static Color GREY = new Color(.78125f, .78125f, .78125f, 1);
 
-    // Singleton gameobjects
+    // Inspector gameobjects
     public Formation formation;
     public TurnPhaser turn_phaser;
     public MapUI map_ui;
@@ -27,16 +33,33 @@ public class Controller : MonoBehaviour {
     public CityUIManager city_ui;
     public TravelCardManager travel_card_manager;
 
-    public Discipline astra;
-    public Discipline martial;
-    public Discipline endura;
-    public Storeable city;
-    private int turn_number = 1;
+    public Button loadB, saveB, resumeB;
+    public GameObject save_warningP, new_game_warningP, load_warningP;
+    public Discipline astra, martial, endura;
+    public City city;
     public int num_discs = 3;
+    private bool game_has_begun = false;
+    private int _turn_number = 1;
+    private int turn_number {
+        get { return _turn_number; }
+        set {
+            _turn_number = value;
+            if (map_ui != null)
+                map_ui.turn_number_t.text = turn_number.ToString();
+        }
+    }
 
-    public string active_disc; // disciplines are like sub factions.
+    private int _active_disc_ID;
+    public int active_disc_ID {
+        get { return _active_disc_ID; }
+        set {
+            _active_disc_ID = value;
+            map_ui.load_stats(get_disc());
+            map_ui.load_stats(city);
+        }
+    } // disciplines are like sub factions.
 
-    public IDictionary<string, Discipline> discs = new Dictionary<string, Discipline>();
+    public IDictionary<int, Discipline> discs = new Dictionary<int, Discipline>();
 
     void Awake() {
         discs.Add(ASTRA, astra);
@@ -52,8 +75,8 @@ public class Controller : MonoBehaviour {
         battle_phaser = GameObject.Find("BattlePhaser").GetComponent<BattlePhaser>();
         cam_switcher = GameObject.Find("CamSwitcher").GetComponent<CamSwitcher>();
         bat_loader = GameObject.Find("BatLoader").GetComponent<BatLoader>();
-        travel_deck = GameObject.Find("TravelDeck").GetComponent<TravelDeck>();
-        tile_mapper = GameObject.Find("TileMapper").GetComponent<TileMapper>();
+        travel_deck = GameObject.Find(TRAVEL_DECK).GetComponent<TravelDeck>();
+        tile_mapper = GameObject.Find(TILE_MAPPER).GetComponent<TileMapper>();
         enemy_loader = GameObject.Find("EnemyLoader").GetComponent<EnemyLoader>();
         map_ui = GameObject.Find("MapUI").GetComponent<MapUI>();
         unit_panel_man = GameObject.Find("UnitPanelManager").GetComponent<UnitPanelManager>();
@@ -61,11 +84,81 @@ public class Controller : MonoBehaviour {
         enemy_brain = GameObject.Find("EnemyBrain").GetComponent<EnemyBrain>();
         travel_card_manager = GameObject.Find("TravelCardPanel").GetComponent<TravelCardManager>();
         city_ui = GameObject.Find("CityUIManager").GetComponent<CityUIManager>();
-        
     }
 
     void Start() {
-        set_disc(ASTRA);
+        active_disc_ID = ASTRA;
+        save_warningP.SetActive(false);
+        new_game_warningP.SetActive(false);
+        load_warningP.SetActive(false);
+    }
+
+    public void init(bool from_save) {
+        game_has_begun = true;
+        tile_mapper.init(from_save);
+        travel_deck.init(from_save);
+
+        // Clear fields not overwritten by possible load.
+        formation.reset();
+        battle_phaser.reset();
+        turn_phaser.reset();
+        
+        cam_switcher.flip_menu_map();
+    }
+
+    // Called by save button
+    public void save_game() {
+        // Double check the user wants to overwrite their save.
+        
+        save_warningP.SetActive(false);
+        List<GameData> serializables = new List<GameData>() {
+            { tile_mapper.save() },
+            { save() },
+            { astra.save() },
+            { martial.save() },
+            { endura.save() },
+            { city.save() },
+            { travel_deck.save() },
+        };
+        
+        foreach (var s in serializables) {
+            FileIO.save_game(s, s.name);
+        }
+    }
+
+    public void load_game() {
+        ControllerData cdata = FileIO.load_game(CONTROLLER) as ControllerData;
+        if (cdata == null)
+            return;
+        load(cdata);
+
+        tile_mapper.load(FileIO.load_game(TILE_MAPPER));
+        astra.load(FileIO.load_game("astra"));
+        martial.load(FileIO.load_game("martial"));
+        endura.load(FileIO.load_game("endura"));
+        city.load(FileIO.load_game("city"));
+        travel_deck.load(FileIO.load_game(TRAVEL_DECK));
+
+        init(true);
+    }
+
+    public void new_game() {
+
+        init(false);
+    }
+
+    public GameData save() {
+        ControllerData data = new ControllerData();
+        data.name = CONTROLLER;
+        data.turn_number = turn_number;
+        data.active_disc = active_disc_ID;
+        return data;
+    }
+
+    public void load(GameData generic) {
+        ControllerData data = generic as ControllerData;
+        active_disc_ID = data.active_disc;
+        turn_number = data.turn_number;
     }
 
     public void advance_turn() {
@@ -75,30 +168,46 @@ public class Controller : MonoBehaviour {
             disc.register_turn();
         }
         city.register_turn();
-
-        map_ui.turn_number_t.text = turn_number.ToString();
         map_ui.load_stats(get_disc());
-        map_ui.load_stats(city);
-    }
-     
-    public void set_disc(string type) {
-        active_disc = type;
-        map_ui.load_stats(get_disc());
-        map_ui.load_stats(city);
+        //map_ui.load_stats(city);
+    }  
+
+    public void check_button_states() {
+        loadB.interactable = FileIO.load_file_exists();
+        saveB.interactable = game_has_begun;
+        resumeB.interactable = game_has_begun;
+    } 
+
+    public void save_button() {
+        if (FileIO.load_file_exists()) {
+            save_warningP.SetActive(true);    
+            return;
+        }
+        save_game();
     }
 
-    public void rotate_disc() {
-        if (get_disc_name() == ASTRA) set_disc(ENDURA);
-        else if (get_disc_name() == ENDURA) set_disc(MARTIAL);
-        else if (get_disc_name() == MARTIAL) set_disc(ASTRA);
-    }       
+    public void load_button() {
+        if (game_has_begun) {
+            load_warningP.SetActive(true);
+            return;
+        }
+        load_game();
+    }
 
-    public string get_disc_name() {
-        return active_disc;
+    public void new_game_button() {
+        if (game_has_begun) {
+            new_game_warningP.SetActive(true);
+            return;
+        }
+        new_game();
+    }
+
+    public void show_warning_panel(bool active) {
+        save_warningP.SetActive(active);
     }
 
     public Discipline get_disc() {
-        return discs[get_disc_name()];
+        return discs[active_disc_ID];
     }
 
     public Battalion get_active_bat() {
@@ -107,11 +216,11 @@ public class Controller : MonoBehaviour {
 
     // BUTTON HANDLES
     public void inc_stat(string field) {
-        discs[active_disc].change_var(field, 1);
+        discs[active_disc_ID].change_var(field, 1);
     }
 
     public void dec_stat(string field) {
-        discs[active_disc].change_var(field, -1);
+        discs[active_disc_ID].change_var(field, -1);
     }
 
     public void inc_city_stat(string field) {

@@ -3,8 +3,9 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 using System;
+using UnityEngine.EventSystems;
 
-public class TileMapper : MonoBehaviour {
+public class TileMapper : MonoBehaviour, ISaveLoad {
     public const int PLAINS_1 = 0;
     public const int FOREST_1 = 1;
     public const int RUINS_1 = 2;
@@ -15,16 +16,17 @@ public class TileMapper : MonoBehaviour {
     public const int MIRE = 7;
     public const int SETTLEMENT = 8;
     public const int RUNE_GATE = 9;
+    public const int CITY = 10;
 
-    public const int PLAINS_2 = 12;
-    public const int FOREST_2 = 13;
-    public const int RUINS_2 = 14;
-    public const int CLIFF_2 = 15;
-    public const int CAVE_2 = 16;
-    public const int STAR_2 = 17;
-    public const int TITRUM_2 = 18;
-    public const int LUSH_LAND_2 = 19;
-    public const int MOUNTAIN_2 = 20;
+    public const int PLAINS_2 = 11;
+    public const int FOREST_2 = 12;
+    public const int RUINS_2 = 13;
+    public const int CLIFF_2 = 14;
+    public const int CAVE_2 = 15;
+    public const int STAR_2 = 16;
+    public const int TITRUM_2 = 17;
+    public const int LUSH_LAND_2 = 18;
+    public const int MOUNTAIN_2 = 19;
 
     public TurnPhaser tp;
     public CamSwitcher cs;
@@ -55,12 +57,14 @@ public class TileMapper : MonoBehaviour {
     public Tile city;
     public Tile shadow;
     private System.Random rand;
-    public Controller c;
+    private Controller c;
 
-    private static Dictionary<int, Tile> tiles = new Dictionary<int, Tile>();
+    private static IDictionary<int, Tile> tiles = new Dictionary<int, Tile>();
+    private static IDictionary<Tile, int> tile_to_tileID = new Dictionary<Tile, int>();
 
-    public Dictionary<int, Dictionary<int, int>> bag_counters
+    private Dictionary<int, Dictionary<int, int>> bag_counters
      = new Dictionary<int, Dictionary<int, int>>();
+    public Dictionary<int, List<int>> bags = new Dictionary<int, List<int>>();
     private Dictionary<int, int> t1_bag_count = new Dictionary<int, int>() {
         {PLAINS_1, 6},
         {FOREST_1, 6},
@@ -88,7 +92,6 @@ public class TileMapper : MonoBehaviour {
         {PLAINS_2, 212},
     };
 
-    public Dictionary<int, List<int>> bags = new Dictionary<int, List<int>>();
     
     public Dictionary<Pos, MapCell> map = new Dictionary<Pos, MapCell>();
     public Vector3 center_point;
@@ -108,6 +111,7 @@ public class TileMapper : MonoBehaviour {
         bag_counters.Add(2, t2_bag_count);
         bag_counters.Add(3, t3_bag_count);
         // Tier 1
+        tiles.Add(CITY, city);
         tiles.Add(PLAINS_1, plains_1);
         tiles.Add(FOREST_1, forest_1);
         tiles.Add(RUINS_1, ruins_1);
@@ -115,10 +119,10 @@ public class TileMapper : MonoBehaviour {
         tiles.Add(CAVE_1, cave_1);
         tiles.Add(STAR_1, star_1);
         tiles.Add(TITRUM_1, titrum_1);
-        tiles.Add(MIRE, mire);
         tiles.Add(SETTLEMENT, settlement);
-        tiles.Add(RUNE_GATE, rune_gate);
         // Tier 2
+        tiles.Add(RUNE_GATE, rune_gate);
+        tiles.Add(MIRE, mire);
         tiles.Add(PLAINS_2, plains_2);
         tiles.Add(FOREST_2, forest_2);
         tiles.Add(RUINS_2, ruins_2);
@@ -128,18 +132,72 @@ public class TileMapper : MonoBehaviour {
         tiles.Add(TITRUM_2, titrum_2);
         tiles.Add(MOUNTAIN_2, mountain_2);
         tiles.Add(LUSH_LAND_2, lush_land_2);
-        
+
+        // Populate inverse dictionary.
+        foreach (KeyValuePair<int, Tile> pair in tiles) {
+            if (!tile_to_tileID.ContainsKey(pair.Value))
+                tile_to_tileID.Add(pair.Value, pair.Key);
+        }
+    }
+
+    public void init(bool from_save) {
+        if (!from_save) {
+            new_game();
+        }
+    }
+
+    void Update() {
+        if (cs.current_cam == CamSwitcher.MAP) {
+            if (Input.GetMouseButtonDown(0)) {
+                if (!EventSystem.current.IsPointerOverGameObject())
+                    handle_left_click();
+            }
+        }
+    }
+
+    public GameData save() {
+        return new MapData(this, Controller.TILE_MAPPER);
+    }
+
+    private void new_game() {
         populate_decks();
         generate_t1(tm);
         generate_t2(tm);
         generate_t3(tm);
     }
 
-    void Update() {
-        if (cs.current_cam == CamSwitcher.MAP) {
-            if (Input.GetMouseButtonDown(0)) {
-                handle_left_click();
-            }
+    private void clear_data() {
+        bags[1].Clear();
+        bags[2].Clear();
+        bags[3].Clear();
+        map.Clear();
+    }
+    
+    public void load(GameData generic) {
+        MapData data = generic as MapData;
+        clear_data();
+
+        foreach (int num in data.t1_bag)
+            bags[1].Add(num);
+        foreach (int num in data.t2_bag)
+            bags[2].Add(num);
+        foreach (int num in data.t3_bag)
+            bags[3].Add(num);
+        
+        // Recreate map.
+        foreach (SMapCell mcs in data.cells) {
+            Pos pos = new Pos(mcs.x, mcs.y);
+            MapCell cell = MapCell.create_cell(
+                mcs.tier, mcs.tile_type, tiles[mcs.tile_type], pos);
+            cell.minerals = mcs.minerals;
+            cell.star_crystals = mcs.star_crystals;
+            cell.discovered = mcs.discovered;
+
+            if (cell.discovered)
+                place_tile(tiles[mcs.tile_type], mcs.x, mcs.y);
+            else
+                place_tile(shadow, pos.x, pos.y);
+            map.Add(pos, cell);
         }
     }
 
@@ -167,7 +225,6 @@ public class TileMapper : MonoBehaviour {
         
         MapCell cell = map[new Pos(x, y)];
         if (cell.discovered) {
-            Debug.Log("was discovered");
             if (cell.has_rune_gate) {
                 if (waiting_for_second_gate) {
                     // move to gate
@@ -178,16 +235,63 @@ public class TileMapper : MonoBehaviour {
                 }
             }
         } else { // Not discovered, draw tile
-            tm.SetTile(new Vector3Int(x, y, 0), null); // clear shadow
+            //tm.SetTile(new Vector3Int(x, y, 0), null); // clear shadow
             tm.SetTile(new Vector3Int(x, y, 0), cell.tile);
         }
         c.get_disc().pos = pos;
         c.map_ui.update_cell_text(cell.name);
-        c.get_active_bat().in_battle = cell.has_enemies;
-        Debug.Log("setting in_battle to " + c.get_active_bat().in_battle + "for " + c.get_disc_name()
+        c.get_active_bat().in_battle = cell.has_enemies; // Only if enemies have already spawned.
+
+        Debug.Log("setting in_battle to " + c.get_active_bat().in_battle + 
+        "for " + c.active_disc_ID
             + " at " + x + ", " + y);
-        
         return true;
+    }
+
+    public static bool check_adjacent(int x, int y, int x1, int y1) {
+        int dx = Mathf.Abs(x - x1);
+        int dy = Mathf.Abs(y - y1);
+        return dx + dy == 1;
+    }
+
+    // Randomly pick tiles from grab bags. 
+    private Tile grab_tile(int tier) {
+        if (bags[tier].Count > 0) {
+            int index = rand.Next(bags[tier].Count);
+            int tile_ID = bags[tier][index];
+
+            bags[tier].RemoveAt(index);
+            return tiles[tile_ID];
+        }
+        return null;
+    }
+
+    private void populate_decks() {
+        for (int tier = 1; tier <= 3; tier++) { // For each tier
+            foreach (int tile_type_ID in bag_counters[tier].Keys) {
+                for (int i = 0; i < bag_counters[tier][tile_type_ID]; i++) {
+                    bags[tier].Add(tile_type_ID);
+                }
+            }
+        }
+    }
+
+    public void create_tile(int tier, int x, int y) {
+        Pos pos = new Pos(x, y);
+        Tile tile = grab_tile(tier);
+        map.Add(pos, MapCell.create_cell(
+            tier, tile_to_tileID[tile], tile, pos));
+        place_tile(shadow, pos.x, pos.y);
+    }
+
+    public TileBase get_tile(float x, float y) {
+        if (x >= 0 && y >= 0) 
+            return tm.GetTile(new Vector3Int((int)x, (int)y, 0));
+        return null;  
+    }
+
+    public void place_tile(Tile tile, int x, int y) {
+        tm.SetTile(new Vector3Int(x, y, 0), tile);
     }
 
     public bool is_at_city(Discipline disc) {
@@ -208,44 +312,11 @@ public class TileMapper : MonoBehaviour {
     public List<Enemy> get_enemies(Vector3 pos) {
         return get_cell(pos).get_enemies();
     }
-
-    public static bool check_adjacent(int x, int y, int x1, int y1) {
-        int dx = Mathf.Abs(x - x1);
-        int dy = Mathf.Abs(y - y1);
-        return (dx + dy == 1) ? true : false;
-    }
-
-    // Randomly pick tiles from grab bags. 
-    private Tile grab_tile(int tier) {
-        if (bags[tier].Count > 0) {
-            int index = rand.Next(bags[tier].Count);
-            int tile_ID = bags[tier][index];
-
-            bags[tier].RemoveAt(index);
-            bag_counters[tier][tile_ID]--;
-            return tiles[tile_ID];
-        }
-        return null;
-    }
-
-    private void populate_decks() {
-        for (int tier = 1; tier <= 3; tier++) { // For each tier
-            foreach (int tile_type_ID in bag_counters[tier].Keys) {
-                for (int i = 0; i < bag_counters[tier][tile_type_ID]; i++) {
-                    bags[tier].Add(tile_type_ID);
-                }
-            }
-        }
-    }
-
-    public TileBase get_tile(float x, float y) {
-        if (x >= 0 && y >= 0) 
-            return tm.GetTile(new Vector3Int((int)x, (int)y, 0));
-        return null;  
-    }
-
-    public void place_tile(Tilemap tmap, Tile type, int x, int y) {
-        tmap.SetTile(new Vector3Int(x, y, 0), type);
+    
+    public void build_rune_gate(Pos pos) {
+        MapCell mc = map[pos];
+        mc.has_rune_gate = true;
+        c.map_ui.activate_rune_gateB(true);
     }
 
     void generate_t1(Tilemap tm) {
@@ -253,8 +324,8 @@ public class TileMapper : MonoBehaviour {
             for (int y = 8; y < 13; y++) {
                 if (x == 10 && y == 10) {
                     Pos pos = new Pos(x, y);
-                    map.Add(pos, MapCell.create_cell(1, city, pos));
-                    place_tile(tm, city, x, y);
+                    map.Add(pos, MapCell.create_cell(1, CITY, city, pos));
+                    place_tile(city, x, y);
                 } else {
                     create_tile(1, x, y);
                 }
@@ -313,19 +384,4 @@ public class TileMapper : MonoBehaviour {
             }
         }
     }
-
-    public void create_tile(int tier, int x, int y) {
-        Pos pos = new Pos(x, y);
-        Tile tile = grab_tile(tier);
-        //map.Add(pos, new MapCell(tier, tile, pos));
-        map.Add(pos, MapCell.create_cell(tier, tile, pos));
-        place_tile(tm, shadow, pos.x, pos.y);
-    }
-
-    public void build_rune_gate(Pos pos) {
-        MapCell mc = map[pos];
-        mc.has_rune_gate = true;
-        c.map_ui.activate_rune_gateB(true);
-    }
 }
-

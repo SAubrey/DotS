@@ -215,6 +215,7 @@ public class Unit {
 
     // Called at the end of a battle phase.
     public void post_phase() {
+        Debug.Log("post phasing");
         num_actions = max_num_actions;
         has_acted_in_stage = false;
         attack_set = false;

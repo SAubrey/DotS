@@ -5,7 +5,6 @@ using UnityEngine.UI;
 
 public class MapUI : MonoBehaviour {
 
-    
     private Color astra_color = new Color(.8f, .8f, 1, 1); // Astra blue
     private Color endura_color = new Vector4(1, 1f, .8f, 1); // Endura orange
     private Color martial_color = new Color(1, .8f, .8f, 1); // Martial red
@@ -23,7 +22,6 @@ public class MapUI : MonoBehaviour {
     public Text c_erelics;
     public Text c_equimares;
     public IDictionary<string, Text> city_inv = new Dictionary<string, Text>();
-    public GameObject warriorP;
 
     // Battalion Resource UI
     public GameObject invP;
@@ -48,12 +46,13 @@ public class MapUI : MonoBehaviour {
     public Text inspirator_count;
     public Dictionary<int, Text> unit_countsT = new Dictionary<int, Text>();
 
-    public Text bat_text;
-    public Text map_cellT;
+    public Text map_discT;
     public Text battle_discT;
+    public Text map_cellT;
     public IDictionary<string, Text> disc_inv = new Dictionary<string, Text>();
     public Button next_stageB;
     public Button rune_gateB;
+    
 
     Controller c;
     void Awake() {
@@ -92,33 +91,33 @@ public class MapUI : MonoBehaviour {
             s.change_var(resource, 0);
         }
         c.city_ui.load_unit_counts();
-        highlight_culture(c.get_disc_name());
+        highlight_discipline(c.active_disc_ID);
     }
 
-    public void update_stat_text(string field, string calling_class, int val) {
+    public void update_stat_text(string field, int calling_class, int val) {
         Text t = null;
-        if (calling_class == "city") {
+        if (calling_class == Controller.CITY) {
             city_inv.TryGetValue(field, out t);
-        } else if (calling_class == c.active_disc) {
+        } else if (calling_class == c.active_disc_ID) {
             disc_inv.TryGetValue(field, out t);
         }
         if (t != null)
             t.text = val.ToString();
     }
 
-    private void highlight_culture(string culture) {
-        if (culture == Controller.ASTRA) {
-            bat_text.text = "Astra";
-            bat_text.color = astra_color;
-        } else if (culture == Controller.MARTIAL) {
-            bat_text.text = "Martial";
-            bat_text.color = martial_color;
-        } else if (culture == Controller.ENDURA) {
-            bat_text.text = "Endura";
-            bat_text.color = endura_color;
+    private void highlight_discipline(int discipline) {
+        if (discipline == Controller.ASTRA) {
+            map_discT.text = "Astra";
+            map_discT.color = astra_color;
+        } else if (discipline == Controller.MARTIAL) {
+            map_discT.text = "Martial";
+            map_discT.color = martial_color;
+        } else if (discipline == Controller.ENDURA) {
+            map_discT.text = "Endura";
+            map_discT.color = endura_color;
         }
-            battle_discT.text = bat_text.text;
-            battle_discT.color = bat_text.color;
+        battle_discT.text = map_discT.text;
+        battle_discT.color = map_discT.color;
     }
 
     public void toggle_city_panel() {

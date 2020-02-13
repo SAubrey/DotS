@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using System;
 
-public class TravelDeck : MonoBehaviour {
+public class TravelDeck : MonoBehaviour, ISaveLoad {
 
     // <TYPE><NUM>_<TIER>
     public const int ATT1_1 = 1;
@@ -70,7 +70,7 @@ public class TravelDeck : MonoBehaviour {
     // List allows fair random choice for draws from decks with more than 1 of a card type. 
     // This ensures grab-bag probability, or without replacement.
     // Elements are removed as they are drawn. <TIER, List<cards>>
-    private Dictionary<int, List<int>> decks = new Dictionary<int, List<int>>();
+    public Dictionary<int, List<int>> decks = new Dictionary<int, List<int>>();
 
     // Inclusion dictionary limiting which card types are allowed
     // in which biomes. <MapCell.ID, List<TravelCard.type>>
@@ -159,7 +159,48 @@ public class TravelDeck : MonoBehaviour {
         // no cards for star, lush. Settlement = quest card?
 
         toggle_card_panel();
+    }
+
+    public void init(bool from_save) {
+        if (!from_save) 
+            new_game();
+    }
+
+        // Called once.
+    private void populate_decks() {
+        for (int tier = 1; tier <= 3; tier++) { // For each deck
+            foreach (int card_id in card_counters[tier].Keys) {
+                decks[tier].Add(card_id);
+            }
+        }
+    }
+
+    public GameData save() {
+        TravelDeckData data = new TravelDeckData(this, Controller.TRAVEL_DECK);
+        return data;
+    }
+
+    private void new_game() {
+        clear_data();
         populate_decks();
+    }
+
+    private void clear_data() {
+        foreach (List<int> deck in decks.Values) {
+            deck.Clear();
+        }
+    }
+
+    public void load(GameData generic) {
+        TravelDeckData td = generic as TravelDeckData;
+        clear_data();
+
+        foreach (int card_type in td.t1_deck) 
+            decks[1].Add(card_type);
+        foreach (int card_type in td.t2_deck) 
+            decks[2].Add(card_type);
+        foreach (int card_type in td.t3_deck) 
+            decks[3].Add(card_type);
     }
 
     public Button combat_cards_onlyB; // DEV ONLY
@@ -192,9 +233,7 @@ public class TravelDeck : MonoBehaviour {
             // could organize actual cards by class but draw from them in a single list. 
 
             // Remove card
-            //decks[tier].RemoveAt(index);
             decks[tier].Remove(card_id);
-            card_counters[tier][card_id]--; // Not necessary.
             return cards[card_id];
         }
         return null;
@@ -224,15 +263,6 @@ public class TravelDeck : MonoBehaviour {
             }
         }
         return cards[0];
-    }
-
-    // Called once.
-    private void populate_decks() {
-        for (int tier = 1; tier <= 3; tier++) { // For each deck
-            foreach (int card_id in card_counters[tier].Keys) {
-                decks[tier].Add(card_id);
-            }
-        }
     }
 
     public void display_card(TravelCard tc) {

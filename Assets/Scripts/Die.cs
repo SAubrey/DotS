@@ -44,9 +44,9 @@ public class Die : MonoBehaviour {
 
     private int get_rand_side(int current_side, int sides) {
         int roll;
-        do {
+        roll = Random.Range(1, sides + 1);
+        if (roll == current_side)
             roll = Random.Range(1, sides + 1);
-        } while (roll == current_side);
         return roll;
     }
 

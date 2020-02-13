@@ -31,7 +31,7 @@ public class MapCell {
     public const int SETTLEMENT_ID = 10;
     public const int RUNE_GATE_ID = 11;
 
-    public static MapCell create_cell(int tier, Tile tile, Pos pos) {
+    public static MapCell create_cell(int tier, int tile_type, Tile tile, Pos pos) {
         MapCell mc = null;
         string[] splits = tile.ToString().Split('_');
 
@@ -63,6 +63,7 @@ public class MapCell {
         } else {
             mc = new MapCell(tier, tile, pos, 0);
         }
+        mc.tile_type = tile_type;
         return mc;
     }
 
@@ -74,6 +75,7 @@ public class MapCell {
     public int ID;
     public int minerals = 0;
     public int star_crystals = 0;
+    public int tile_type;
     public bool has_travel_card = true;
     public bool has_rune_gate = false;
     private List<Enemy> enemies = new List<Enemy>();
@@ -116,7 +118,6 @@ public class MapCell {
             }
         }
     }
-
 
     public void clear_enemies() {
         enemies.Clear();

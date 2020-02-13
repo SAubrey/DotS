@@ -8,6 +8,7 @@ public class BatLoader : MonoBehaviour {
     public Battalion endura_battalion;
     public Battalion martial_battalion;
 
+    // Text fields in the unit selection scrollbar.
     public Dictionary<int, Text> texts = new Dictionary<int, Text>();
     public Text warrior_t;
     public Text spearman_t;
@@ -15,16 +16,8 @@ public class BatLoader : MonoBehaviour {
     public Text miner_t;
     public Text inspirator_t;
     public Text seeker_t;
-    // Text fields in the unit selection scrollbar.
 
-
-    public Dictionary<int, Sprite> images = new Dictionary<int, Sprite>();
-    public Sprite archer;
-    public Sprite warrior;
-    public Sprite spearman;
-    public Sprite inspiritor;
-    public Sprite miner;
-    public Sprite empty;
+    public Sprite empty; // UIMask image for a slot button image.
 
     // Button images in battle scene for highlighting selections.
     public IDictionary<int, Image> unit_button_imgs = new Dictionary<int, Image>();
@@ -42,15 +35,6 @@ public class BatLoader : MonoBehaviour {
     public Sprite miner_I;
     public Sprite inspirator_I;
     public Sprite seeker_I;
-
-    void Awake() {
-        images.Add(PlayerUnit.ARCHER, archer);
-        images.Add(PlayerUnit.WARRIOR, warrior);
-        images.Add(PlayerUnit.SPEARMAN, spearman);
-        images.Add(PlayerUnit.INSPIRATOR, inspiritor);
-        images.Add(PlayerUnit.MINER, miner);
-        images.Add(PlayerUnit.EMPTY, empty);
-    }
 
     void Start() {
         texts.Add(PlayerUnit.WARRIOR, warrior_t);
@@ -81,6 +65,9 @@ public class BatLoader : MonoBehaviour {
     public void load_text(Battalion b) {
         MapUI map_ui = b.c.map_ui;
         foreach (int type in b.units.Keys) {
+            if (!texts.ContainsKey(type) || !map_ui.unit_countsT.ContainsKey(type))
+                continue;
+
             string num = b.count_placeable(type).ToString();
             int total_num = b.units[type].Count;
             int num_injured = b.count_injured(type);

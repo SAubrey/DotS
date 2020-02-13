@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Storeable : MonoBehaviour {
+public class Storeable : MonoBehaviour, ISaveLoad {
     public const string LIGHT = "light";
     public const string UNITY = "unity";
     public const string EXPERIENCE = "experience";
@@ -15,10 +15,10 @@ public class Storeable : MonoBehaviour {
 
     public static string[] FIELDS = { LIGHT, UNITY, EXPERIENCE, STAR_CRYSTALS,
                             MINERALS, ARELICS, MRELICS, ERELICS, EQUIMARES };
-    public string self;
-    protected Controller c;
+    public Controller c;
     protected MapUI map_ui;
     public CityUIManager city_ui;
+    public int ID;
     public GameObject rising_info_prefab;
     public GameObject origin_of_rise_obj;
 
@@ -26,39 +26,38 @@ public class Storeable : MonoBehaviour {
         c = GameObject.Find("Controller").GetComponent<Controller>();
         map_ui = c.map_ui;
         city_ui = c.city_ui;
-        
-        if (self == "city") {
-            _light = 8;
-        }
     }
+
+    public virtual GameData save() { return null; }
+    public virtual void load(GameData generic) { }
 
     public virtual void register_turn() {
-        decrement_light();
+        light_decay_cascade();
     }
 
-    public void decrement_light() {
-        if (light > 0) {
-            light--;
-        }
+    public void light_decay_cascade() {
+        Dictionary<string, int> d = new Dictionary<string, int>();
+        d.Add(LIGHT, -1);
         if (light <= 0) {
-            decrement_sc();
+            if (star_crystals > 0) {
+                d.Add(STAR_CRYSTALS, -1);
+                d.Add(LIGHT, 4);
+            } else {
+                if (unity >= 2)
+                    d.Add(UNITY, -2);
+                else if (unity == 1)
+                    d.Add(UNITY, -1);
+            }
         }
-    }
-    
-    private void decrement_sc() {
-        if (star_crystals > 0) {
-            star_crystals--;
-            light = 4;
-        } else {
-            decrement_unity();
-        }
+        StartCoroutine(adjust_resources_visibly(d));
     }
 
-    private void decrement_unity() {
-        if (unity > 0) {
-            unity -= (2 - (unity % 2));
-        } else {
-            Debug.Log("No more unity remaining for " + self + "!");
+    public IEnumerator adjust_resources_visibly(Dictionary<string, int> adjustments) {
+        foreach (KeyValuePair<string, int> r in adjustments) {
+            if (r.Value != 0) {
+                change_var(r.Key, r.Value, true);
+                yield return new WaitForSecondsRealtime(0.5f);
+            }
         }
     }
 
@@ -76,9 +75,9 @@ public class Storeable : MonoBehaviour {
         return true;
     }
 
-    public void update_text_fields(string type, int value) {
-        map_ui.update_stat_text(type, self, value);
-        city_ui.update_stat_text(type, self, value);
+    public virtual void update_text_fields(string type, int value) {
+        map_ui.update_stat_text(type, ID, value);
+        city_ui.update_stat_text(type, ID, value);
     }
 
     public void create_rising_info(string type, int value) {
@@ -234,3 +233,4 @@ public class Storeable : MonoBehaviour {
         }
     }
 }
+ 

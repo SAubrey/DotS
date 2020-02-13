@@ -125,7 +125,9 @@ public class Slot : MonoBehaviour {
             //unit_img.sprite = bl.unit_images[image_ID];
             //unit_img.color = Color.white;
         } else {
-            img.sprite = bl.images[PlayerUnit.EMPTY]; // empty
+            //Debug.Log(bl.images);
+            //img.sprite = c.bat_loader.images[PlayerUnit.EMPTY]; // empty
+            img.sprite = c.bat_loader.empty; // empty
             unit_img.color = TRANSPARENT;
             //unit_img.sprite = bl.unit_images[image_ID];
         }
@@ -327,5 +329,6 @@ public class Slot : MonoBehaviour {
         info_canv.transform.LookAt(cam.transform); 
         info_canv.transform.forward *= -1; 
         unit_img.transform.LookAt(cam.transform);
+        unit_img.transform.forward *= -1;
     }
 }

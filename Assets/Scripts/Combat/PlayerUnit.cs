@@ -3,22 +3,26 @@ using System.Collections.Generic;
 
 public class PlayerUnit : Unit {
     public const int WARRIOR = 0;
-    public const int SPEARMAN = 1;
-    public const int ARCHER = 2;
-    public const int MINER = 3;
-    public const int INSPIRATOR = 4;
-    public const int SEEKER = 8;
-    public const int VANGUARD = 5;
-    public const int ARBALEST = 6;
-    public const int SKIRMISHER = 16;
-    public const int PALADIN = 7;
-    public const int MENDER = 9;
-    public const int DRUMMER = 10;
-    public const int PIKEMAN = 11;
-    public const int CARTER = 13;
-    public const int DRAGOON = 14;
-    public const int SCOUT = 15;
-    public const int GUARDIAN = 17;
+    public const int SPEARMAN = WARRIOR + 1;
+    public const int ARCHER = SPEARMAN + 1;
+    public const int MINER = ARCHER + 1;
+    public const int INSPIRATOR = MINER + 1;
+    public const int SEEKER = INSPIRATOR + 1;
+    public const int VANGUARD = SEEKER + 1;
+    public const int ARBALEST = VANGUARD + 1;
+    public const int SKIRMISHER = ARBALEST + 1;
+    public const int PALADIN = SKIRMISHER + 1;
+    public const int MENDER = PALADIN + 1;
+    public const int DRUMMER = MENDER + 1;
+    public const int PIKEMAN = DRUMMER + 1;
+    public const int CARTER = PIKEMAN + 1;
+    public const int DRAGOON = CARTER + 1;
+    public const int SCOUT = DRAGOON + 1;
+    public const int GUARDIAN = SCOUT + 1;
+
+    public static List<int> unit_types = new List<int>{ WARRIOR, SPEARMAN, ARCHER, 
+        MINER, INSPIRATOR, SEEKER, VANGUARD, ARBALEST, SKIRMISHER, PALADIN,
+        MENDER, DRUMMER, PIKEMAN, CARTER, DRAGOON, SCOUT, GUARDIAN };
 
     public const int EMPTY = 100; // Graphical lookup usage.
 
@@ -53,6 +57,20 @@ public class PlayerUnit : Unit {
         else if (ID == ARCHER) pu = new Archer();
         else if (ID == MINER) pu = new Miner();
         else if (ID == INSPIRATOR) pu = new Inspirator();
+        else if (ID == SEEKER) pu = new Seeker();
+        /*
+        else if (ID == VANGUARD) pu = new Vanguard();
+        else if (ID == ARBALEST) pu = new Arbalest();
+        //else if (ID == SKIRMISHER) pu = new Skirmisher();
+        else if (ID == PALADIN) pu = new Paladin();
+        else if (ID == MENDER) pu = new Mender();
+        else if (ID == DRUMMER) pu = new Drummer();
+        else if (ID == PIKEMAN) pu = new Pikeman();
+        else if (ID == CARTER) pu = new Carter();
+        else if (ID == DRAGOON) pu = new Dragoon();
+        else if (ID == SCOUT) pu = new Scout();
+        else if (ID == GUARDIAN) pu = new Guardian();*/
+
         return pu;
     }
 
@@ -256,6 +274,14 @@ public class Mender : PlayerUnit {
     public Mender() {
         init("Mender", 0, 3, 4, MELEE, HEAL_1);
         ID = MENDER;
+    }
+}
+
+
+public class Skirmisher : PlayerUnit {
+    public Skirmisher() {
+        init("Skirmisher", 1, 1, 1, MELEE, 0,0 ); // fix
+        ID = SKIRMISHER;
     }
 }
 

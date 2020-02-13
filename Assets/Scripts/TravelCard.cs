@@ -42,6 +42,8 @@ public class TravelCard {
     private static int[] RULE_FIELDS = { ENTER_COMBAT, CHARGE, AMBUSH, OFF_GUARD,
         BLESSING1, AFFECT_RESOURCES, FOG, };
 
+    public virtual void action(TravelCardManager tcm) { }
+    public virtual void use_roll_result(int result, Controller c) { }
 
     public TravelCard(int id, int type, Sprite sprite) {
         ID = id;
@@ -61,24 +63,6 @@ public class TravelCard {
 
     protected void set_rule(int rule, bool state) {
         rules[rule] = state;
-    }
-
-    public virtual void action(TravelCardManager tcm) {
-    }
-
-    public virtual void use_roll_result(int result, Controller c) {
-
-    }
-
-    public IEnumerator adjust_resources(Controller c) {
-
-        Discipline disc = c.get_disc();
-        foreach (KeyValuePair<string, int> r in consequence) {
-            if (r.Value != 0) {
-                disc.change_var(r.Key, r.Value, true);
-                yield return new WaitForSecondsRealtime(0.5f);
-            }
-        }
     }
 }
 
@@ -169,7 +153,7 @@ public class Chance2_1 : Chance {
             // lose 2 unity
             consequence[Storeable.UNITY] = -2;
         }
-        adjust_resources(c);
+        c.get_disc().adjust_resources_visibly(consequence);
     }
 }
 

@@ -13,13 +13,9 @@ public class TurnPhaser : MonoBehaviour {
 
     private Controller c;
     private TravelDeck td;
-    private TileMapper tm;
-    private TravelCardManager tcm;
     private CamSwitcher cs;
-    private Selector selector;
     private EnemyLoader enemy_loader;
 
-    public Button next_turnB;
     public Button mineB;
 
     private MapCell cell;
@@ -28,41 +24,77 @@ public class TurnPhaser : MonoBehaviour {
 
     void Start() {
         c = GameObject.Find("Controller").GetComponent<Controller>();
-        selector = c.selector;
         cs = c.cam_switcher;
         enemy_loader = c.enemy_loader;
-        tm = c.tile_mapper;
         td = c.travel_deck;
-        tcm = c.travel_card_manager;
 
-        advance_stage();
-        pre_phase();
+        disable_mineB();
+        stage = MOVEMENT;
     }
 
     public void advance_stage() {
         stage++;
     }
 
-    private void pre_phase() {
-        // Disable next turn button
-        disable_mineB();
-        cell = tm.get_cell(c.get_disc().pos);
-        if (check_mineable(cell)) 
-            enable_mineB();
+        // Stage adjustment happens internally only. 
+    // advance_stage is the only externally accessible way to advance.
+    private int _stage = 0;
+    private int stage {
+        get { return _stage; }
+        set {
+            _stage = value;
+
+            if (_stage == MOVEMENT) {
+
+                // Don't move if resuming battle.
+                Debug.Log("in battle? " + c.get_active_bat().in_battle);
+                if (c.get_active_bat().in_battle) {
+                    stage = ACTION; // Bypasses travel card and action.
+                } else
+                    moving = true;
+            }
+            else if (_stage == TRAVEL_CARD) {
+                moving = false;
+                Debug.Log("travel card stage");
+                travel_card();
+            }
+            else if (_stage == ACTION) {
+                Debug.Log("action stage");
+                action();
+            }
+            else if (_stage > ACTION) {
+                advance_player();
+                stage = MOVEMENT;
+            }
+        }
     }
 
-    private void movement() {
-        moving = true;
+    private void advance_player() {
+        c.active_disc_ID = (c.active_disc_ID + 1) % 3;
+        if (c.active_disc_ID == 0)
+            c.advance_turn();
+        
+        reset();
+        cs.set_active(CamSwitcher.MAP, true);
+    }
+
+    public void reset() { // New game
+        tc = null;
+        cell = c.tile_mapper.get_cell(c.get_disc().pos);
+        disable_mineB();
+        if (check_mineable(cell)) 
+            enable_mineB();
+        c.map_ui.activate_next_stageB(false);
+        c.map_ui.update_cell_text(cell.name);
+        stage = MOVEMENT;
     }
 
     // Don't pull a travel card on a discovered cell.
     private void travel_card() {
-        cell = tm.get_cell(c.get_disc().pos);
-
+        cell = c.tile_mapper.get_cell(c.get_disc().pos);
         if (!cell.discovered) {
             cell.discover();
             if (cell.has_travel_card) {
-
                 // DRAW CARD
                 tc = td.draw_card(cell.tier, cell.ID);
                 c.get_disc().travel_card = tc;
@@ -87,7 +119,7 @@ public class TurnPhaser : MonoBehaviour {
                 enemy_loader.load_existing_enemies(cell.get_enemies());
 
             } else { // Resume battle exactly as it was.
-                c.formation.load_board(c.active_disc);
+                c.formation.load_board(c.active_disc_ID);
             }
             cs.set_active(CamSwitcher.BATTLE, true);
             return;
@@ -109,7 +141,7 @@ public class TurnPhaser : MonoBehaviour {
         if (tc.follow_rule(TravelCard.ENTER_COMBAT)) { // If a combat travel card was pulled.
             begin_new_combat(tc);
         } else if (tc.follow_rule(TravelCard.AFFECT_RESOURCES)) {
-            StartCoroutine(tc.adjust_resources(c));
+            StartCoroutine(c.get_disc().adjust_resources_visibly(tc.consequence));
         } 
     }
 
@@ -117,58 +149,6 @@ public class TurnPhaser : MonoBehaviour {
         c.get_active_bat().in_battle = true; 
         enemy_loader.load(cell.ID, cell.tier, tc.enemies);
         cs.set_active(CamSwitcher.BATTLE, true);
-    }
-
-    private void finish_phase() {
-        cs.set_active(CamSwitcher.MAP, true);
-        player++;
-        pre_phase();
-    }
-    // Stage and player adjustment happen internally only. 
-    // advance_stage is the only externally accessible way to advance.
-    private int _stage = 0;
-    private int stage {
-        get { return _stage; }
-        set {
-            _stage = value;
-            if (_stage == MOVEMENT) {
-
-                // Don't move if resuming battle.
-                Debug.Log("in battle? " + c.get_active_bat().in_battle);
-                if (c.get_active_bat().in_battle) {
-                    stage = ACTION; // Bypasses travel card and action.
-                } else
-                    movement();
-            }
-            else if (_stage == TRAVEL_CARD) {
-                moving = false;
-                Debug.Log("travel card stage");
-                travel_card();
-            }
-            else if (_stage == ACTION) {
-                Debug.Log("action stage");
-                action();
-            }
-            else if (_stage > ACTION) {
-                finish_phase();
-                stage = MOVEMENT;
-            }
-        }
-    }
-
-    private int _player = 1;
-    private int player {
-        get { return _player; }
-        set {
-            _player = value;
-            tc = null;
-            cell = null;
-            c.rotate_disc();
-            if (_player > c.num_discs) {
-                _player = 1;
-                c.advance_turn();
-            }
-        }
     }
 
     public void mine() {
@@ -190,13 +170,8 @@ public class TurnPhaser : MonoBehaviour {
     }
 
     private bool check_mineable(MapCell cell) {
-        if (!c.get_active_bat().has_miner()) {
-            return false;
-        }
-        if (cell.minerals > 0 || cell.star_crystals > 0) {
-            return true;
-        }
-        return false;
+        return (c.get_active_bat().has_miner() && 
+            (cell.minerals > 0 || cell.star_crystals > 0));
     }
 
     private void enable_mineB() {

@@ -12,6 +12,7 @@ public class UnitPanel : MonoBehaviour {
     public Slot slot;
     public PlayerUnit punit;
     private Camera cam;
+    public GameObject infoP;
 
     public virtual void update_panel(Slot slot) {}
 
@@ -32,27 +33,41 @@ public class UnitPanel : MonoBehaviour {
 
     public virtual void close() {
         if (panel.activeSelf) {
+            infoP.SetActive(false);
             panel.SetActive(false); 
             selector.deselect();
             slot = null;
             punit = null;
         }
     }
-
     
     public void rotate(int direction) {
         slot.get_group().rotate(direction);
     }
 
     public void show_panel(Slot slot) {
-        if (slot != null) {
-            this.slot = slot;
-            if (slot.has_punit) {
-                this.punit = slot.get_punit();
-            }
-            update_panel(slot);
-            panel.SetActive(true); 
-            reposition(slot);
+        if (slot == null)
+            return;
+        this.slot = slot;
+        if (slot.has_punit) {
+            this.punit = slot.get_punit();
         }
+        update_panel(slot);
+        update_info_panel();
+        reposition(slot);
+        panel.SetActive(true); 
+    }
+
+    public void toggle_info_panel() {
+        infoP.SetActive(!infoP.activeSelf);
+        if (infoP.activeSelf)
+            update_info_panel();
+    }
+
+    public void update_info_panel() {
+        if (slot == null)
+            return;
+        Text t = infoP.GetComponentInChildren<Text>();
+        AttributeWriter.write_attribute_text(t, slot.get_unit());
     }
 }

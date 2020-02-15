@@ -224,7 +224,7 @@ PrefabInstance:
     - target: {fileID: 8590276945283539934, guid: 87e1be6ca8d3f9449a295e3185b72b94,
         type: 3}
       propertyPath: m_Colors.m_NormalColor.a
-      value: 0.78431374
+      value: 0.6862745
       objectReference: {fileID: 0}
     - target: {fileID: 2536770967119698840, guid: 87e1be6ca8d3f9449a295e3185b72b94,
         type: 3}
@@ -410,6 +410,11 @@ PrefabInstance:
       propertyPath: m_Pivot.y
       value: 0.5
       objectReference: {fileID: 0}
+    - target: {fileID: 8590276945283539934, guid: 87e1be6ca8d3f9449a295e3185b72b94,
+        type: 3}
+      propertyPath: m_Colors.m_NormalColor.a
+      value: 0.6862745
+      objectReference: {fileID: 0}
     - target: {fileID: 2536770967119698840, guid: 87e1be6ca8d3f9449a295e3185b72b94,
         type: 3}
       propertyPath: group
@@ -588,11 +593,6 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Pivot.y
       value: 0.5
-      objectReference: {fileID: 0}
-    - target: {fileID: 8590276945283539934, guid: 87e1be6ca8d3f9449a295e3185b72b94,
-        type: 3}
-      propertyPath: m_Colors.m_NormalColor.a
-      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2536770967119698840, guid: 87e1be6ca8d3f9449a295e3185b72b94,
         type: 3}

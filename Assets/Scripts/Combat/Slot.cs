@@ -113,23 +113,24 @@ public class Slot : MonoBehaviour {
         return null;
     }
 
+    // Update slot button image and slot unit image.
     public void set_sprite(int image_ID) { 
         if (has_punit) {
-            //img.sprite = bl.images[image_ID]; 
+            //img.sprite = bl.images[image_ID]; // tile img
+            img.sprite = bl.white_fade_img;
             if (bl.unit_images.ContainsKey(image_ID)) {
-                unit_img.color = Color.white;
-                unit_img.sprite = bl.unit_images[image_ID];
+                if (bl.unit_images[image_ID] != null) {
+                    unit_img.color = Color.white;
+                    unit_img.sprite = bl.unit_images[image_ID];
+                }
             }
         } else if (has_enemy) {
-            img.sprite = c.enemy_loader.images[image_ID];
-            //unit_img.sprite = bl.unit_images[image_ID];
-            //unit_img.color = Color.white;
-        } else {
-            //Debug.Log(bl.images);
-            //img.sprite = c.bat_loader.images[PlayerUnit.EMPTY]; // empty
-            img.sprite = c.bat_loader.empty; // empty
+            img.sprite = bl.dark_fade_img;
             unit_img.color = TRANSPARENT;
-            //unit_img.sprite = bl.unit_images[image_ID];
+            //img.sprite = c.enemy_loader.images[image_ID]; // tile img
+        } else {
+            img.sprite = bl.empty; // empty
+            unit_img.color = TRANSPARENT;
         }
     }
 

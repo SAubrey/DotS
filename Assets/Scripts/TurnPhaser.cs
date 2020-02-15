@@ -14,9 +14,8 @@ public class TurnPhaser : MonoBehaviour {
     private Controller c;
     private TravelDeck td;
     private CamSwitcher cs;
+    private MapUI map_ui;
     private EnemyLoader enemy_loader;
-
-    public Button mineB;
 
     private MapCell cell;
     private TravelCard tc;
@@ -27,8 +26,11 @@ public class TurnPhaser : MonoBehaviour {
         cs = c.cam_switcher;
         enemy_loader = c.enemy_loader;
         td = c.travel_deck;
+        map_ui = c.map_ui;
 
-        disable_mineB();
+        map_ui.disable_mineB();
+        map_ui.disable_scoutB();
+        map_ui.set_active_rune_gateB(false);
         stage = MOVEMENT;
     }
 
@@ -81,11 +83,11 @@ public class TurnPhaser : MonoBehaviour {
     public void reset() { // New game
         tc = null;
         cell = c.tile_mapper.get_cell(c.get_disc().pos);
-        disable_mineB();
-        if (check_mineable(cell)) 
-            enable_mineB();
-        c.map_ui.activate_next_stageB(false);
-        c.map_ui.update_cell_text(cell.name);
+        map_ui.set_active_next_stageB(false);
+        map_ui.set_active_rune_gateB(false);
+        map_ui.set_active_mineB(check_mineable(cell));
+        map_ui.set_active_scoutB(c.get_active_bat().get_unit(PlayerUnit.SCOUT) != null);
+        map_ui.update_cell_text(cell.name);
         stage = MOVEMENT;
     }
 
@@ -129,9 +131,9 @@ public class TurnPhaser : MonoBehaviour {
 
         Debug.Log("no travelcard, no enemies in tile. Can mine?");
         if (check_mineable(cell)) {
-            enable_mineB();
+            map_ui.enable_mineB();
         } 
-        c.map_ui.activate_next_stageB(true);
+        c.map_ui.set_active_next_stageB(true);
         //if () check then enable build button
 
         // Check for settlement and adjust UI accordingly.
@@ -152,7 +154,7 @@ public class TurnPhaser : MonoBehaviour {
     }
 
     public void mine() {
-        disable_mineB();
+        map_ui.disable_mineB();
         int mine_qty = c.get_active_bat().mine_qty;
         if (cell.ID == MapCell.TITRUM_ID || cell.ID == MapCell.MOUNTAIN_ID) {
             if (cell.minerals >= mine_qty) {
@@ -172,13 +174,5 @@ public class TurnPhaser : MonoBehaviour {
     private bool check_mineable(MapCell cell) {
         return (c.get_active_bat().has_miner() && 
             (cell.minerals > 0 || cell.star_crystals > 0));
-    }
-
-    private void enable_mineB() {
-        mineB.interactable = true;
-    }
-
-    public void disable_mineB() {
-        mineB.interactable = false;
     }
 }

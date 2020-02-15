@@ -37,11 +37,6 @@ public class Battalion {
     }
 
     public void add_units(int type, int count) {
-        //Debug.Log(type);
-        foreach (int k in units.Keys) {
-          //  Debug.Log(k);
-           // Debug.Log(units[k]);
-        }
         for (int i = 0; i < count; i++) {
             if (units.ContainsKey(type)) {
                 units[type].Add(PlayerUnit.create_punit(type));

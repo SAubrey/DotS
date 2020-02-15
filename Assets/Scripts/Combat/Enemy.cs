@@ -176,7 +176,7 @@ public class Korote : Enemy {
 public class Molner : Enemy {
     public Molner() {
         ID = MOLNER;
-        init("Molner", 2, 2, 2, MELEE, FLANKING, GROUPING_2, CHARGE);
+        init("Molner", 2, 2, 2, MELEE, FLANKING, CHARGE, GROUPING_2);
     }
 }
 public class Etuena : Enemy {
@@ -246,28 +246,28 @@ public class Eke_Lord : Enemy {
 public class Ketemcol : Enemy {
     public Ketemcol() {
         ID = KETEMCOL;
-        init("Ketemcol", 2, 8, 6, MELEE, ARCING_STRIKE, STUN, ARMOR_1);
+        init("Ketemcol", 2, 8, 6, MELEE, ARCING_STRIKE, STUN);
         defense = 1;
     }
 }
 public class Mahukin : Enemy {
     public Mahukin() {
         ID = MAHUKIN;
-        init("Mahukin", 2, 3, 4, MELEE, ARMOR_2, GROUPING_2, 0);
+        init("Mahukin", 2, 3, 4, MELEE, GROUPING_2, 0, 0);
         defense = 2;
     }
 }
 public class Drongo : Enemy {
     public Drongo() {
         ID = DRONGO;
-        init("Drongo", 3, 6, 6, MELEE, ARMOR_3, 0, 0);
+        init("Drongo", 3, 6, 6, MELEE, 0, 0, 0);
         defense = 3;
     }
 }
 public class Maheket : Enemy {
     public Maheket() {
         ID = MAHEKET;
-        init("Maheket", 3, 3, 5, MELEE, ARMOR_2, GROUPING_2, 0);
+        init("Maheket", 3, 3, 5, MELEE, GROUPING_2, 0, 0);
         defense = 2;
     }
 }
@@ -288,7 +288,7 @@ public class Etalket : Enemy {
 public class Muatem : Enemy {
     public Muatem() {
         ID = MUATEM;
-        init("Muatem", 7, 4, 12, MELEE, ARMOR_5, DEVASTATING_BLOW, 0);
+        init("Muatem", 7, 4, 12, MELEE, CRUSHING_BLOW, 0);
         defense = 5;
     }
 }
@@ -313,7 +313,7 @@ public class Gokin : Enemy {
 public class Tajaqar : Enemy {
     public Tajaqar() {
         ID = TAJAQAR;
-        init("Tajaqar", 3, 3, 5, MELEE, FLANKING, ARMOR_1, GROUPING_2);
+        init("Tajaqar", 3, 3, 5, MELEE, FLANKING, GROUPING_2);
         defense = 1;
     }
 }
@@ -326,7 +326,7 @@ public class Tajaero : Enemy {
 public class Terra_Qual : Enemy {
     public Terra_Qual() {
         ID = TERRA_QUAL;
-        init("Terra Qual", 5, 10, 12, MELEE, 0, ARCING_STRIKE, ARMOR_2);
+        init("Terra Qual", 5, 10, 12, MELEE, 0, ARCING_STRIKE);
         defense = 2;
     }
 }

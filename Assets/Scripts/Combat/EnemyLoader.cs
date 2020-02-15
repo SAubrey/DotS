@@ -30,10 +30,10 @@ public class EnemyLoader : MonoBehaviour {
     private Formation f;
     public System.Random rand;
 
+    public Dictionary<int, Sprite> images = new Dictionary<int, Sprite>();
     public Sprite galtsa, grem, endu, korote, molner, etuena, clypte, goliath, kverm,
         latu, eke_tu, oetem, eke_fu, eke_shi_ami, eke_lord, ketemcol, mahukin, drongo, maheket,
         calute, etalket, muatem, drak, zerrku, gokin, tajaqar, tajaero, terra_qual, duale;
-    public Dictionary<int, Sprite> images = new Dictionary<int, Sprite>();
    
     public Dictionary<int, List<List<List<int>>>> biomes = 
         new Dictionary<int, List<List<List<int>>>>();

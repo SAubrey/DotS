@@ -32,20 +32,13 @@ public class TileMapper : MonoBehaviour, ISaveLoad {
     public CamSwitcher cs;
     public Tilemap tm;
     
-    public Tile plains_1;
-    public Tile plains_2;
-    public Tile forest_1;
-    public Tile forest_2;
-    public Tile ruins_1;
-    public Tile ruins_2;
-    public Tile cliff_1;
-    public Tile cliff_2;
-    public Tile cave_1;
-    public Tile cave_2;
-    public Tile star_1;
-    public Tile star_2;
-    public Tile titrum_1;
-    public Tile titrum_2;
+    public Tile plains_1, plains_2;
+    public Tile forest_1, forest_2;
+    public Tile ruins_1, ruins_2;
+    public Tile cliff_1, cliff_2;
+    public Tile cave_1, cave_2;
+    public Tile star_1, star_2;
+    public Tile titrum_1, titrum_2;
     public Tile mire;
     //public Tile mire_1;
     public Tile lush_land_2;
@@ -91,11 +84,10 @@ public class TileMapper : MonoBehaviour, ISaveLoad {
     private Dictionary<int, int> t3_bag_count = new Dictionary<int, int>() {
         {PLAINS_2, 212},
     };
-
     
     public Dictionary<Pos, MapCell> map = new Dictionary<Pos, MapCell>();
-    public Vector3 center_point;
     public bool waiting_for_second_gate { get; set; } = false;
+    public bool scouting { get; set; } = false;
 
     void Start() {
         c = GameObject.Find("Controller").GetComponent<Controller>();
@@ -149,14 +141,10 @@ public class TileMapper : MonoBehaviour, ISaveLoad {
     void Update() {
         if (cs.current_cam == CamSwitcher.MAP) {
             if (Input.GetMouseButtonDown(0)) {
-                if (!EventSystem.current.IsPointerOverGameObject())
+                if (!EventSystem.current.IsPointerOverGameObject()) 
                     handle_left_click();
             }
         }
-    }
-
-    public GameData save() {
-        return new MapData(this, Controller.TILE_MAPPER);
     }
 
     private void new_game() {
@@ -172,39 +160,20 @@ public class TileMapper : MonoBehaviour, ISaveLoad {
         bags[3].Clear();
         map.Clear();
     }
-    
-    public void load(GameData generic) {
-        MapData data = generic as MapData;
-        clear_data();
-
-        foreach (int num in data.t1_bag)
-            bags[1].Add(num);
-        foreach (int num in data.t2_bag)
-            bags[2].Add(num);
-        foreach (int num in data.t3_bag)
-            bags[3].Add(num);
-        
-        // Recreate map.
-        foreach (SMapCell mcs in data.cells) {
-            Pos pos = new Pos(mcs.x, mcs.y);
-            MapCell cell = MapCell.create_cell(
-                mcs.tier, mcs.tile_type, tiles[mcs.tile_type], pos);
-            cell.minerals = mcs.minerals;
-            cell.star_crystals = mcs.star_crystals;
-            cell.discovered = mcs.discovered;
-
-            if (cell.discovered)
-                place_tile(tiles[mcs.tile_type], mcs.x, mcs.y);
-            else
-                place_tile(shadow, pos.x, pos.y);
-            map.Add(pos, cell);
-        }
-    }
 
     private void handle_left_click() {
         if (tp.moving) {
             Vector3 pos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-            if (move_player(pos)) {
+            if (get_tile(pos.x, pos.y) == null)
+                return;
+            if (scouting) {
+                if (scout(pos)) {
+                    scouting = false;
+                    c.map_ui.set_active_scoutB(false);
+                    c.turn_phaser.advance_stage();
+                }
+            }
+            else if (move_player(pos)) {
                 tp.advance_stage(); // Movement stage to action
             }
         }
@@ -212,30 +181,24 @@ public class TileMapper : MonoBehaviour, ISaveLoad {
 
     public bool move_player(Vector3 pos) {
         Discipline d = c.get_disc();
+        if (get_tile(pos.x, pos.y) == null || 
+            !(check_adjacent(pos, d.pos) || waiting_for_second_gate)) 
+            return false;
+
         int x = (int)pos.x;
         int y = (int)pos.y;
-        if (waiting_for_second_gate) {
-
-        }
-        else if (get_tile(pos.x, pos.y) == null || 
-                !check_adjacent(x, y, 
-                (int)d.pos.x, (int)d.pos.y)) {
-            return false;
-        }
-        
         MapCell cell = map[new Pos(x, y)];
         if (cell.discovered) {
             if (cell.has_rune_gate) {
                 if (waiting_for_second_gate) {
                     // move to gate
                     waiting_for_second_gate = false;
-                    c.map_ui.activate_rune_gateB(false);
+                    c.map_ui.set_active_rune_gateB(false);
                 } else {
-                    c.map_ui.activate_rune_gateB(true);
+                    c.map_ui.set_active_rune_gateB(true);
                 }
             }
         } else { // Not discovered, draw tile
-            //tm.SetTile(new Vector3Int(x, y, 0), null); // clear shadow
             tm.SetTile(new Vector3Int(x, y, 0), cell.tile);
         }
         c.get_disc().pos = pos;
@@ -248,9 +211,23 @@ public class TileMapper : MonoBehaviour, ISaveLoad {
         return true;
     }
 
+    private bool scout(Vector3 pos) {
+        if (get_tile(pos.x, pos.y) == null || !check_adjacent(pos, c.get_disc().pos)) 
+            return false;
+        MapCell cell = map[new Pos((int)pos.x, (int)pos.y)];
+        tm.SetTile(new Vector3Int((int)pos.x, (int)pos.y, 0), cell.tile);
+        return true;
+    }
+
     public static bool check_adjacent(int x, int y, int x1, int y1) {
         int dx = Mathf.Abs(x - x1);
         int dy = Mathf.Abs(y - y1);
+        return dx + dy == 1;
+    }
+
+    public static bool check_adjacent(Vector3 pos1, Vector3 pos2) {
+        int dx = Mathf.Abs((int)pos1.x - (int)pos2.x);
+        int dy = Mathf.Abs((int)pos1.y - (int)pos2.y);
         return dx + dy == 1;
     }
 
@@ -295,14 +272,39 @@ public class TileMapper : MonoBehaviour, ISaveLoad {
     }
 
     public bool is_at_city(Discipline disc) {
-        if ((int)disc.pos.x == 10 && (int)disc.pos.y == 10) {
-            return true;
-        }
-        return false;
+        return ((int)disc.pos.x == 10 && (int)disc.pos.y == 10);
     }
 
-    public MapCell get_cell(int x, int y) {
-        return map[new Pos(x, y)];
+    public GameData save() {
+        return new MapData(this, Controller.TILE_MAPPER);
+    }
+ 
+    public void load(GameData generic) {
+        MapData data = generic as MapData;
+        clear_data();
+
+        foreach (int num in data.t1_bag)
+            bags[1].Add(num);
+        foreach (int num in data.t2_bag)
+            bags[2].Add(num);
+        foreach (int num in data.t3_bag)
+            bags[3].Add(num);
+        
+        // Recreate map.
+        foreach (SMapCell mcs in data.cells) {
+            Pos pos = new Pos(mcs.x, mcs.y);
+            MapCell cell = MapCell.create_cell(
+                mcs.tier, mcs.tile_type, tiles[mcs.tile_type], pos);
+            cell.minerals = mcs.minerals;
+            cell.star_crystals = mcs.star_crystals;
+            cell.discovered = mcs.discovered;
+
+            if (cell.discovered)
+                place_tile(tiles[mcs.tile_type], mcs.x, mcs.y);
+            else
+                place_tile(shadow, pos.x, pos.y);
+            map.Add(pos, cell);
+        }
     }
 
     public MapCell get_cell(Vector3 pos) {
@@ -316,7 +318,7 @@ public class TileMapper : MonoBehaviour, ISaveLoad {
     public void build_rune_gate(Pos pos) {
         MapCell mc = map[pos];
         mc.has_rune_gate = true;
-        c.map_ui.activate_rune_gateB(true);
+        c.map_ui.set_active_rune_gateB(true);
     }
 
     void generate_t1(Tilemap tm) {
@@ -324,7 +326,9 @@ public class TileMapper : MonoBehaviour, ISaveLoad {
             for (int y = 8; y < 13; y++) {
                 if (x == 10 && y == 10) {
                     Pos pos = new Pos(x, y);
-                    map.Add(pos, MapCell.create_cell(1, CITY, city, pos));
+                    MapCell mc = MapCell.create_cell(1, CITY, city, pos);
+                    mc.name = "City";
+                    map.Add(pos, mc);
                     place_tile(city, x, y);
                 } else {
                     create_tile(1, x, y);
@@ -383,5 +387,13 @@ public class TileMapper : MonoBehaviour, ISaveLoad {
                 create_tile(3, x + 13, y);
             }
         }
+    }
+
+    public void toggle_waiting_for_second_gate() {
+        waiting_for_second_gate = !waiting_for_second_gate;
+    }
+
+    public void toggle_scouting() {
+        scouting = !scouting;
     }
 }

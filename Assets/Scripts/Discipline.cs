@@ -47,6 +47,12 @@ public class Discipline : Storeable, ISaveLoad {
     public Pos get_Pos() {
         return new Pos((int)pos.x, (int)pos.y);
     }
+
+    public void reset() {
+        foreach (int type in PlayerUnit.unit_types) {  
+            bat.units[type].Clear();
+        }
+    }
     
     private Vector3 _pos;
     public Vector3 pos {
@@ -80,7 +86,6 @@ public class Discipline : Storeable, ISaveLoad {
         Debug.Log("count:" + data.sbat.healthy_types.Count);
         //for (int i = 0; i < PlayerUnit.unit_types.Count - 1; i++) {
         foreach (int type in PlayerUnit.unit_types) {  
-            Debug.Log(type);
             bat.units[type].Clear();
             bat.add_units(type, data.sbat.healthy_types[type]);
         }

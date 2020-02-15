@@ -167,7 +167,7 @@ public class Storeable : MonoBehaviour, ISaveLoad {
         }
     }
 
-    protected int _star_crystals = 1;
+    protected int _star_crystals = 0;
     public int star_crystals {
         get { return _star_crystals; }
         set { 

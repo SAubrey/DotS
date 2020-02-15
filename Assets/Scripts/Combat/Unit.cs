@@ -25,36 +25,35 @@ public class Unit {
     public const int PIERCING = 6;
     public const int ARCING_STRIKE = 7;
     public const int AGGRESSIVE = 8;
-    public const int ARMOR_1 = 9;
-    public const int ARMOR_2 = 10;
-    public const int ARMOR_3 = 11;
-    public const int ARMOR_4 = 12;
-    public const int ARMOR_5 = 13;
-    public const int TERROR_1 = 14;
-    public const int TERROR_2 = 15;
-    public const int TERROR_3 = 16;
-    public const int TARGET_RANGE = 17;
-    public const int TARGET_HEAVY = 18;
-    public const int STUN = 19;
-    public const int WEAKNESS_POLEARM = 20;
-    public const int DEVASTATING_BLOW = 21;
-    public const int TARGET_CENTERFOLD = 22;
-    public const int REACH = 23;
-    public const int CHARGE = 24;
+    public const int TARGET_RANGE = 9;
+    public const int TARGET_HEAVY = 10;
+    public const int STUN = 11;
+    public const int CHARGE = 12;
+    public const int PARRY = 13;
+    public const int PENETRATING_BLOW = 14;
+    public const int CRUSHING_BLOW = 15;
 
-    // Allied attributes
-    public const int INSPIRE = 25;
-    public const int HARVEST = 26;
-    public const int COUNTER_CHARGE = 27;
-    public const int BOLSTER = 28;
-    public const int TRUE_SIGHT = 29;
-    public const int HEAL_1 = 30;
-    public const int COMBINED_EFFORT = 31;
+    // Enemy only attributes
+    public const int TERROR_1 = 16;
+    public const int TERROR_2 = 17;
+    public const int TERROR_3 = 18;
+    public const int WEAKNESS_POLEARM = 19;
+    public const int TARGET_CENTERFOLD = 20;
+
+    // Allied only attributes
+    public const int REACH = 21;
+    public const int INSPIRE = 22;
+    public const int HARVEST = 23;
+    public const int COUNTER_CHARGE = 24;
+    public const int BOLSTER = 25;
+    public const int TRUE_SIGHT = 26;
+    public const int HEAL_1 = 27;
+    public const int COMBINED_EFFORT = 28;
 
     // Attribute fields
-    protected int num_attributes = 31;
-    public List<bool> attributes = new List<bool>();
-    //public bool grouping_active = false;
+    protected const int num_attributes = 28;
+    public List<bool> attributes = new List<bool>(num_attributes);
+    public int attribute1, attribute2, attribute3 = -1;
     protected bool attribute_active = false;
     public bool attribute_requires_action = false; // alters button behavior.
     public bool passive_attribute = false;
@@ -75,7 +74,8 @@ public class Unit {
         get { return _num_actions; }
         set {
             if (value < _num_actions) {
-                slot.update_images();
+                if (slot != null)
+                    slot.update_images();
                 has_acted_in_stage = true;
             }
 
@@ -130,6 +130,9 @@ public class Unit {
         health = hp;
         max_health = hp;
 
+        attribute1 = atr1;
+        attribute2 = atr2;
+        attribute3 = atr3;
         if (atr1 >= 0)
             attributes[atr1] = true;
         if (atr2 >= 0)

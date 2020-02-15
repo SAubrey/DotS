@@ -13,20 +13,19 @@ public class PlayerUnit : Unit {
     public const int SKIRMISHER = ARBALEST + 1;
     public const int PALADIN = SKIRMISHER + 1;
     public const int MENDER = PALADIN + 1;
-    public const int DRUMMER = MENDER + 1;
-    public const int PIKEMAN = DRUMMER + 1;
-    public const int CARTER = PIKEMAN + 1;
+    public const int CARTER = MENDER + 1;
     public const int DRAGOON = CARTER + 1;
     public const int SCOUT = DRAGOON + 1;
-    public const int GUARDIAN = SCOUT + 1;
+    public const int DRUMMER = SCOUT + 1;
+    public const int GUARDIAN = DRUMMER + 1;
+    public const int PIKEMAN = GUARDIAN + 1;
 
-    public static List<int> unit_types = new List<int>{ WARRIOR, SPEARMAN, ARCHER, 
+    public static List<int> unit_types = new List<int> { WARRIOR, SPEARMAN, ARCHER, 
         MINER, INSPIRATOR, SEEKER, VANGUARD, ARBALEST, SKIRMISHER, PALADIN,
-        MENDER, DRUMMER, PIKEMAN, CARTER, DRAGOON, SCOUT, GUARDIAN };
+        MENDER, CARTER, DRAGOON, SCOUT, DRUMMER, GUARDIAN, PIKEMAN };
 
     public const int EMPTY = 100; // Graphical lookup usage.
 
-    //public float resilience;
     private float injury_thresh;
     public bool injured = false;
     private bool _defending = false;
@@ -44,7 +43,7 @@ public class PlayerUnit : Unit {
     }
 
     protected void init(string name, int att, int def, int res, 
-            int style, int atr1=-1, int atr2=-1, int atr3=-1) {
+            int style, int atr1=0, int atr2=0, int atr3=0) {
         base.init(name, att, res, style, atr1, atr2, atr3);
         type = PLAYER;
         defense = def;
@@ -58,10 +57,9 @@ public class PlayerUnit : Unit {
         else if (ID == MINER) pu = new Miner();
         else if (ID == INSPIRATOR) pu = new Inspirator();
         else if (ID == SEEKER) pu = new Seeker();
-        /*
         else if (ID == VANGUARD) pu = new Vanguard();
         else if (ID == ARBALEST) pu = new Arbalest();
-        //else if (ID == SKIRMISHER) pu = new Skirmisher();
+        else if (ID == SKIRMISHER) pu = new Skirmisher();
         else if (ID == PALADIN) pu = new Paladin();
         else if (ID == MENDER) pu = new Mender();
         else if (ID == DRUMMER) pu = new Drummer();
@@ -69,7 +67,7 @@ public class PlayerUnit : Unit {
         else if (ID == CARTER) pu = new Carter();
         else if (ID == DRAGOON) pu = new Dragoon();
         else if (ID == SCOUT) pu = new Scout();
-        else if (ID == GUARDIAN) pu = new Guardian();*/
+        else if (ID == GUARDIAN) pu = new Guardian();
 
         return pu;
     }
@@ -252,7 +250,6 @@ public class Seeker : PlayerUnit {
     }
 }
 
-
 public class Vanguard : PlayerUnit {
     public Vanguard() {
         init("Vanguard", 2, 3, 5, MELEE);
@@ -260,7 +257,6 @@ public class Vanguard : PlayerUnit {
         passive_attribute = true;
     }
 }
-
 
 public class Arbalest : PlayerUnit {
     public Arbalest() {
@@ -274,22 +270,28 @@ public class Mender : PlayerUnit {
     public Mender() {
         init("Mender", 0, 3, 4, MELEE, HEAL_1);
         ID = MENDER;
+        max_num_actions = 1;
+        _num_actions = max_num_actions;
     }
 }
 
-
 public class Skirmisher : PlayerUnit {
     public Skirmisher() {
-        init("Skirmisher", 1, 1, 1, MELEE, 0,0 ); // fix
+        init("Skirmisher", 2, 2, 2, RANGE, STUN, GROUPING_2); 
         ID = SKIRMISHER;
+        // "range or melee" achieved by range
+    
     }
 }
 
 public class Scout : PlayerUnit {
     public Scout() {
-        init("Scout", 3, 0, 2, RANGE);
+        init("Scout", 3, 0, 2, RANGE, PIERCING);
         ID = SCOUT;
         passive_attribute = true;
+        // Double strike
+        max_num_actions = 3;
+        _num_actions = max_num_actions;
     }
 }
 
@@ -335,18 +337,17 @@ public class Drummer : PlayerUnit {
     }
 }
 
-public class Pikeman : PlayerUnit {
-    public Pikeman() {
-        init("Pikeman", 1, 2, 2, MELEE, REACH);
-        // FIX STATS
-        ID = PIKEMAN;
-        passive_attribute = true;
-    }
-}
-
 public class Guardian : PlayerUnit {
     public Guardian() {
         init("Guardian", 3, 4, 4, MELEE, GROUPING_1, COMBINED_EFFORT);
         ID = GUARDIAN;
+    }
+}
+
+public class Pikeman : PlayerUnit {
+    public Pikeman() {
+        init("Pikeman", 3, 1, 3, MELEE, REACH, PIERCING, COUNTER_CHARGE);
+        ID = PIKEMAN;
+        passive_attribute = true;
     }
 }

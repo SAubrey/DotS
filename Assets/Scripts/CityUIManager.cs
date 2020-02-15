@@ -31,28 +31,29 @@ public class CityUIManager : MonoBehaviour {
     public Text d_star_crystals, d_minerals, d_arelics, d_mrelics, d_erelics, d_equimares;
 
     // Unit quantity texts - Hiring
-    public IDictionary<int, Text> units_count = new Dictionary<int, Text>();
-    public Text warriorT, spearmanT, archerT, minerT, inspiratorT;
-
+    public IDictionary<int, Text> unit_counts = new Dictionary<int, Text>();
+    public Text warriorT, spearmanT, archerT, minerT, inspiratorT, seekerT, vanguardT,
+        arbalestT, skirmisherT, paladinT, menderT, carterT, dragoonT, scoutT,
+        drummerT, guardianT, pikemanT;
 
     // City Upgrades 
-    //public Dictionary<int, Button> upgrade_buttons = new Dictionary<int, Button>();
+    // Arrange buttons in inspector left to right, top to bottom.
     public List<Button> upgrade_buttons = new List<Button>();
-    /*public Button forgeB, templeB, workshopB, forge2B, barracksB, temple2B, 
-        meditationB, storehouseB, workshop2B, encampmentsB, barracks2B, hallofadeptB, 
-        temple3B, garrisonB, stableB;*/
+
     public Dictionary<int, Button> hire_buttons = new Dictionary<int, Button>();
-    public Button warriorB, spearmanB, archerB, inspiratorB, minerB, seekerB;
+    public Button warriorB, spearmanB, archerB, inspiratorB, minerB, seekerB, vanguardB,
+        arbalestB, skirmisherB, paladinB, menderB, carterB, dragoonB, scoutB,
+        drummerB, guardianB, pikemanB;
     public Dictionary<int, Upgrade> upgrades = new Dictionary<int, Upgrade>();
     private Controller c;
     public GameObject cityP;
     public GameObject upgradesP;
     public bool visible = false;
+    public Text infoT;
 
     void Start() {
         c = GameObject.Find("Controller").GetComponent<Controller>();    
 
-        //city_inv.Add(Storeable.LIGHT, c_light);
         city_inv.Add(Storeable.STAR_CRYSTALS, c_star_crystals);
         city_inv.Add(Storeable.MINERALS, c_minerals);
         city_inv.Add(Storeable.ARELICS, c_arelics);
@@ -60,7 +61,6 @@ public class CityUIManager : MonoBehaviour {
         city_inv.Add(Storeable.ERELICS, c_erelics);
         city_inv.Add(Storeable.EQUIMARES, c_equimares);
 
-        //disc_inv.Add(Storeable.LIGHT, d_light);
         disc_inv.Add(Storeable.STAR_CRYSTALS, d_star_crystals);
         disc_inv.Add(Storeable.MINERALS, d_minerals);
         disc_inv.Add(Storeable.ARELICS, d_arelics);
@@ -68,11 +68,11 @@ public class CityUIManager : MonoBehaviour {
         disc_inv.Add(Storeable.ERELICS, d_erelics);
         disc_inv.Add(Storeable.EQUIMARES, d_equimares);
 
-        units_count.Add(PlayerUnit.WARRIOR, warriorT);
-        units_count.Add(PlayerUnit.SPEARMAN, spearmanT);
-        units_count.Add(PlayerUnit.ARCHER, archerT);
-        units_count.Add(PlayerUnit.MINER, minerT);
-        units_count.Add(PlayerUnit.INSPIRATOR, inspiratorT);
+        unit_counts.Add(PlayerUnit.WARRIOR, warriorT);
+        unit_counts.Add(PlayerUnit.SPEARMAN, spearmanT);
+        unit_counts.Add(PlayerUnit.ARCHER, archerT);
+        unit_counts.Add(PlayerUnit.MINER, minerT);
+        unit_counts.Add(PlayerUnit.INSPIRATOR, inspiratorT);
         cityP.SetActive(visible);
 
         hire_buttons.Add(PlayerUnit.WARRIOR, warriorB);
@@ -122,23 +122,24 @@ public class CityUIManager : MonoBehaviour {
     }
 
     public void load_unit_counts() {
-        foreach (int type in units_count.Keys) {
-            units_count[type].text = c.get_active_bat().units[type].Count.ToString();
-        }
+        foreach (int type in unit_counts.Keys) 
+            unit_counts[type].text = 
+                c.get_active_bat().units[type].Count.ToString();
     }
 
     public void try_hire_unit(string args_str) {
         string[] args = args_str.Split(',');
         int type = Int32.Parse(args[0]);
-        int sc_cost = Int32.Parse(args[1]);;
-        int mineral_cost = Int32.Parse(args[2]);;
+        int sc_cost = Int32.Parse(args[1]);
+        int mineral_cost = Int32.Parse(args[2]);
 
         if (verify_avail_unit_resources(sc_cost, mineral_cost)) {
             c.get_active_bat().add_units(type, 1);
             c.get_disc().change_var(Storeable.STAR_CRYSTALS, -sc_cost);
             c.get_disc().change_var(Storeable.MINERALS, -mineral_cost);
-            // update text in disc
-            units_count[type].text = c.get_active_bat().units[type].Count.ToString();
+            // Update text in city ui and map ui
+            unit_counts[type].text = c.get_active_bat().units[type].Count.ToString();
+            c.map_ui.unit_countsT[type].text = unit_counts[type].text;
         }
     }
 
@@ -272,6 +273,10 @@ public class CityUIManager : MonoBehaviour {
             return upgrades[upgrade_ID].purchased && upgrades[upgrade_ID2].purchased;
         return upgrades[upgrade_ID].purchased;
     }
+
+    public void update_info_text(int punit_ID) {
+        AttributeWriter.write_attribute_text(infoT, PlayerUnit.create_punit(punit_ID));
+    }
 }
 
 
@@ -283,7 +288,8 @@ public class Upgrade {
     public List<int> required_unlocks = new List<int>();
     public List<int> required_to_unlock = new List<int>();
     public Upgrade(int ID, int sc=0, int m=0, 
-        int ar=0, int mr=0, int er=0, int R1=0, int R2=0, int RT1=0, int RT2=0) {
+        int ar=0, int mr=0, int er=0, 
+        int R1=0, int R2=0, int RT1=0, int RT2=0) {
         this.ID = ID;
         star_crystals = sc;
         minerals = m;

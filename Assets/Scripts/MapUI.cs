@@ -11,6 +11,7 @@ public class MapUI : MonoBehaviour {
     
     public Text turn_number_t;
 
+
     // ---City UI---
     public GameObject cityP;
     private bool city_panel_active = true;
@@ -18,11 +19,13 @@ public class MapUI : MonoBehaviour {
         c_arelics, c_mrelics, c_erelics, c_equimares;
     public IDictionary<string, Text> city_inv = new Dictionary<string, Text>();
 
+
     // Battalion Resource UI
     public GameObject invP;
     private bool inv_panel_active = true;
     public Text b_light, b_unity, b_experience, b_star_crystals,
          b_minerals, b_arelics, b_mrelics, b_erelics, b_equimares;
+
 
     // Battalion Unit UI
     public GameObject unitsP;
@@ -30,14 +33,15 @@ public class MapUI : MonoBehaviour {
     public Dictionary<int, Text> unit_countsT = new Dictionary<int, Text>();
     public Text warrior_count, spearman_count, archer_count, 
         miner_count, inspirator_count, seeker_count,
-        vanguard_count, arbalest_count, skirmisher_count, 
+        guardian_count, arbalest_count, skirmisher_count, 
         paladin_count, mender_count, carter_count, dragoon_count,
-        scout_count, drummer_count, guardian_count, pikeman_count;
+        scout_count, drummer_count, shield_maiden_count, pikeman_count;
 
     Controller c;
     public IDictionary<string, Text> disc_inv = new Dictionary<string, Text>();
     public Text map_discT, battle_discT, map_cellT;
     public Button next_stageB, rune_gateB, scoutB, mineB;
+    public GameObject ask_to_enterP;
 
     void Awake() {
         c = GameObject.Find("Controller").GetComponent<Controller>();
@@ -68,7 +72,7 @@ public class MapUI : MonoBehaviour {
         unit_countsT.Add(PlayerUnit.MINER, miner_count);
         unit_countsT.Add(PlayerUnit.INSPIRATOR, inspirator_count);
         unit_countsT.Add(PlayerUnit.SEEKER, seeker_count);
-        unit_countsT.Add(PlayerUnit.VANGUARD, vanguard_count);
+        unit_countsT.Add(PlayerUnit.GUARDIAN, guardian_count);
         unit_countsT.Add(PlayerUnit.ARBALEST, arbalest_count);
         unit_countsT.Add(PlayerUnit.SKIRMISHER, skirmisher_count);
         unit_countsT.Add(PlayerUnit.PALADIN, paladin_count);
@@ -77,7 +81,7 @@ public class MapUI : MonoBehaviour {
         unit_countsT.Add(PlayerUnit.DRAGOON, dragoon_count);
         unit_countsT.Add(PlayerUnit.SCOUT, scout_count);
         unit_countsT.Add(PlayerUnit.DRUMMER, drummer_count);
-        unit_countsT.Add(PlayerUnit.GUARDIAN, guardian_count);
+        unit_countsT.Add(PlayerUnit.SHIELD_MAIDEN, shield_maiden_count);
         unit_countsT.Add(PlayerUnit.PIKEMAN, pikeman_count);
     }
 
@@ -136,6 +140,18 @@ public class MapUI : MonoBehaviour {
 
     public void set_active_next_stageB(bool state) {
         next_stageB.interactable = state;
+    }
+
+    public void set_next_stageB_text(string text) {
+        next_stageB.GetComponentInChildren<Text>().text = text;
+    }
+
+    public void set_active_ask_to_enterP(bool state) {
+        ask_to_enterP.SetActive(state);
+    }
+
+    public void set_active_game_lossP(bool state) {
+        ask_to_enterP.SetActive(state);
     }
 
     public void set_active_rune_gateB(bool state) {

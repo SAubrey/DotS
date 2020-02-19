@@ -170,14 +170,14 @@ public class EnemyLoader : MonoBehaviour {
     private bool spawn_left = false;
     private Zone get_appropriate_zone(Enemy enemy) {
         Zone zone = front_first_zone;
-        if (enemy.attributes[Enemy.FLANKING]) {
+        if (enemy.has_attribute(Enemy.FLANKING)) {
             spawn_left = !spawn_left;
             zone = spawn_left ? left_first_zone : right_first_zone;
         }
-        else if (enemy.attributes[Enemy.STALK]) {
+        else if (enemy.has_attribute(Enemy.STALK)) {
             zone = rear_first_zone.full ? rear_second_zone : rear_first_zone;
         }
-        else if (enemy.is_range()) {
+        else if (enemy.is_range) {
             if (front_second_zone.full) {
                 spawn_left = !spawn_left;
                 zone = spawn_left ? left_second_zone : right_second_zone;

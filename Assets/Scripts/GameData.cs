@@ -36,7 +36,7 @@ public class MapData : GameData {
 
         foreach (MapCell mc in tm.map.Values) {
             SMapCell mcs = 
-                new SMapCell(mc.tile_type,
+                new SMapCell(mc.tile_ID,
                         mc.pos.x, mc.pos.y, 
                         mc.tier, mc.discovered,
                         mc.minerals, mc.star_crystals);
@@ -70,11 +70,14 @@ public class DisciplineData : GameData {
     public SBattalion sbat;
     public SStoreableResources sresources;
     public float col, row;
+    public int redrawn_travel_card_ID;
 
     public DisciplineData(Discipline disc, string name) {
         this.name = name;
         col = disc.pos.x;
         row = disc.pos.y;
+        if (disc.bat.in_battle)
+            redrawn_travel_card_ID = disc.get_travelcard().ID;
         sbat = new SBattalion(disc.bat);
         sresources = new SStoreableResources(disc);
     }
@@ -97,7 +100,6 @@ public struct SStoreableResources {
 [System.Serializable]
 public struct SBattalion {
     // Indices refer to the unit type, values refer to the amount.
-    //public int[] healthy_types, injured_types;
     public List<int> healthy_types, injured_types;
     public SBattalion(Battalion bat) {
         healthy_types = new List<int>(PlayerUnit.unit_types.Count);

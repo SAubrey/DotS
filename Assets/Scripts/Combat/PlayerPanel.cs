@@ -35,8 +35,8 @@ public class PlayerPanel : UnitPanel {
         disable_rotateB();
         disable_attributeB();
 
-        bool ranging = bp.range_stage && punit.is_range();
-        bool combat_staging = (bp.range_stage && punit.is_range()) || 
+        bool ranging = bp.range_stage && punit.is_range;
+        bool combat_staging = (bp.range_stage && punit.is_range) || 
                                 (bp.combat_stage);
 
         if (bp.movement_stage)
@@ -66,8 +66,8 @@ public class PlayerPanel : UnitPanel {
         set_press_defB(punit.defending);
         _defB_pressed = punit.defending;
         //if (punit.attribute_requires_action && (attB_pressed || defB_pressed)) {
-        set_press_attributeB(punit.is_attribute_active());
-        _attributeB_pressed = punit.is_attribute_active();
+        set_press_attributeB(punit.is_attribute_active);
+        _attributeB_pressed = punit.is_attribute_active;
         //} 
         moveB_pressed = false;
     }
@@ -99,7 +99,7 @@ public class PlayerPanel : UnitPanel {
     public bool attB_pressed {
         get { return _attB_pressed; }
         set {
-            if (_attB_pressed == value)
+            if (_attB_pressed == value) // Ignore if same state.
                 return;
             _attB_pressed = value;
             set_press_attackB(value);
@@ -111,6 +111,7 @@ public class PlayerPanel : UnitPanel {
             } else {
                 if (punit.attack_set) {
                     aq.get_player_queue().remove_attack(punit.attack_id, c.line_drawer);
+                    //slot.show_attacking(false);
                 } 
                 if (attributeB_pressed && punit.attribute_requires_action) {
                     attributeB_pressed = false;

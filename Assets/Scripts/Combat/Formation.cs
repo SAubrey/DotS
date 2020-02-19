@@ -7,8 +7,6 @@ using UnityEngine.EventSystems;
 /* There is a single formation containing groups of 3 slots. Only the first slot performs game actions.
  */
 public class Formation : MonoBehaviour {
-
-    public GameObject slot_panel;
     private Controller c;
 
     // Organized by column, row
@@ -47,27 +45,6 @@ public class Formation : MonoBehaviour {
                 return groups[col][row];
         }
         return null;
-    }
-
-    // Called by battalion selection buttons
-    public void set_selected_unit(int ID) {
-        
-        // Reset color of currently selected unit if one exists.
-        int su = c.get_active_bat().get_selected_unit_type(); 
-        if (su >= 0 && su < PlayerUnit.EMPTY) {
-            c.bat_loader.unit_button_imgs[su].color = Color.white;
-        }
-        
-        // Select and change color of new selection
-        c.get_active_bat().set_selected_unit_type(ID);
-        c.bat_loader.unit_button_imgs[ID].color = new Color(.7f, .7f, .7f, 1);
-    }
-
-    public void clear_placement_selection() {
-        foreach (int unit_type in c.bat_loader.unit_button_imgs.Keys) {
-            c.bat_loader.unit_button_imgs[unit_type].color = Color.white;
-        }
-        c.get_active_bat().clear_selected_unit_type();
     }
 
     public List<Slot> get_highest_full_slots(int unit_type) {
@@ -125,7 +102,7 @@ public class Formation : MonoBehaviour {
             }
         }
         c.selector.selected_slot = null;
-        clear_placement_selection();
+        c.bat_loader.clear_placement_selection();
     }
 
     public void reset_groups_dir() {

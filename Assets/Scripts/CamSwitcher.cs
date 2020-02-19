@@ -44,7 +44,7 @@ public class CamSwitcher : MonoBehaviour {
     void cycle() {
         if (current_cam == MAP) {
             set_active(BATTLE, true);
-            bat_loader.load_text(c.get_active_bat());
+            bat_loader.load_text();
         } else if (current_cam == BATTLE) {
             set_active(MAP, true);
         }
@@ -86,7 +86,7 @@ public class CamSwitcher : MonoBehaviour {
             mapCam.enabled = active;
             mapUI_canvas.SetActive(active);
             if (active) {
-                bat_loader.load_text(c.get_active_bat());
+                bat_loader.load_text();
                 // Set the camera in the middle of the map.
                 mapCam.transform.SetPositionAndRotation(new Vector3(10, 10, -14), Quaternion.identity);
                 set_active(BATTLE, false);
@@ -99,7 +99,7 @@ public class CamSwitcher : MonoBehaviour {
             if (active) {
                 set_active(MAP, false);
                 set_active(MENU, false);
-                bat_loader.load_text(c.get_active_bat());
+                bat_loader.load_text();
             }
         }
 

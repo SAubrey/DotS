@@ -8,8 +8,8 @@ public class PlayerUnit : Unit {
     public const int MINER = ARCHER + 1;
     public const int INSPIRATOR = MINER + 1;
     public const int SEEKER = INSPIRATOR + 1;
-    public const int VANGUARD = SEEKER + 1;
-    public const int ARBALEST = VANGUARD + 1;
+    public const int GUARDIAN = SEEKER + 1;
+    public const int ARBALEST = GUARDIAN + 1;
     public const int SKIRMISHER = ARBALEST + 1;
     public const int PALADIN = SKIRMISHER + 1;
     public const int MENDER = PALADIN + 1;
@@ -17,30 +17,15 @@ public class PlayerUnit : Unit {
     public const int DRAGOON = CARTER + 1;
     public const int SCOUT = DRAGOON + 1;
     public const int DRUMMER = SCOUT + 1;
-    public const int GUARDIAN = DRUMMER + 1;
-    public const int PIKEMAN = GUARDIAN + 1;
+    public const int SHIELD_MAIDEN = DRUMMER + 1;
+    public const int PIKEMAN = SHIELD_MAIDEN + 1;
 
     public static List<int> unit_types = new List<int> { WARRIOR, SPEARMAN, ARCHER, 
-        MINER, INSPIRATOR, SEEKER, VANGUARD, ARBALEST, SKIRMISHER, PALADIN,
-        MENDER, CARTER, DRAGOON, SCOUT, DRUMMER, GUARDIAN, PIKEMAN };
+        MINER, INSPIRATOR, SEEKER, GUARDIAN, ARBALEST, SKIRMISHER, PALADIN,
+        MENDER, CARTER, DRAGOON, SCOUT, DRUMMER, SHIELD_MAIDEN, PIKEMAN };
 
     public const int EMPTY = 100; // Graphical lookup usage.
-
-    private float injury_thresh;
     public bool injured = false;
-    private bool _defending = false;
-    public bool defending {
-        get { return _defending; }
-        set {
-            if (value && !out_of_actions) {
-                _defending = true;
-                slot.show_defensive(true);
-            } else {
-                _defending = false;
-                slot.show_defensive(false);
-            }
-        }
-    }
 
     protected void init(string name, int att, int def, int res, 
             int style, int atr1=0, int atr2=0, int atr3=0) {
@@ -57,7 +42,7 @@ public class PlayerUnit : Unit {
         else if (ID == MINER) pu = new Miner();
         else if (ID == INSPIRATOR) pu = new Inspirator();
         else if (ID == SEEKER) pu = new Seeker();
-        else if (ID == VANGUARD) pu = new Vanguard();
+        else if (ID == GUARDIAN) pu = new Guardian();
         else if (ID == ARBALEST) pu = new Arbalest();
         else if (ID == SKIRMISHER) pu = new Skirmisher();
         else if (ID == PALADIN) pu = new Paladin();
@@ -67,7 +52,7 @@ public class PlayerUnit : Unit {
         else if (ID == CARTER) pu = new Carter();
         else if (ID == DRAGOON) pu = new Dragoon();
         else if (ID == SCOUT) pu = new Scout();
-        else if (ID == GUARDIAN) pu = new Guardian();
+        else if (ID == SHIELD_MAIDEN) pu = new ShieldMaiden();
 
         return pu;
     }
@@ -92,12 +77,12 @@ public class PlayerUnit : Unit {
         } else if (state == DEAD) {
             dead = true;
             slot.show_dead(); 
-            slot.c.bat_loader.load_text(slot.c.get_active_bat());
+            slot.c.bat_loader.load_text(slot.c.get_active_bat(), ID);
             slot.c.get_active_bat().add_dead_unit(this);
         }
         if (defending) {
             num_actions--;
-            defending = false; // Defense only works on first attack this way.
+            defending = false; 
         }
         return state;
     }
@@ -153,6 +138,7 @@ public class PlayerUnit : Unit {
     }
 
     // ---ATTRIBUTES---
+
     protected void apply_surrounding_effect(int boost_type, int amount, List<Pos> coords) {
         Formation f = slot.c.formation;
         Group g;
@@ -207,6 +193,7 @@ public class Spearman : PlayerUnit {
     public Spearman() {
         init("Spearman", 1, 2, 2, MELEE, COUNTER_CHARGE);
         ID = SPEARMAN;
+        passive_attribute = true;
     }
 }
 
@@ -250,11 +237,10 @@ public class Seeker : PlayerUnit {
     }
 }
 
-public class Vanguard : PlayerUnit {
-    public Vanguard() {
-        init("Vanguard", 2, 3, 5, MELEE);
-        ID = VANGUARD;
-        passive_attribute = true;
+public class Guardian : PlayerUnit {
+    public Guardian() {
+        init("Guardian", 2, 3, 5, MELEE, PARRY);
+        ID = GUARDIAN;
     }
 }
 
@@ -272,6 +258,15 @@ public class Mender : PlayerUnit {
         ID = MENDER;
         max_num_actions = 1;
         _num_actions = max_num_actions;
+    }
+
+    public override bool set_attribute_active(bool state) {
+        bool active = base.set_attribute_active(state);
+        if (active) {
+            slot.c.bat_loader.selecting_for_heal = active;
+            slot.c.bat_loader.healing_unit = this;
+        }
+        return active;
     }
 }
 
@@ -337,10 +332,10 @@ public class Drummer : PlayerUnit {
     }
 }
 
-public class Guardian : PlayerUnit {
-    public Guardian() {
-        init("Guardian", 3, 4, 4, MELEE, GROUPING_1, COMBINED_EFFORT);
-        ID = GUARDIAN;
+public class ShieldMaiden : PlayerUnit {
+    public ShieldMaiden() {
+        init("Shield Maiden", 3, 4, 4, MELEE, GROUPING_1, COMBINED_EFFORT);
+        ID = SHIELD_MAIDEN;
     }
 }
 

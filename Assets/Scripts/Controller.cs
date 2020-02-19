@@ -179,11 +179,11 @@ public class Controller : MonoBehaviour, ISaveLoad {
     } 
 
     public void save_button() {
-        if (FileIO.load_file_exists()) {
-            save_warningP.SetActive(true);    
-            return;
-        }
-        save_game();
+        //if (FileIO.load_file_exists()) {
+        save_warningP.SetActive(true);    
+        //return;
+        //}
+        //save_game();
     }
 
     public void load_button() {
@@ -200,6 +200,16 @@ public class Controller : MonoBehaviour, ISaveLoad {
             return;
         }
         new_game();
+    }
+
+    public void end_game(bool player_won) {
+        if (player_won) {
+            cam_switcher.set_active(CamSwitcher.MAP, true);
+
+        } else {
+            cam_switcher.set_active(CamSwitcher.MAP, true);
+            map_ui.set_active_game_lossP(true);
+        }
     }
 
     public void show_warning_panel(bool active) {

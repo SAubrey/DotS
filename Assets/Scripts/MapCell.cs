@@ -31,7 +31,7 @@ public class MapCell {
     public const int SETTLEMENT_ID = 10;
     public const int RUNE_GATE_ID = 11;
 
-    public static MapCell create_cell(int tier, int tile_type, Tile tile, Pos pos) {
+    public static MapCell create_cell(int tier, int tile_ID, Tile tile, Pos pos) {
         MapCell mc = null;
         string[] splits = tile.ToString().Split('_');
 
@@ -63,7 +63,7 @@ public class MapCell {
         } else {
             mc = new MapCell(tier, tile, pos, 0);
         }
-        mc.tile_type = tile_type;
+        mc.tile_ID = tile_ID;
         return mc;
     }
 
@@ -73,11 +73,12 @@ public class MapCell {
     public bool discovered = false;
     public string name;
     public int ID;
-    public int minerals = 0;
-    public int star_crystals = 0;
-    public int tile_type;
-    public bool has_travel_card = true;
+    public int minerals, star_crystals = 0;
+    public int tile_ID;
+    public bool creates_travelcard = true;
     public bool has_rune_gate = false;
+    public bool travelcard_complete = false;
+    private TravelCard travelcard;
     private List<Enemy> enemies = new List<Enemy>();
     
 
@@ -90,6 +91,19 @@ public class MapCell {
 
     public void discover() {
         discovered = true;
+    }
+
+    public void set_travelcard(TravelCard tc) {
+        if (tc == null)
+            return;
+        travelcard_complete = false;
+        travelcard = tc;
+    }
+
+    public void complete_travelcard() {
+        travelcard = null;
+        travelcard_complete = true;
+        clear_enemies();
     }
 
     public void save_enemies(List<Slot> enemy_slots) {
@@ -158,7 +172,8 @@ public class Star : MapCell {
     public Star(int tier, Tile tile, Pos pos) : base(tier, tile, pos, STAR_ID) {
         name = STAR;
         star_crystals = 18;
-        has_travel_card = false;
+        creates_travelcard = false;
+        travelcard_complete = true;
     }
 }
 
@@ -171,7 +186,8 @@ public class Titrum : MapCell {
 public class LushLand : MapCell {
     public LushLand(int tier, Tile tile, Pos pos) : base(tier, tile, pos, LUSH_LAND_ID) {
         name = LUSH_LAND;
-        has_travel_card = false;
+        creates_travelcard = false;
+        travelcard_complete = true;
     }
 }
 public class Mire : MapCell {
@@ -188,7 +204,8 @@ public class Mountain : MapCell {
 public class Settlement : MapCell {
     public Settlement(int tier, Tile tile, Pos pos) : base(tier, tile, pos, SETTLEMENT_ID) {
         name = SETTLEMENT;
-        has_travel_card = false;
+        creates_travelcard = false;
+        travelcard_complete = true;
     }
 }
 public class RuneGate : MapCell {

@@ -148,6 +148,8 @@ public class TileMapper : MonoBehaviour, ISaveLoad {
     }
 
     private void new_game() {
+        scouting = false;
+        waiting_for_second_gate = false;
         populate_decks();
         generate_t1(tm);
         generate_t2(tm);
@@ -174,24 +176,35 @@ public class TileMapper : MonoBehaviour, ISaveLoad {
                 }
             }
             else if (move_player(pos)) {
-                tp.advance_stage(); // Movement stage to action
+                tp.advance_stage(); // Movement stage to travel card
             }
         }
     }
 
     public bool move_player(Vector3 pos) {
-        Discipline d = c.get_disc();
-        if (get_tile(pos.x, pos.y) == null || 
-            !(check_adjacent(pos, d.pos) || waiting_for_second_gate)) 
+        if (get_tile(pos.x, pos.y) == null) 
             return false;
-
+        
+        Discipline d = c.get_disc();
         int x = (int)pos.x;
         int y = (int)pos.y;
         MapCell cell = map[new Pos(x, y)];
+
+        // Failed to click on a rune gate (not-adjacent) after
+        // clicking on the runegate teleport button. 
+        if (waiting_for_second_gate && !cell.has_rune_gate) {
+            return false;
+        } else if (!check_adjacent(pos, d.pos)) {
+            return false;
+        }
+        c.get_disc().pos = pos;
+        c.map_ui.update_cell_text(cell.name);
+        
         if (cell.discovered) {
             if (cell.has_rune_gate) {
                 if (waiting_for_second_gate) {
-                    // move to gate
+                    // Rune Gate button has been activated, move to
+                    // the rune gate that has just been clicked.
                     waiting_for_second_gate = false;
                     c.map_ui.set_active_rune_gateB(false);
                 } else {
@@ -201,13 +214,13 @@ public class TileMapper : MonoBehaviour, ISaveLoad {
         } else { // Not discovered, draw tile
             tm.SetTile(new Vector3Int(x, y, 0), cell.tile);
         }
-        c.get_disc().pos = pos;
-        c.map_ui.update_cell_text(cell.name);
-        c.get_active_bat().in_battle = cell.has_enemies; // Only if enemies have already spawned.
-
-        Debug.Log("setting in_battle to " + c.get_active_bat().in_battle + 
-        "for " + c.active_disc_ID
-            + " at " + x + ", " + y);
+        
+        // 
+        if ((cell.ID == MapCell.CAVE_ID || cell.ID == MapCell.RUINS_ID) 
+                && !cell.travelcard_complete) {
+            c.map_ui.set_active_ask_to_enterP(true);
+            return false;        
+        }
         return true;
     }
 
@@ -217,12 +230,6 @@ public class TileMapper : MonoBehaviour, ISaveLoad {
         MapCell cell = map[new Pos((int)pos.x, (int)pos.y)];
         tm.SetTile(new Vector3Int((int)pos.x, (int)pos.y, 0), cell.tile);
         return true;
-    }
-
-    public static bool check_adjacent(int x, int y, int x1, int y1) {
-        int dx = Mathf.Abs(x - x1);
-        int dy = Mathf.Abs(y - y1);
-        return dx + dy == 1;
     }
 
     public static bool check_adjacent(Vector3 pos1, Vector3 pos2) {

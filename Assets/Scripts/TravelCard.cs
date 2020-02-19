@@ -41,6 +41,7 @@ public class TravelCard {
     private Dictionary<int, bool> rules = new Dictionary<int, bool>();
     private static int[] RULE_FIELDS = { ENTER_COMBAT, CHARGE, AMBUSH, OFF_GUARD,
         BLESSING1, AFFECT_RESOURCES, FOG, };
+    public bool requires_seeker = false;
 
     public virtual void action(TravelCardManager tcm) { }
     public virtual void use_roll_result(int result, Controller c) { }
@@ -215,7 +216,10 @@ public class Ruins1_1 : RuinsCard {
         set_rule(AFFECT_RESOURCES, true);
         consequence[Storeable.ARELICS] = 3;
         // +1 seeker unit 
-        //c.get_active_bat().add_units(PlayerUnit.SEEKER, 1);
+    }
+
+    public override void action(TravelCardManager tcm) {
+        tcm.c.get_active_bat().add_units(PlayerUnit.SEEKER, 1);
     }
 }
 
@@ -275,12 +279,7 @@ public class Location3_1 : LocationCard {
         consequence[Storeable.ARELICS] = 1;
         consequence[Storeable.ERELICS] = 1;
         consequence[Storeable.MRELICS] = 1;
-    }
-
-    public override void action(TravelCardManager tcm) {
-        if (true) {
-            // AFFECT reward
-        }
+        requires_seeker = true;
     }
 }
 

@@ -27,7 +27,7 @@ public class AttackQueuer : MonoBehaviour {
         if (end.get_unit() == null)
             return false;
         if (start.get_unit().can_hit(end)) {
-            if (attacker.is_playerunit()) {
+            if (attacker.is_playerunit) {
                 get_player_queue().add_attack(start, end, attack_id, line_drawer);
             } else {
                 get_enemy_queue().add_attack(start, end, attack_id, line_drawer);
@@ -104,7 +104,7 @@ public class AttackQueuer : MonoBehaviour {
     private void post_battle() {
         // Clear attacks and clean the battlefield
         c.get_active_bat().post_battle();
-        c.enemy_brain.clear_dead_enemies();
+        c.enemy_brain.post_battle();
         reset();
         c.line_drawer.clear();
         c.battle_phaser.post_battle(); // after reset
@@ -118,9 +118,11 @@ public class AttackQueuer : MonoBehaviour {
         // create XP hitsplat here if end unit is enemy?
 
         // Blood streaks
-        ParticleSystem psI = Instantiate(blood_ps);
-        ParticleSysTracker pst = psI.GetComponent<ParticleSysTracker>();
-        pst.init(end_slot.transform.position);
+        if (dmg > 0) {
+            ParticleSystem psI = Instantiate(blood_ps);
+            ParticleSysTracker pst = psI.GetComponent<ParticleSysTracker>();
+            pst.init(end_slot.transform.position);
+        }
     }
 
     private void reset() {
@@ -155,7 +157,6 @@ public class AttackQueue {
     public List<Attack> get_group() {
         if (groupings.Count <= 0)
             return null;
-
         // Get the first group of size 2+
         List<Attack> group = new List<Attack>();
         foreach (Unit u in groupings.Keys) {
@@ -211,8 +212,7 @@ Attacks are 1:1 relationships, from start(attacker) to end(defender)
 public class Attack {
     private PlayerUnit punit;
     private Enemy enemy;
-    private Slot start;
-    private Slot end;
+    private Slot start, end;
     public int direction;
     public int id;
 
@@ -222,7 +222,7 @@ public class Attack {
         this.id = id;
         start.get_unit().attack_id = id;
 
-        if (start.get_unit().is_playerunit()) {
+        if (start.get_unit().is_playerunit) {
             punit = start.get_punit();
             enemy = end.get_enemy();
             direction = AttackQueuer.PU_TO_E;
@@ -264,7 +264,7 @@ public class Attack {
 
     public int calc_dmg_taken() {
         return get_end_unit().calc_dmg_taken(
-            get_raw_dmg(), get_start_unit().attributes[Unit.PIERCING]);
+            get_raw_dmg(), get_start_unit().has_attribute(Unit.PIERCING));
     }
 
     // Accounts for grouping attack dmg.

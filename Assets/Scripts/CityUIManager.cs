@@ -32,18 +32,18 @@ public class CityUIManager : MonoBehaviour {
 
     // Unit quantity texts - Hiring
     public IDictionary<int, Text> unit_counts = new Dictionary<int, Text>();
-    public Text warriorT, spearmanT, archerT, minerT, inspiratorT, seekerT, vanguardT,
+    public Text warriorT, spearmanT, archerT, minerT, inspiratorT, seekerT, guardianT,
         arbalestT, skirmisherT, paladinT, menderT, carterT, dragoonT, scoutT,
-        drummerT, guardianT, pikemanT;
+        drummerT, shield_maidenT, pikemanT;
 
     // City Upgrades 
     // Arrange buttons in inspector left to right, top to bottom.
     public List<Button> upgrade_buttons = new List<Button>();
 
     public Dictionary<int, Button> hire_buttons = new Dictionary<int, Button>();
-    public Button warriorB, spearmanB, archerB, inspiratorB, minerB, seekerB, vanguardB,
+    public Button warriorB, spearmanB, archerB, inspiratorB, minerB, seekerB, guardianB,
         arbalestB, skirmisherB, paladinB, menderB, carterB, dragoonB, scoutB,
-        drummerB, guardianB, pikemanB;
+        drummerB, shield_maidenB, pikemanB;
     public Dictionary<int, Upgrade> upgrades = new Dictionary<int, Upgrade>();
     private Controller c;
     public GameObject cityP;
@@ -73,14 +73,37 @@ public class CityUIManager : MonoBehaviour {
         unit_counts.Add(PlayerUnit.ARCHER, archerT);
         unit_counts.Add(PlayerUnit.MINER, minerT);
         unit_counts.Add(PlayerUnit.INSPIRATOR, inspiratorT);
+        unit_counts.Add(PlayerUnit.SEEKER, seekerT);
+        unit_counts.Add(PlayerUnit.GUARDIAN, guardianT);
+        unit_counts.Add(PlayerUnit.ARBALEST, arbalestT);
+        unit_counts.Add(PlayerUnit.SKIRMISHER, skirmisherT);
+        unit_counts.Add(PlayerUnit.PALADIN, paladinT);
+        unit_counts.Add(PlayerUnit.MENDER, menderT);
+        unit_counts.Add(PlayerUnit.CARTER, carterT);
+        unit_counts.Add(PlayerUnit.DRAGOON, dragoonT);
+        unit_counts.Add(PlayerUnit.SCOUT, scoutT);
+        unit_counts.Add(PlayerUnit.DRUMMER, drummerT);
+        unit_counts.Add(PlayerUnit.SHIELD_MAIDEN, shield_maidenT);
+        unit_counts.Add(PlayerUnit.PIKEMAN, pikemanT);
         cityP.SetActive(visible);
 
         hire_buttons.Add(PlayerUnit.WARRIOR, warriorB);
         hire_buttons.Add(PlayerUnit.SPEARMAN, spearmanB);
         hire_buttons.Add(PlayerUnit.ARCHER, archerB);
-        hire_buttons.Add(PlayerUnit.INSPIRATOR, inspiratorB);
         hire_buttons.Add(PlayerUnit.MINER, minerB);
+        hire_buttons.Add(PlayerUnit.INSPIRATOR, inspiratorB);
         hire_buttons.Add(PlayerUnit.SEEKER, seekerB);
+        hire_buttons.Add(PlayerUnit.GUARDIAN, guardianB);
+        hire_buttons.Add(PlayerUnit.ARBALEST, arbalestB);
+        hire_buttons.Add(PlayerUnit.SKIRMISHER, skirmisherB);
+        hire_buttons.Add(PlayerUnit.PALADIN, paladinB);
+        hire_buttons.Add(PlayerUnit.MENDER, menderB);
+        hire_buttons.Add(PlayerUnit.CARTER, carterB);
+        hire_buttons.Add(PlayerUnit.DRAGOON, dragoonB);
+        hire_buttons.Add(PlayerUnit.SCOUT, scoutB);
+        hire_buttons.Add(PlayerUnit.DRUMMER, drummerB);
+        hire_buttons.Add(PlayerUnit.SHIELD_MAIDEN, shield_maidenB);
+        hire_buttons.Add(PlayerUnit.PIKEMAN, pikemanB);
 
         //                                     sc, M, A, MR, E
         upgrades.Add(0, new Upgrade(0, 0, 0, 0, 0));
@@ -95,9 +118,9 @@ public class CityUIManager : MonoBehaviour {
         upgrades.Add(STOREHOUSE, new Upgrade(STOREHOUSE, 5, 10, 0, 0, 3, WORKSHOP, 0, GARRISON, 0));
         upgrades.Add(WORKSHOP2, new Upgrade(WORKSHOP2, 0, 9, 1, 2, 6, WORKSHOP, 0, STABLE, 0));
 
-        foreach (Button b in hire_buttons.Values) {
+        foreach (Button b in hire_buttons.Values)
             b.interactable = false;
-        }
+        
         unlock_unit_purchase(PlayerUnit.WARRIOR);
         unlock_unit_purchase(PlayerUnit.SPEARMAN);
         unlock_unit_purchase(PlayerUnit.ARCHER);
@@ -209,7 +232,7 @@ public class CityUIManager : MonoBehaviour {
         }
         else if (is_purchased(FORGE)) {
             if (ID == BARRACKS) {
-                unlock_unit_purchase(PlayerUnit.VANGUARD);
+                unlock_unit_purchase(PlayerUnit.GUARDIAN);
                 unlock_unit_purchase(PlayerUnit.ARBALEST);
                 unlock_unit_purchase(PlayerUnit.SKIRMISHER);
             } else if (ID == BARRACKS2) 

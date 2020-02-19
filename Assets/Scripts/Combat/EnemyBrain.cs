@@ -5,20 +5,20 @@ using UnityEngine;
 public class EnemyBrain : MonoBehaviour{
     private Controller c;
     private Formation f;
-    private AttackQueuer aq;
 
     void Start() {
         c = GameObject.Find("Controller").GetComponent<Controller>();
         f = c.formation;
-        aq = c.attack_queuer;
     }
 
-    public void attack(Slot slot) {
-        Slot target = slot.get_enemy().get_target();
+    public void attack(Slot enemy_slot) {
+        Slot target = enemy_slot.get_enemy().get_target();
         if (target == null)
             return;
-        slot.get_group().rotate_towards_target(target.get_group());
-        aq.attempt_attack(slot, target);
+        enemy_slot.get_group().rotate_towards_target(target.get_group());
+        bool successful = enemy_slot.get_unit().attempt_set_up_attack(target);
+        if (successful) {
+        }
     }
 
     public void move_units() {
@@ -28,7 +28,8 @@ public class EnemyBrain : MonoBehaviour{
             if (in_range(slot, slot.get_enemy().get_target()))
                 continue;
 
-            Slot destination = find_closest_adjacent_move(slot, slot.get_enemy().get_target());
+            Slot destination = 
+                find_closest_adjacent_move(slot, slot.get_enemy().get_target());
             if (destination != null) {
                 slot.get_enemy().attempt_move(destination);
             }
@@ -48,7 +49,8 @@ public class EnemyBrain : MonoBehaviour{
         retarget();
         List<Slot> enemies = f.get_highest_full_slots(Unit.ENEMY);
         foreach (Slot slot in enemies) {
-            if (slot.get_enemy().is_range() && in_range(slot, slot.get_enemy().get_target())) {
+            if (slot.get_enemy().is_range && 
+                    in_range(slot, slot.get_enemy().get_target())) {
                 attack(slot);
             }
         }
@@ -124,6 +126,13 @@ public class EnemyBrain : MonoBehaviour{
         return dx + dy;
     }
 
+    public void post_battle() {
+        clear_dead_enemies();
+        foreach (Slot s in c.formation.get_all_full_slots(Unit.ENEMY)) {
+            s.update_UI();
+        }
+    }
+
     public void post_phase() {
         List<Slot> enemies = f.get_all_full_slots(Unit.ENEMY);
         foreach (Slot s in enemies) {
@@ -131,10 +140,10 @@ public class EnemyBrain : MonoBehaviour{
         }
     }
 
-    public void clear_dead_enemies() {
+    private void clear_dead_enemies() {
         List<Slot> enemy_slots = f.get_all_full_slots(Unit.ENEMY);
         foreach (Slot s in enemy_slots) {
-            if (s.get_enemy().is_dead()) {
+            if (s.get_enemy().is_dead) {
                 s.empty(false);
             }
         }

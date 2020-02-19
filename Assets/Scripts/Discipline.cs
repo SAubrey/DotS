@@ -5,7 +5,8 @@ using UnityEngine;
 public class Discipline : Storeable, ISaveLoad {
     public GameObject piece;
     public Battalion bat;
-    public TravelCard travel_card;
+    private TravelCard travelcard;
+    public bool restart_battle_from_drawn_card = false;
     void Start() {
         c = GameObject.Find("Controller").GetComponent<Controller>();
         bat = new Battalion(c, ID);
@@ -48,7 +49,30 @@ public class Discipline : Storeable, ISaveLoad {
         return new Pos((int)pos.x, (int)pos.y);
     }
 
+    public void complete_travelcard() {
+        if (travelcard != null) {
+            MapCell mc = c.tile_mapper.get_cell(pos);
+            mc.complete_travelcard();
+            travelcard = null;
+            if (bat.in_battle) {
+                bat.in_battle = false;
+                StartCoroutine(adjust_resources_visibly(travelcard.consequence));
+            }
+        }
+    }
+
+    public void set_travelcard(TravelCard tc) {
+        travelcard = tc;
+        MapCell mc = c.tile_mapper.get_cell(pos);
+        mc.set_travelcard(tc);
+    }
+
+    public TravelCard get_travelcard() {
+        return travelcard;
+    }
+
     public void reset() {
+        restart_battle_from_drawn_card = false;
         foreach (int type in PlayerUnit.unit_types) {  
             bat.units[type].Clear();
         }
@@ -71,6 +95,7 @@ public class Discipline : Storeable, ISaveLoad {
 
     public override void load(GameData generic) {
         DisciplineData data = generic as DisciplineData;
+        reset();
         light = data.sresources.light;
         unity = data.sresources.unity;
         star_crystals = data.sresources.star_crystals;
@@ -80,17 +105,16 @@ public class Discipline : Storeable, ISaveLoad {
         mrelics = data.sresources.mrelics;
 
         pos = new Vector3(data.col, data.row);
-        
+        travelcard = c.travel_deck.get_card(data.redrawn_travel_card_ID);
+        restart_battle_from_drawn_card = travelcard != null;
+
         // Create healthy units.
         Debug.Log("count:" + PlayerUnit.unit_types.Count);
         Debug.Log("count:" + data.sbat.healthy_types.Count);
-        //for (int i = 0; i < PlayerUnit.unit_types.Count - 1; i++) {
         foreach (int type in PlayerUnit.unit_types) {  
-            bat.units[type].Clear();
             bat.add_units(type, data.sbat.healthy_types[type]);
         }
         // Create injured units.
-        //for (int type = 0; type < PlayerUnit.unit_types.Count; type++) {
         foreach (int type in PlayerUnit.unit_types) {
             for (int i = 0; i < data.sbat.injured_types[type]; i++) {
                 PlayerUnit pu = PlayerUnit.create_punit(type);
@@ -100,5 +124,7 @@ public class Discipline : Storeable, ISaveLoad {
                 bat.units[type].Add(pu);
             }
         }
+
+        
     }
 }

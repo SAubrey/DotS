@@ -39,10 +39,9 @@ public class Enemy : Unit {
     public bool xp_taken = false;
 
     private Slot target = null; // player unit to be moved towards and attacked
-    public bool defending = true;
 
     protected void init(string name, int att, int hp, int xp, 
-            int style, int atr1=-1, int atr2=-1, int atr3=-1) {
+            int style, int atr1=0, int atr2=0, int atr3=0) {
         base.init(name, att, hp, style, atr1, atr2, atr3);
         type = ENEMY;
         this.xp = xp;
@@ -95,7 +94,7 @@ public class Enemy : Unit {
             return false;
 
         bool melee_vs_flying = combat_style == Unit.MELEE && 
-                                punit.get_unit().attributes[Unit.FLYING];
+                    punit.get_unit().has_attribute(Unit.FLYING);
         if (melee_vs_flying) 
             return false; 
         return true;
@@ -152,25 +151,25 @@ public class Enemy : Unit {
 public class Galtsa : Enemy {
     public Galtsa() {
         ID = GALTSA;
-        init("Galtsa", 2, 2, 2, MELEE, CHARGE, GROUPING_2, 0);
+        init("Galtsa", 2, 2, 2, MELEE, CHARGE, GROUPING_2);
     }
 }
 public class Grem : Enemy {
     public Grem() {
         ID = GREM;
-        init("Grem", 1, 1, 1, MELEE, 0, 0, 0);
+        init("Grem", 1, 1, 1, MELEE);
     }
 }
 public class Endu : Enemy {
     public Endu() {
         ID = ENDU;
-        init("Endu", 4, 2, 3, MELEE, CHARGE, 0, 0);
+        init("Endu", 4, 2, 3, MELEE, CHARGE);
     }
 }
 public class Korote : Enemy {
     public Korote() {
         ID = KOROTE;
-        init("Korote", 1, 2, 2, MELEE, FLANKING, GROUPING_2, 0);
+        init("Korote", 1, 2, 2, MELEE, FLANKING, GROUPING_2);
     }
 }
 public class Molner : Enemy {
@@ -188,25 +187,25 @@ public class Etuena : Enemy {
 public class Clypte : Enemy {
     public Clypte() {
         ID = CLYPTE;
-        init("Clypte", 3, 5, 3, RANGE, TARGET_RANGE, 0, 0);
+        init("Clypte", 3, 5, 3, RANGE, TARGET_RANGE);
     }
 }
 public class Goliath : Enemy {
     public Goliath() {
         ID = GOLIATH;
-        init("Goliath", 12, 8, 6, MELEE, TERROR_3, CHARGE, 0);
+        init("Goliath", 12, 8, 6, MELEE, TERROR_3, CHARGE);
     }
 }
 public class Kverm : Enemy {
     public Kverm() {
         ID = KVERM;
-        init("Kverm", 2, 1, 1, MELEE, STALK, 0, 0);
+        init("Kverm", 2, 1, 1, MELEE, STALK);
     }
 }
 public class Latu : Enemy {
     public Latu() {
         ID = LATU;
-        init("Latu", 3, 3, 3, MELEE, STALK, AGGRESSIVE, 0);
+        init("Latu", 3, 3, 3, MELEE, STALK, AGGRESSIVE);
         max_num_actions = 3;
         num_actions = 3;
     }
@@ -214,7 +213,7 @@ public class Latu : Enemy {
 public class Eke_tu : Enemy {
     public Eke_tu() {
         ID = EKE_TU;
-        init("Eke Tu", 1, 2, 2, MELEE, TARGET_RANGE, AGGRESSIVE, 0);
+        init("Eke Tu", 1, 2, 2, MELEE, TARGET_RANGE, AGGRESSIVE);
         max_num_actions = 3;
         num_actions = 3;
     }
@@ -222,13 +221,13 @@ public class Eke_tu : Enemy {
 public class Oetem : Enemy {
     public Oetem() {
         ID = OETEM;
-        init("Oetem", 4, 3, 3, MELEE, GROUPING_2, 0, 0);
+        init("Oetem", 4, 3, 3, MELEE, GROUPING_2);
     }
 }
 public class Eke_fu : Enemy {
     public Eke_fu() {
         ID = EKE_FU;
-        init("Eke Fu", 3, 2, 2, MELEE, GROUPING_2, FLANKING, 0);
+        init("Eke Fu", 3, 2, 2, MELEE, GROUPING_2, FLANKING);
     }
 }
 public class Eke_shi_ami : Enemy {
@@ -253,28 +252,28 @@ public class Ketemcol : Enemy {
 public class Mahukin : Enemy {
     public Mahukin() {
         ID = MAHUKIN;
-        init("Mahukin", 2, 3, 4, MELEE, GROUPING_2, 0, 0);
+        init("Mahukin", 2, 3, 4, MELEE, GROUPING_2);
         defense = 2;
     }
 }
 public class Drongo : Enemy {
     public Drongo() {
         ID = DRONGO;
-        init("Drongo", 3, 6, 6, MELEE, 0, 0, 0);
+        init("Drongo", 3, 6, 6, MELEE);
         defense = 3;
     }
 }
 public class Maheket : Enemy {
     public Maheket() {
         ID = MAHEKET;
-        init("Maheket", 3, 3, 5, MELEE, GROUPING_2, 0, 0);
+        init("Maheket", 3, 3, 5, MELEE, GROUPING_2);
         defense = 2;
     }
 }
 public class Calute : Enemy {
     public Calute() {
         ID = CALUTE;
-        init("Calute", 6, 6, 5, MELEE, STALK, AGGRESSIVE, 0);
+        init("Calute", 6, 6, 5, MELEE, STALK, AGGRESSIVE);
         max_num_actions = 3;
         num_actions = 3;
     }
@@ -282,32 +281,32 @@ public class Calute : Enemy {
 public class Etalket : Enemy {
     public Etalket() {
         ID = ETALKET;
-        init("Etalket", 2, 5, 4, MELEE, STALK, TERROR_3, 0);
+        init("Etalket", 2, 5, 4, MELEE, STALK, TERROR_3);
     }
 }
 public class Muatem : Enemy {
     public Muatem() {
         ID = MUATEM;
-        init("Muatem", 7, 4, 12, MELEE, CRUSHING_BLOW, 0);
+        init("Muatem", 7, 4, 12, MELEE, CRUSHING_BLOW);
         defense = 5;
     }
 }
 public class Drak : Enemy {
     public Drak() {
         ID = DRAK;
-        init("Drak", 3, 5, 3, MELEE, TARGET_CENTERFOLD, TERROR_2, FLYING);
+        init("Drak", 3, 5, 3, MELEE, TERROR_2, FLYING);
     }
 }
 public class Zerrku : Enemy {
     public Zerrku() {
         ID = ZERRKU;
-        init("Zerrku", 3, 3, 4, RANGE, GROUPING_2, 0, 0);
+        init("Zerrku", 3, 3, 4, RANGE, GROUPING_2);
     }
 }
 public class Gokin : Enemy {
     public Gokin() {
         ID = GOKIN;
-        init("Gokin", 2, 2, 2, MELEE, FLANKING, GROUPING_2, 0);
+        init("Gokin", 2, 2, 2, MELEE, FLANKING, GROUPING_2);
     }
 }
 public class Tajaqar : Enemy {
@@ -320,20 +319,20 @@ public class Tajaqar : Enemy {
 public class Tajaero : Enemy {
     public Tajaero() {
         ID = TAJAERO;
-        init("Tajaero", 3, 2, 4, RANGE, FLYING, 0, 0);
+        init("Tajaero", 3, 2, 4, RANGE, FLYING);
     }
 }
 public class Terra_Qual : Enemy {
     public Terra_Qual() {
         ID = TERRA_QUAL;
-        init("Terra Qual", 5, 10, 12, MELEE, 0, ARCING_STRIKE);
+        init("Terra Qual", 5, 10, 12, MELEE, ARCING_STRIKE);
         defense = 2;
     }
 }
 public class Duale : Enemy {
     public Duale() {
         ID = DUALE;
-        init("Duale", 2, 6, 5, RANGE, AGGRESSIVE, FLANKING, 0);
+        init("Duale", 2, 6, 5, RANGE, AGGRESSIVE, FLANKING);
         max_num_actions = 3;
         num_actions = 3;
     }

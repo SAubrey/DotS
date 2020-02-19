@@ -10,10 +10,18 @@ public class UnitPanelManager : MonoBehaviour {
     }
 
     public void update(Slot slot) {
-        if (slot.get_punit() != null) {
+        if (slot.has_punit) {
             player_panel.update_panel(slot);
-        } else if (slot.get_enemy() != null) {
+        } else if (slot.has_enemy) {
             enemy_panel.update_panel(slot);
+        }
+    }
+
+    public void update_text(Slot slot) {
+        if (slot.has_punit) {
+            player_panel.update_text(slot.get_punit());
+        } else if (slot.has_punit) {
+            //enemy_panel.update_text(slot);
         }
     }
 
@@ -29,10 +37,10 @@ public class UnitPanelManager : MonoBehaviour {
     }
 
     public void show(Slot slot) {
-        if (slot.get_punit() != null) {
+        if (slot.has_punit) {
             player_panel.show_panel(slot);
             enemy_panel.panel.SetActive(false);
-        } else if (slot.get_enemy() != null) {
+        } else if (slot.has_enemy) {
             enemy_panel.show_panel(slot);
             player_panel.panel.SetActive(false);
         }

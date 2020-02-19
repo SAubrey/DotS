@@ -94,7 +94,6 @@ public class TravelDeck : MonoBehaviour, ISaveLoad {
     public GameObject travel_card_panel;
     public TravelCardManager tcm;
     public Image tc_img;
-    private bool displaying = true;
     private System.Random rand;
 
     void Start() {
@@ -157,30 +156,26 @@ public class TravelDeck : MonoBehaviour, ISaveLoad {
         allowed_cards[MapCell.CAVE_ID].Add(TravelCard.CAVE);
         allowed_cards[MapCell.RUINS_ID].Add(TravelCard.RUINS);
         // no cards for star, lush. Settlement = quest card?
-
-        toggle_card_panel();
     }
 
     public void init(bool from_save) {
         if (!from_save) 
             new_game();
     }
-
-        // Called once.
-    private void populate_decks() {
-        for (int tier = 1; tier <= 3; tier++) { // For each deck
-            foreach (int card_id in card_counters[tier].Keys) {
-                decks[tier].Add(card_id);
-            }
-        }
+    
+    public void display_card(TravelCard tc) {
+        if (tc == null)
+            return;
+        set_active_card_panel(true);
+        tc_img.sprite = tc.sprite;
     }
 
     public GameData save() {
-        TravelDeckData data = new TravelDeckData(this, Controller.TRAVEL_DECK);
-        return data;
+        return new TravelDeckData(this, Controller.TRAVEL_DECK);
     }
 
     private void new_game() {
+        set_active_card_panel(false);
         clear_data();
         populate_decks();
     }
@@ -188,6 +183,15 @@ public class TravelDeck : MonoBehaviour, ISaveLoad {
     private void clear_data() {
         foreach (List<int> deck in decks.Values) {
             deck.Clear();
+        }
+    }
+
+    // Called once.
+    private void populate_decks() {
+        for (int tier = 1; tier <= 3; tier++) { // For each deck
+            foreach (int card_id in card_counters[tier].Keys) {
+                decks[tier].Add(card_id);
+            }
         }
     }
 
@@ -229,9 +233,6 @@ public class TravelDeck : MonoBehaviour, ISaveLoad {
             int index = rand.Next(0, drawable_cards.Count);
             int card_id = drawable_cards[index];
 
-            // -- check if the card can be played in the biome of the tile.
-            // could organize actual cards by class but draw from them in a single list. 
-
             // Remove card
             decks[tier].Remove(card_id);
             return cards[card_id];
@@ -265,24 +266,15 @@ public class TravelDeck : MonoBehaviour, ISaveLoad {
         return cards[0];
     }
 
-    public void display_card(TravelCard tc) {
-        if (tc == null)
-            return;
-        if (!displaying) {
-            toggle_card_panel();
-            if (displaying) {
-                tc_img.sprite = tc.sprite;
-                tc.action(tcm);
-            }
-        }
-    }
-
-    public void toggle_card_panel() {
-        displaying = !displaying;
-        travel_card_panel.SetActive(displaying);
+    public void set_active_card_panel(bool state) {
+        travel_card_panel.SetActive(state);
     }
     
     private void remove_card(int tier, int card_id) {
         decks[tier].Remove(card_id);
+    }
+
+    public TravelCard get_card(int ID) {
+        return cards[ID];
     }
 }

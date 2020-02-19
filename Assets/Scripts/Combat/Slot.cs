@@ -5,26 +5,23 @@ using UnityEngine.EventSystems;
 
 public class Slot : MonoBehaviour {
     private Unit unit;
-    public Image img;
-    public Image unit_img;
+    public Image img, unit_img;
     public Controller c;
     private Formation f;
     private Camera cam;
     private BatLoader bl;
 
     // --VISUAL-- 
-    public Text namefg_T;
-    public Text namebg_T;
+    public Text namefg_T, namebg_T;
     public Color unselected_color;
-    public Color dead;
-    public Color injured;
+    public Color dead, injured;
     private Color TRANSPARENT = new Color(0, 0, 0, 0);
     private Color healthbar_fill_color = new Color(1, 1, 1, .8f);
     public Color healthbar_bg_color;
     public Slider healthbar;
     public Canvas info_canv;
-    public Image healthbar_bg;
-    public Image healthbar_fill;
+    public Image healthbar_bg, healthbar_fill;
+    public Sprite range_icon, melee_icon;
     private int healthbar_inc_width = 15;
 
     public Text attfgT, attbgT;
@@ -32,18 +29,15 @@ public class Slot : MonoBehaviour {
     public Text deffgT, defbgT;
     public Image deffgI, defbgI;
     public Text hpfgT, hpbgT;
-    public Color attfgI_c;
-    public Color deffgI_c;
+    public Text num_actionsfgT, num_actionsbgT;
+    public Color attfgI_c, deffgI_c;
 
     [HideInInspector]
-    public int col;
-    [HideInInspector]
-    public int row;
+    public int col, row;
     public int num; // Hierarchy in group. 0, 1, 2
     public Group group;
-    private bool _disabled = false;
     public Button button;
-    public bool has_active_bonus = false;
+    private bool _disabled = false;
     
     void Awake() {
         c = GameObject.Find("Controller").GetComponent<Controller>();
@@ -70,7 +64,10 @@ public class Slot : MonoBehaviour {
         if (u == null)
             return false;
         set_unit(u);
+        init_UI();
+        set_nameT(unit.get_name());
         set_sprite(u.get_ID());
+        set_active_UI(true);
         return true;
     }
 
@@ -82,9 +79,9 @@ public class Slot : MonoBehaviour {
             unit = null;
         }
         set_sprite(PlayerUnit.EMPTY);
+        set_active_UI(false);
         set_nameT("");
         show_selection(false);
-        toggle_healthbar(false);
         if (validate)
             group.validate_unit_order();
         return removed_unit;
@@ -93,14 +90,11 @@ public class Slot : MonoBehaviour {
     private void set_unit(Unit u) {
         if (u == null) 
             return;
-        if (u.is_playerunit()) {
+        if (u.is_playerunit) {
             unit = u as PlayerUnit;
-        } else if (u.is_enemy()) {
+        } else if (u.is_enemy) {
             unit = u as Enemy;
         }
-        toggle_healthbar(true);
-        update_UI();
-        set_nameT(unit.get_name());
         unit.set_slot(this);
     }
 
@@ -114,7 +108,7 @@ public class Slot : MonoBehaviour {
     }
 
     // Update slot button image and slot unit image.
-    public void set_sprite(int image_ID) { 
+    private void set_sprite(int image_ID) { 
         if (has_punit) {
             //img.sprite = bl.images[image_ID]; // tile img
             img.sprite = bl.white_fade_img;
@@ -138,15 +132,29 @@ public class Slot : MonoBehaviour {
         get { return _disabled; }
         set { 
             _disabled = value;
-            toggle_healthbar(_disabled);
+            set_active_UI(_disabled);
             button.interactable = !_disabled;
         }
     }
 
-    public void size_healthbar(float max_hp) {
-        // Adjust width based on max hp.
-        RectTransform t = healthbar.transform as RectTransform;
-        t.sizeDelta = new Vector2(healthbar_inc_width * max_hp, t.sizeDelta.y);
+
+    // ---UI---
+    public void init_UI() {
+        // Change attack icon based on attack type.
+        if (get_unit().is_range) {
+            attfgI.sprite = range_icon;
+            attfgI.color = Color.white;
+            attbgI.sprite = range_icon;
+        } else {
+            attfgI.sprite = melee_icon;
+            attfgI.color = Color.white;
+            attbgI.sprite = melee_icon;
+        }
+
+        // Show enemy as always defending if def > 0
+        if (get_unit().is_enemy)
+            show_defending(get_unit().get_defense() > 0);
+        update_UI();
     }
 
     // Updated when a boost is removed or applied,
@@ -155,20 +163,18 @@ public class Slot : MonoBehaviour {
         update_healthbar();
         update_attack();
         update_defense();
-
-        update_images();
+        update_num_actions(get_unit().num_actions);
+        c.unit_panel_man.update_text(this);
     }
 
     public void update_healthbar() {
         float hp = get_unit().health; // This will already include the boost but not the bonus.
-        float hp_boost = get_unit().get_stat_boost(Unit.HEALTH_BOOST) 
-            + get_unit().get_bonus_health();
 
-        healthbar.maxValue = get_unit().max_health + hp_boost;
-        healthbar.value = hp;
+        healthbar.maxValue = get_unit().get_boosted_max_health();
+        healthbar.value = get_unit().health;
         size_healthbar(healthbar.maxValue);
 
-        if (unit.is_playerunit()) {
+        if (unit.is_playerunit) {
             if (healthbar.value < healthbar.maxValue / 2)
                 healthbar.fillRect.GetComponent<Image>().color = injured;
         } else {
@@ -178,6 +184,12 @@ public class Slot : MonoBehaviour {
         
         hpfgT.text = build_health_string();
         hpbgT.text = hpfgT.text;
+    }
+
+    private void size_healthbar(float max_hp) {
+        // Adjust width based on max hp.
+        RectTransform t = healthbar.transform as RectTransform;
+        t.sizeDelta = new Vector2(healthbar_inc_width * max_hp, t.sizeDelta.y);
     }
 
     public string build_health_string() {
@@ -194,6 +206,12 @@ public class Slot : MonoBehaviour {
     public void update_attack() {
         attfgT.text = build_att_string();
         attbgT.text = attfgT.text;
+        Unit u = get_unit();
+        if (u.has_grouping) {
+            int num_grouped = u.has_attribute(PlayerUnit.GROUPING_1) ? 2 : 3;
+            show_group_attacking(u.is_attribute_active && u.attack_set, num_grouped);
+        }
+        show_attacking(u.attack_set);
     }
 
     public string build_att_string() {
@@ -201,7 +219,7 @@ public class Slot : MonoBehaviour {
             + get_unit().get_bonus_att_dmg();
 
         string str = get_unit().get_raw_attack_dmg().ToString();
-        if (att_boost > 0) 
+        if (att_boost > 0 && get_unit().attack_set) 
             str += "+" + att_boost.ToString();
         return str;
     }
@@ -209,6 +227,17 @@ public class Slot : MonoBehaviour {
     public void update_defense() {
         deffgT.text = build_def_string();
         defbgT.text = deffgT.text;
+        Unit u = get_unit();
+        if (u.has_grouping) {
+            int num_grouped = u.has_attribute(PlayerUnit.GROUPING_1) ? 2 : 3;       
+            show_group_defending(u.is_attribute_active && u.defending, num_grouped);
+        }
+        show_defending(u.defending);
+    }
+
+    public void update_num_actions(int value) {
+        num_actionsbgT.text = value.ToString();
+        num_actionsfgT.text = num_actionsbgT.text;
     }
 
     public string build_def_string() {
@@ -216,22 +245,12 @@ public class Slot : MonoBehaviour {
             + get_unit().get_bonus_def();
 
         string str = get_unit().get_raw_defense().ToString();
-        if (def_boost > 0) 
+        if (def_boost > 0 && get_unit().defending) 
             str += "+" + def_boost.ToString();
         return str;
     }
 
-    public void update_images() {
-        if (get_unit().out_of_actions) {
-            attfgI.color = Color.white;
-            deffgI.color = Color.white;
-        } else {
-            attfgI.color = attfgI_c;
-            deffgI.color = deffgI_c;
-        }
-    }
-
-    public void toggle_healthbar(bool state) {
+    public void set_active_UI(bool state) {
         if (state) {
             healthbar_bg.color = healthbar_bg_color;
             healthbar_fill.color = healthbar_fill_color;
@@ -252,39 +271,14 @@ public class Slot : MonoBehaviour {
         defbgT.enabled = state;
         deffgI.enabled = state;
         defbgI.enabled = state;
-    }
 
-    public bool has_punit {
-        get {
-            if (unit == null) return false;
-            if (unit.is_playerunit()) return true;
-            return false;
-        }
-    }
-
-    public bool has_enemy {
-        get {
-            if (unit == null) return false;
-            if (unit.is_enemy()) return true;
-            return false;
-        }
-    }
-
-    public bool has_unit {
-        get { return unit != null ? true : false; }
-    }
-
-    public bool is_empty {
-        get { return unit == null ? true : false; }
-    }
-
-    public bool is_type(int type) {
-        return group.type == type;
+        num_actionsbgT.enabled = state;
+        num_actionsfgT.enabled = state;
     }
 
     public void show_selection(bool showing) {
         if (img != null) {
-            img.color = showing? Color.gray : Color.white;
+            img.color = showing ? Color.gray : Color.white;
         }
     }
 
@@ -298,13 +292,64 @@ public class Slot : MonoBehaviour {
             img.color = injured;
     }
 
-    public void show_offensive() {
-        if (img != null)
-            img.color = new Color(1, 0.2f, 0.2f, 1);
+    public void show_attacking(bool attacking) {
+        attfgI.color = attacking ? attfgI_c : Color.white;
     }
 
-    public void show_defensive(bool defending) {
-        healthbar_fill.color = defending ? Color.blue : Color.white;
+    public void show_defending(bool defending) {
+        deffgI.color = defending ? deffgI_c : Color.white;
+    }
+
+    public void show_group_defending(bool defending, int num) {
+        Slot s;
+        for (int i = 0; i < num; i++) {
+            s = group.slots[i];
+            s.deffgI.color = defending ? s.deffgI_c : Color.white;
+        }
+    }
+
+    public void show_group_attacking(bool attacking, int num) {
+        Slot s;
+        for (int i = 0; i < num; i++) {
+            s = group.slots[i];
+            s.attfgI.color = attacking ? s.attfgI_c : Color.white;
+        }
+    }
+
+    public void face_text_to_cam() {
+        info_canv.transform.LookAt(cam.transform); 
+        info_canv.transform.forward *= -1; 
+        unit_img.transform.LookAt(cam.transform);
+        unit_img.transform.forward *= -1;
+    }
+    // ---End UI--- 
+    
+    public bool is_type(int type) {
+        return group.type == type;
+    }
+
+    public bool has_punit {
+        get {
+            if (unit == null) return false;
+            if (unit.is_playerunit) return true;
+            return false;
+        }
+    }
+
+    public bool has_enemy {
+        get {
+            if (unit == null) return false;
+            if (unit.is_enemy) return true;
+            return false;
+        }
+    }
+
+    public bool has_unit {
+        get { return unit != null ? true : false; }
+    }
+
+    public bool is_empty {
+        get { return unit == null ? true : false; }
     }
 
     public PlayerUnit get_punit() {
@@ -320,16 +365,7 @@ public class Slot : MonoBehaviour {
         namebg_T.text = txt;
     }
 
-    public Sprite get_sprite() { return img.sprite; }
-
     public Group get_group() {
         return group;
-    }
-
-    public void face_text_to_cam() {
-        info_canv.transform.LookAt(cam.transform); 
-        info_canv.transform.forward *= -1; 
-        unit_img.transform.LookAt(cam.transform);
-        unit_img.transform.forward *= -1;
     }
 }

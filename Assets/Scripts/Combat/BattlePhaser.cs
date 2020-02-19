@@ -113,7 +113,7 @@ public class BattlePhaser : MonoBehaviour {
         init_placement_stage = false;
         can_skip = true;
         selector.deselect();
-        c.get_active_bat().clear_selected_unit_type();
+        c.bat_loader.clear_placement_selection();
         advance_stage();
         // Scan through placed characters and the enemy to determine initial effects.
     }
@@ -173,6 +173,7 @@ public class BattlePhaser : MonoBehaviour {
     public void post_battle() {
         if (stage == ASSESSMENT) advance_phase();
         can_skip = true;
+        Debug.Log(c.get_active_bat().get_all_placed_units().Count);
         check_finished();
     }
 
@@ -185,16 +186,20 @@ public class BattlePhaser : MonoBehaviour {
 
     private void post_phases() {
         if (battle_finished) {
-            c.get_active_bat().in_battle = false;
+            Debug.Log("battle finished");
+
             if (player_won) {
-                StartCoroutine(c.get_disc().adjust_resources_visibly(
-                    c.get_disc().travel_card.consequence));
+                Debug.Log("Player won the battle.");
                 // If enemies were stored to resume battle, clear them out.
                 MapCell mc = c.tile_mapper.get_cell(c.get_disc().pos);
-                mc.clear_enemies();
+                c.get_disc().complete_travelcard();
+            } else if (enemy_won) {
+                Debug.Log("Enemy won the battle.");
+
             }
         } else {
             if (mini_retreating) { // Fall back and regroup.
+                Debug.Log("Mini retreating.");
                 c.get_active_bat().mini_retreating = true;
                 save_enemies_to_map();
             } else // Save the board exactly as is to resume next turn.
@@ -220,6 +225,7 @@ public class BattlePhaser : MonoBehaviour {
         c.tile_mapper.move_player(c.get_disc().prev_pos);
         // Penalize retreat.
         c.get_disc().change_var(Storeable.UNITY, -1, true);
+        c.get_disc().set_travelcard(null);
         post_phases();
     }
 
@@ -233,7 +239,7 @@ public class BattlePhaser : MonoBehaviour {
     }
 
     private bool player_units_on_field { 
-        get { return c.formation.get_all_full_slots(Unit.PLAYER).Count > 0; }
+        get { return c.get_active_bat().get_all_placed_units().Count > 0; }
     } 
 
     private bool player_won { 
@@ -248,7 +254,7 @@ public class BattlePhaser : MonoBehaviour {
         get { return !player_units_on_field && units_in_reserve; }
     }
 
-    private bool battle_finished { get { return (player_won || enemy_won); } }
+    private bool battle_finished { get { return player_won || enemy_won; } }
 
     private bool _can_skip = false;
     public bool can_skip {

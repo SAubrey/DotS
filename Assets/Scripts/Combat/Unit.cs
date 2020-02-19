@@ -16,7 +16,7 @@ public class Unit {
     public const int ATTACK_BOOST = 3;
 
 
-    // Attributes
+    // Attributes (0 is null atr)
     public const int FLANKING = 1;
     public const int FLYING = 2;
     public const int GROUPING_1 = 3;
@@ -38,7 +38,6 @@ public class Unit {
     public const int TERROR_2 = 17;
     public const int TERROR_3 = 18;
     public const int WEAKNESS_POLEARM = 19;
-    public const int TARGET_CENTERFOLD = 20;
 
     // Allied only attributes
     public const int REACH = 21;
@@ -51,9 +50,7 @@ public class Unit {
     public const int COMBINED_EFFORT = 28;
 
     // Attribute fields
-    protected const int num_attributes = 28;
-    public List<bool> attributes = new List<bool>(num_attributes);
-    public int attribute1, attribute2, attribute3 = -1;
+    public int attribute1, attribute2, attribute3 = 0;
     protected bool attribute_active = false;
     public bool attribute_requires_action = false; // alters button behavior.
     public bool passive_attribute = false;
@@ -61,21 +58,19 @@ public class Unit {
     // Combat fields
     public const int MELEE = 1;
     public const int RANGE = 2;
-    protected int attack_dmg;
-    protected int defense;
-    public int health;
-    public int max_health;
+    protected int attack_dmg, defense;
+    public int health, max_health;
     public int combat_style;
     public int movement_range = 1;
     public int attack_range = 1;
     public int max_num_actions = 2;
-    public int _num_actions;
+    protected int _num_actions;
     public int num_actions {
         get { return _num_actions; }
         set {
             if (value < _num_actions) {
                 if (slot != null)
-                    slot.update_images();
+                    slot.update_num_actions(value);
                 has_acted_in_stage = true;
             }
 
@@ -87,17 +82,42 @@ public class Unit {
     }
     public bool out_of_actions { get { return num_actions <= 0; } }
     public bool has_acted_in_stage = false;
-    public bool attack_set = false;
+    private bool _attack_set = false;
+    public bool attack_set {
+        get { return _attack_set; }
+        set {
+            if (out_of_actions)
+                value = false;
+            _attack_set = value;
+            if (slot != null)
+                slot.update_attack();
+        }
+    }
+    private bool _defending = false;
+    public bool defending {
+        get { return _defending; }
+        set {
+            if (out_of_actions)
+                value = false;
+            _defending = value;
+            if (slot != null)
+                slot.update_defense();
+        }
+    }
 
     protected int type; // Player or Enemy
-    protected int ID; // Unique code for the particular unit type.
+    protected int ID; // Code for the particular unit type.
     protected string name;
     // Unique identifier for looking up drawn attack lines and aggregating attacks.
     public int attack_id;
 
     protected Slot slot = null;
     protected bool dead = false; // Used to determine what to remove in the Battalion.
-    private bool placed = false;
+    protected bool placed = false;
+
+
+    private static int static_unique_ID = 0;
+    private int unique_ID = static_unique_ID;
 
     public virtual int take_damage(int dmg) { return 0; }
     public virtual int calc_dmg_taken(int dmg, bool piercing=false) { return 0; }
@@ -106,13 +126,8 @@ public class Unit {
     public virtual int get_attack_dmg() { return attack_dmg; }
     public virtual int get_defense() { return defense; }
     public virtual bool set_attribute_active(bool state) {
-        if (state && can_activate_attribute()) {
-            attribute_active = true;
-            Debug.Log("turning attr on");
-        } else {
-            attribute_active = false;
-            Debug.Log("turning attr off");
-        }
+        attribute_active = state && can_activate_attribute();
+        Debug.Log("turning attr " + attribute_active);
         if (slot != null)
             slot.update_UI();
         return attribute_active;
@@ -120,8 +135,8 @@ public class Unit {
 
     public virtual void remove_boost() { }
 
-    protected void init(string name, int att, int hp, int style, int atr1, int atr2, int atr3) {
-        create_attribute_list(num_attributes);
+    protected void init(string name, int att, int hp, int style, 
+            int atr1=0, int atr2=0, int atr3=0) {
         this.name = name;
         attack_dmg = att;
         combat_style = style;
@@ -130,21 +145,18 @@ public class Unit {
         health = hp;
         max_health = hp;
 
+        unique_ID = static_unique_ID;
+        static_unique_ID++;
+
         attribute1 = atr1;
         attribute2 = atr2;
         attribute3 = atr3;
-        if (atr1 >= 0)
-            attributes[atr1] = true;
-        if (atr2 >= 0)
-            attributes[atr2] = true;
-        if (atr3 >= 0)
-            attributes[atr3] = true;
     }
 
-    protected void create_attribute_list(int num_attributes) {
-        for (int i = 0; i < num_attributes; i++) {
-            attributes.Insert(i, false);
-        }
+    public bool has_attribute(int atr_ID) {
+        return (attribute1 == atr_ID || 
+                attribute2 == atr_ID || 
+                attribute3 == atr_ID);
     }
 
     public bool can_move(Slot dest) {
@@ -183,71 +195,96 @@ public class Unit {
     public bool can_hit(Slot end) {
         bool attacking_self = slot.get_unit().get_type() == end.get_unit().get_type();
         bool melee_vs_flying = slot.get_unit().combat_style == Unit.MELEE && 
-                                end.get_unit().attributes[Unit.FLYING];
-        bool out_of_range =
+                                end.get_unit().has_attribute(Unit.FLYING);
+       
+        bool out_of_range = has_attribute(REACH) ? 
+            !in_range_of_reach(slot.get_unit().attack_range,
+                     slot.col, slot.row, end.col, end.row) :
             !in_range(slot.get_unit().attack_range,
                      slot.col, slot.row, end.col, end.row);
 
-        return (attacking_self || melee_vs_flying 
-                || out_of_range || out_of_actions) ? false : true;
+        return !(attacking_self || melee_vs_flying 
+                || out_of_range || out_of_actions);
+    }
+
+    public bool attempt_set_up_attack(Slot target_slot) {
+        bool successful = slot.c.attack_queuer.attempt_attack(slot, target_slot);
+        if (successful) {
+            slot.update_attack();
+        }
+        return successful;
     }
 
     public void attack() {
         attack_set = false;
-        num_actions--;
-        if ((attributes[GROUPING_1] || attributes[GROUPING_2]) && is_attribute_active()){
+        if (has_attribute(GROUPING_1) || has_attribute(GROUPING_2)) {
+            Debug.Log(is_actively_grouping);
+        }
+        if (is_actively_grouping) {
             foreach (Slot s in slot.get_group().get_full_slots()) {
                 s.get_unit().num_actions--;
             }
+        } else {
+            num_actions--;
         }
     }
 
     public bool can_attack() {
-        return (attack_dmg > 0 && !out_of_actions);
+        return attack_dmg > 0 && !out_of_actions;
     }
 
     public bool can_defend() {
-        return (defense > 0 && !out_of_actions);
+        return defense > 0 && !out_of_actions;
     }
 
     public bool in_range(int range, int x, int y, int x1, int y1) {
         int dx = Mathf.Abs(x - x1);
         int dy = Mathf.Abs(y - y1);
-        return (dx + dy <= range) ? true : false;
+        return dx + dy <= range;
+    }
+
+    public bool in_range_of_reach(int range, int x, int y, int x1, int y1) {
+        int dx = Mathf.Abs(x - x1);
+        int dy = Mathf.Abs(y - y1);
+        return dx <= range && dy <= range;
     }
 
     // Called at the end of a battle phase.
     public void post_phase() {
-        Debug.Log("post phasing");
         num_actions = max_num_actions;
         has_acted_in_stage = false;
         attack_set = false;
         
         set_attribute_active(false);
         remove_boost();
-        if (slot != null) 
+        if (slot != null) { // Not all units are placed.
             slot.update_UI();
+        }
+    }
+
+    public int get_boosted_max_health( ) {
+        return max_health + get_bonus_health() + get_stat_boost(HEALTH_BOOST);
     }
     
+    // "Bonus" refers to any stat increases not from boost-type attributes.
     public int get_bonus_health() {
         int sum_hp = 0;
+        // hp from non-boost attr?
         return sum_hp;
     }
 
     public int get_bonus_att_dmg() {
         int sum_dmg = 0;
-        if (attribute_active && 
-            (attributes[Unit.GROUPING_1] || attributes[Unit.GROUPING_2])) {
-            sum_dmg += ((1 + attack_dmg) * (get_grouped_units()));
+        if (is_actively_grouping) {
+            sum_dmg += ((1 + attack_dmg) * (count_grouped_units()));
         }
         return sum_dmg;
     }
     
     public int get_bonus_def() {
         int sum_def = 0;
-         if (attribute_active && 
-            (attributes[Unit.GROUPING_1] || attributes[Unit.GROUPING_2])) {
-            sum_def += ((1 + defense) * (get_grouped_units()));
+         if (is_actively_grouping) {
+            sum_def += ((1 + defense) * (count_grouped_units()));
         }
         return sum_def;
     }
@@ -258,9 +295,10 @@ public class Unit {
         return active_boost_amount;
     }
 
-    protected int get_grouped_units() {
+    // Returns number of same units in group with Grouping that have actions remaining.
+    protected int count_grouped_units() {
         int grouped_units = slot.get_group().get_num_of_same_active_units_in_group(ID);
-        if (attributes[Unit.GROUPING_1] && grouped_units > 1) {
+        if (has_attribute(Unit.GROUPING_1) && grouped_units > 1) {
             grouped_units = 1;
         }
         return grouped_units;
@@ -335,9 +373,6 @@ public class Unit {
         return new List<Pos>() {low, high};
     }
 
-    public bool is_attribute_active() {
-        return attribute_active;
-    }
 
     public int get_raw_attack_dmg() {
         return attack_dmg;
@@ -345,22 +380,6 @@ public class Unit {
     
     public int get_raw_defense() {
         return defense;
-    }
-
-    public bool is_melee() {
-        return (combat_style == MELEE) ? true : false;
-    }
-
-    public bool is_range() {
-        return (combat_style == RANGE) ? true : false;
-    }
-
-    public bool is_enemy() {
-        return (type == ENEMY) ? true : false;
-    }
-
-    public bool is_playerunit() {
-        return (type == PLAYER) ? true : false;
     }
 
     public int get_type() {
@@ -378,16 +397,24 @@ public class Unit {
     public Slot get_slot() {
         return slot;
     }
+
     public void set_slot(Slot s) {
         slot = s;
-        placed = slot != null ? true : false;    
+        placed = slot != null;
     }
 
-    public bool is_dead() {
-        return dead;
+    public bool is_actively_grouping { 
+        get { return attribute_active && has_grouping; }
     }
-
-    public bool is_placed() {
-        return placed;
+    public bool has_grouping { 
+        get { return has_attribute(GROUPING_1) || has_attribute(GROUPING_2); }
     }
+    
+    public bool is_attribute_active { get { return attribute_active; } }
+    public bool is_melee { get { return combat_style == MELEE; } }
+    public bool is_range { get { return combat_style == RANGE; } }
+    public bool is_enemy { get { return type == ENEMY; } }
+    public bool is_playerunit { get { return type == PLAYER; } }
+    public bool is_dead { get { return dead; } }
+    public bool is_placed { get { return placed; } }
 }

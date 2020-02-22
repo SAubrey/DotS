@@ -53,7 +53,6 @@ public class PlayerUnit : Unit {
         else if (ID == DRAGOON) pu = new Dragoon();
         else if (ID == SCOUT) pu = new Scout();
         else if (ID == SHIELD_MAIDEN) pu = new ShieldMaiden();
-
         return pu;
     }
 

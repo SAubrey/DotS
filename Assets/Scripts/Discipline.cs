@@ -7,6 +7,8 @@ public class Discipline : Storeable, ISaveLoad {
     public Battalion bat;
     private TravelCard travelcard;
     public bool restart_battle_from_drawn_card = false;
+    public int base_unity = 10;
+
     void Start() {
         c = GameObject.Find("Controller").GetComponent<Controller>();
         bat = new Battalion(c, ID);
@@ -14,7 +16,19 @@ public class Discipline : Storeable, ISaveLoad {
         city_ui = c.city_ui;
 
         _light = 4;
-        _unity = 10;
+        _unity = base_unity;
+        /*
+        _star_crystals = capacity;
+        _minerals = capacity;
+        _arelics = capacity;
+        _mrelics = capacity;
+        _erelics = capacity;
+        */
+        pos = new Vector3(10.5f, 10.5f);
+    }
+
+    public override void new_game() {
+        base.new_game();
         pos = new Vector3(10.5f, 10.5f);
     }
 
@@ -50,15 +64,15 @@ public class Discipline : Storeable, ISaveLoad {
     }
 
     public void complete_travelcard() {
-        if (travelcard != null) {
-            MapCell mc = c.tile_mapper.get_cell(pos);
-            mc.complete_travelcard();
-            travelcard = null;
-            if (bat.in_battle) {
-                bat.in_battle = false;
-                StartCoroutine(adjust_resources_visibly(travelcard.consequence));
-            }
+        if (travelcard == null)
+            return;
+        MapCell mc = c.tile_mapper.get_cell(pos);
+        if (bat.in_battle) {
+            bat.in_battle = false;
+            StartCoroutine(adjust_resources_visibly(travelcard.consequence));
         }
+        mc.complete_travelcard();
+        travelcard = null;
     }
 
     public void set_travelcard(TravelCard tc) {
@@ -96,13 +110,13 @@ public class Discipline : Storeable, ISaveLoad {
     public override void load(GameData generic) {
         DisciplineData data = generic as DisciplineData;
         reset();
-        light = data.sresources.light;
-        unity = data.sresources.unity;
-        star_crystals = data.sresources.star_crystals;
-        minerals = data.sresources.minerals;
-        arelics = data.sresources.arelics;
-        erelics = data.sresources.erelics;
-        mrelics = data.sresources.mrelics;
+        _light = data.sresources.light;
+        _unity = data.sresources.unity;
+        _star_crystals = data.sresources.star_crystals;
+        _minerals = data.sresources.minerals;
+        _arelics = data.sresources.arelics;
+        _erelics = data.sresources.erelics;
+        _mrelics = data.sresources.mrelics;
 
         pos = new Vector3(data.col, data.row);
         travelcard = c.travel_deck.get_card(data.redrawn_travel_card_ID);

@@ -190,13 +190,12 @@ public class BattlePhaser : MonoBehaviour {
 
             if (player_won) {
                 Debug.Log("Player won the battle.");
-                // If enemies were stored to resume battle, clear them out.
-                MapCell mc = c.tile_mapper.get_cell(c.get_disc().pos);
                 c.get_disc().complete_travelcard();
             } else if (enemy_won) {
                 Debug.Log("Enemy won the battle.");
 
             }
+            c.cam_switcher.flip_map_battle();
         } else {
             if (mini_retreating) { // Fall back and regroup.
                 Debug.Log("Mini retreating.");
@@ -221,12 +220,13 @@ public class BattlePhaser : MonoBehaviour {
             return;
 
         save_enemies_to_map();
-        // Move unit back to previous space
-        c.tile_mapper.move_player(c.get_disc().prev_pos);
         // Penalize retreat.
         c.get_disc().change_var(Storeable.UNITY, -1, true);
         c.get_disc().set_travelcard(null);
-        post_phases();
+        // Move unit back to previous space
+        c.tile_mapper.move_player(c.get_disc().prev_pos);
+        reset();
+        tp.advance_stage();
     }
 
     private void check_finished() {

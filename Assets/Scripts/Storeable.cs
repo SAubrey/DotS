@@ -18,9 +18,13 @@ public class Storeable : MonoBehaviour, ISaveLoad {
     public Controller c;
     protected MapUI map_ui;
     public CityUIManager city_ui;
-    public int ID;
     public GameObject rising_info_prefab;
     public GameObject origin_of_rise_obj;
+    public int ID;
+    public const int INITIAL_CAPACITY = 72;
+    public int capacity = INITIAL_CAPACITY;
+    public const int INITIAL_LIGHT_REFRESH_AMOUNT = 4;
+    public int light_refresh_amount = INITIAL_LIGHT_REFRESH_AMOUNT;
 
     void Start() {
         c = GameObject.Find("Controller").GetComponent<Controller>();
@@ -30,6 +34,11 @@ public class Storeable : MonoBehaviour, ISaveLoad {
 
     public virtual GameData save() { return null; }
     public virtual void load(GameData generic) { }
+
+    public virtual void new_game() {
+        capacity = INITIAL_CAPACITY;
+        light_refresh_amount = INITIAL_LIGHT_REFRESH_AMOUNT;
+    }
 
     public virtual void register_turn() {
         light_decay_cascade();
@@ -41,7 +50,7 @@ public class Storeable : MonoBehaviour, ISaveLoad {
         if (light <= 0) {
             if (star_crystals > 0) {
                 d.Add(STAR_CRYSTALS, -1);
-                d.Add(LIGHT, 4);
+                d.Add(LIGHT, light_refresh_amount);
             } else {
                 if (unity >= 2)
                     d.Add(UNITY, -2);
@@ -52,32 +61,19 @@ public class Storeable : MonoBehaviour, ISaveLoad {
         StartCoroutine(adjust_resources_visibly(d));
     }
 
+    public virtual void update_text_fields(string type, int value) {
+        map_ui.update_stat_text(ID, type, value, get_sum_storeable_resources(), capacity);
+        city_ui.update_stat_text(ID, type, value, get_sum_storeable_resources(), capacity);
+    }
+
     public IEnumerator adjust_resources_visibly(Dictionary<string, int> adjustments) {
         foreach (KeyValuePair<string, int> r in adjustments) {
-            if (r.Value != 0) {
-                change_var(r.Key, r.Value, true);
+            int valid_change_amount = get_valid_change_amount(r.Key, r.Value);
+            if (valid_change_amount != 0) {
+                change_var(r.Key, valid_change_amount, true);
                 yield return new WaitForSecondsRealtime(0.5f);
             }
         }
-    }
-
-    private bool verify_change(int value) {
-        if (value < 0) {
-            return false;
-        }
-        return true;
-    }
-
-    public bool verify_change(string type, int value) {
-        if (get_var(type) + value < 0) {
-            return false;
-        }
-        return true;
-    }
-
-    public virtual void update_text_fields(string type, int value) {
-        map_ui.update_stat_text(type, ID, value);
-        city_ui.update_stat_text(type, ID, value);
     }
 
     public void create_rising_info(string type, int value) {
@@ -88,28 +84,71 @@ public class Storeable : MonoBehaviour, ISaveLoad {
         ri_script.init(type, value);
     }
 
+    // Use != 0 with result to use as boolean.
+    public int get_valid_change_amount(string type, int change) {
+        // Return change without going lower than 0.
+        if (get_var(type) + change < 0) {
+            Debug.Log(-get_var(type));
+            return -get_var(type);
+        }
+            //return change - (get_var(type) - change);
+        // Return change without going higher than cap.
+        if (get_sum_storeable_resources() + change > capacity)
+            return capacity - get_sum_storeable_resources();
+        return change;
+    }
+
+    public int get_sum_storeable_resources() {
+        return star_crystals + minerals + arelics + 
+            mrelics + erelics + equimares;
+    }
+
     public void change_var(string var, int val, bool show=false) {
+        val = get_valid_change_amount(var, val);
+
         if (var == LIGHT)
-            light += val;
+            _light += val;
         else if (var == UNITY)
-            unity += val;
+            _unity += val;
         else if (var == EXPERIENCE)
-            experience += val;
+            _experience += val;
         else if (var == STAR_CRYSTALS)
-            star_crystals += val;
+            _star_crystals += val;
         else if (var == MINERALS)
-            minerals += val;
+            _minerals += val;
         else if (var == ARELICS)
-            arelics += val;
+            _arelics += val;
         else if (var == MRELICS)
-            mrelics += val;
+            _mrelics += val;
         else if (var == ERELICS)
-            erelics += val;
+            _erelics += val;
         else if (var == EQUIMARES)
-            equimares += val;
+            _equimares += val;
         
+        update_text_fields(var, get_var(var));
         if (show)
             create_rising_info(var, val);
+    }
+
+    public void set_var_without_check(string var, int val) {
+        if (var == LIGHT)
+            _light += val;
+        else if (var == UNITY)
+            _unity += val;
+        else if (var == EXPERIENCE)
+            _experience += val;
+        else if (var == STAR_CRYSTALS)
+            _star_crystals += val;
+        else if (var == MINERALS)
+            _minerals += val;
+        else if (var == ARELICS)
+            _arelics += val;
+        else if (var == MRELICS)
+            _mrelics += val;
+        else if (var == ERELICS)
+            _erelics += val;
+        else if (var == EQUIMARES)
+            _equimares += val;
     }
 
     public int get_var(string var) {
@@ -135,102 +174,34 @@ public class Storeable : MonoBehaviour, ISaveLoad {
     }
 
     protected int _light = 4;
-    public new int light {
-        get { return _light; }
-        set { 
-            if (verify_change(_light + value)) {
-                _light = value; 
-                update_text_fields(LIGHT, _light);
-            }
-        }
-    }
+    public new int light { get { return _light; } }
+        /*set { 
+            _light = get_valid_change_amount(LIGHT, value - _light); 
+            update_text_fields(LIGHT, _light);
+        }*/
     
     protected int _unity = 0;
-    public int unity {
-        get { return _unity; }
-        set { 
-            if (verify_change(_unity + value)) {
-                _unity = value; 
-                update_text_fields(UNITY, _unity);
-            }
-        }
-    }
+    public int unity { get { return _unity; } }
 
     protected int _experience = 0;
-    public int experience {
-        get { return _experience; }
-        set { 
-            if (verify_change(_experience + value)) {
-                _experience = value; 
-                update_text_fields(EXPERIENCE, _experience);
-            }
-        }
-    }
+    public int experience { get { return _experience; } }
 
     protected int _star_crystals = 0;
-    public int star_crystals {
-        get { return _star_crystals; }
-        set { 
-            if (verify_change(_star_crystals + value)) {
-                _star_crystals = value; 
-                update_text_fields(STAR_CRYSTALS, _star_crystals);
-            } 
-        }
-    }
+    public int star_crystals { get { return _star_crystals; } }
 
     protected int _minerals = 0;
-    public int minerals {
-        get { return _minerals; }
-        set { 
-            if (verify_change(_minerals + value)) {
-                _minerals = value; 
-                update_text_fields(MINERALS, _minerals);
-            } 
-        }
-    }
+    public int minerals { get { return _minerals; } }
 
     protected int _arelics = 0;
-    public int arelics {
-        get { return _arelics; }
-        set { 
-            if (verify_change(_arelics + value)) {
-                _arelics = value; 
-                update_text_fields(ARELICS, _arelics);
-            } 
-        }
-    }
+    public int arelics { get { return _arelics; } }
 
     protected int _mrelics = 0;
-    public int mrelics {
-        get { return _mrelics; }
-        set { 
-            if (verify_change(_mrelics + value)) {
-                _mrelics = value; 
-                update_text_fields(MRELICS, _mrelics);
-            }
-        }
-    }
+    public int mrelics { get { return _mrelics; } }
 
     protected int _erelics = 0;
-    public int erelics {
-        get { return _erelics; }
-        set { 
-            if (verify_change(_erelics + value)) {
-                _erelics = value; 
-                update_text_fields(ERELICS, _erelics);
-            } 
-        }
-    }
+    public int erelics { get { return _erelics; } }
 
     protected int _equimares = 0;
-    public int equimares {
-        get { return _equimares; }
-        set { 
-            if (verify_change(_equimares + value)) {
-                _equimares = value; 
-                update_text_fields(EQUIMARES, _equimares);
-            }
-        }
-    }
+    public int equimares { get { return _equimares; } }
 }
  

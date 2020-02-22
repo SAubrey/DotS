@@ -15,6 +15,7 @@ public class MapUI : MonoBehaviour {
     // ---City UI---
     public GameObject cityP;
     private bool city_panel_active = true;
+    public Text city_capacityT;
     public Text c_light, c_star_crystals, c_minerals, 
         c_arelics, c_mrelics, c_erelics, c_equimares;
     public IDictionary<string, Text> city_inv = new Dictionary<string, Text>();
@@ -30,6 +31,7 @@ public class MapUI : MonoBehaviour {
     // Battalion Unit UI
     public GameObject unitsP;
     private bool unitsP_active = true;
+    public Text bat_capacityT;
     public Dictionary<int, Text> unit_countsT = new Dictionary<int, Text>();
     public Text warrior_count, spearman_count, archer_count, 
         miner_count, inspirator_count, seeker_count,
@@ -39,7 +41,7 @@ public class MapUI : MonoBehaviour {
 
     Controller c;
     public IDictionary<string, Text> disc_inv = new Dictionary<string, Text>();
-    public Text map_discT, battle_discT, map_cellT;
+    public Text map_discT, battle_discT, map_cellT, battle_cellT;
     public Button next_stageB, rune_gateB, scoutB, mineB;
     public GameObject ask_to_enterP;
 
@@ -88,18 +90,27 @@ public class MapUI : MonoBehaviour {
     public void load_stats(Storeable s) {
         // Trigger resource property UI updates by non-adjusting values.
         foreach (string resource in Storeable.FIELDS) {
-            s.change_var(resource, 0);
+            s.update_text_fields(resource, s.get_var(resource));
         }
         c.city_ui.load_unit_counts();
         highlight_discipline(c.active_disc_ID);
     }
 
-    public void update_stat_text(string field, int calling_class, int val) {
+    
+    public static void update_capacity_text(Text text, int sum_resources, int capacity) {
+        if (text == null)
+            return;
+        text.text = sum_resources + " / " + capacity;
+    }
+
+    public void update_stat_text(int calling_class, string field, int val, int sum, int capacity) {
         Text t = null;
         if (calling_class == Controller.CITY) {
             city_inv.TryGetValue(field, out t);
+            MapUI.update_capacity_text(city_capacityT, sum, capacity);
         } else if (calling_class == c.active_disc_ID) {
             disc_inv.TryGetValue(field, out t);
+            MapUI.update_capacity_text(bat_capacityT, sum, capacity);
         }
         if (t != null)
             t.text = val.ToString();
@@ -136,6 +147,7 @@ public class MapUI : MonoBehaviour {
  
     public void update_cell_text(string tile_name) {
         map_cellT.text = tile_name;
+        battle_cellT.text = tile_name;
     }
 
     public void set_active_next_stageB(bool state) {

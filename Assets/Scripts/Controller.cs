@@ -130,7 +130,6 @@ public class Controller : MonoBehaviour, ISaveLoad {
         ControllerData cdata = FileIO.load_game(CONTROLLER) as ControllerData;
         if (cdata == null)
             return;
-        load(cdata);
 
         tile_mapper.load(FileIO.load_game(TILE_MAPPER));
         astra.load(FileIO.load_game("astra"));
@@ -138,12 +137,16 @@ public class Controller : MonoBehaviour, ISaveLoad {
         endura.load(FileIO.load_game("endura"));
         city.load(FileIO.load_game("city"));
         travel_deck.load(FileIO.load_game(TRAVEL_DECK));
+        load(cdata);
 
         init(true);
     }
 
     public void new_game() {
-
+        foreach (Discipline disc in discs.Values) {
+            disc.new_game();
+        }
+        city.new_game();
         init(false);
     }
 
@@ -226,11 +229,11 @@ public class Controller : MonoBehaviour, ISaveLoad {
 
     // BUTTON HANDLES
     public void inc_stat(string field) {
-        discs[active_disc_ID].change_var(field, 1);
+        get_disc().change_var(field, 1);
     }
 
     public void dec_stat(string field) {
-        discs[active_disc_ID].change_var(field, -1);
+        get_disc().change_var(field, -1);
     }
 
     public void inc_city_stat(string field) {

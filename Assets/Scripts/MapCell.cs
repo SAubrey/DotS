@@ -77,6 +77,7 @@ public class MapCell {
     public int tile_ID;
     public bool creates_travelcard = true;
     public bool has_rune_gate = false;
+    public bool restored_rune_gate = false;
     public bool travelcard_complete = false;
     private TravelCard travelcard;
     private List<Enemy> enemies = new List<Enemy>();
@@ -103,7 +104,7 @@ public class MapCell {
     public void complete_travelcard() {
         travelcard = null;
         travelcard_complete = true;
-        clear_enemies();
+        clear_enemies(); // If enemies were stored to resume battle, clear them out.
     }
 
     public void save_enemies(List<Slot> enemy_slots) {

@@ -45,7 +45,7 @@ public class Selector : MonoBehaviour {
         } else if (Input.GetKeyDown(KeyCode.S)) {
             if (player_panel.moveB.interactable)
                 player_panel.move();
-        } else if (Input.GetKeyDown(KeyCode.Escape) || Input.GetKeyDown(KeyCode.X)) {
+        } else if (Input.GetKeyDown(KeyCode.X)) {
             unit_panel_man.close();
         }
     }

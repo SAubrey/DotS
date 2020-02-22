@@ -237,7 +237,7 @@ public class Unit {
         return defense > 0 && !out_of_actions;
     }
 
-    public bool in_range(int range, int x, int y, int x1, int y1) {
+    public static bool in_range(int range, int x, int y, int x1, int y1) {
         int dx = Mathf.Abs(x - x1);
         int dy = Mathf.Abs(y - y1);
         return dx + dy <= range;

@@ -14,23 +14,29 @@ public class City : Storeable {
         ID = Controller.CITY;
     }
 
+    public override void new_game() {
+        base.new_game();
+        light_refresh_amount = 8;
+    }
+
     public override GameData save() { 
         return new CityData(this, name);
     }
 
     public override void load(GameData generic) {
         CityData data = generic as CityData;
-        light = data.sresources.light;
-        unity = data.sresources.unity;
-        star_crystals = data.sresources.star_crystals;
-        minerals = data.sresources.minerals;
-        arelics = data.sresources.arelics;
-        erelics = data.sresources.erelics;
-        mrelics = data.sresources.mrelics;
+        _light = data.sresources.light;
+        _unity = data.sresources.unity;
+        _star_crystals = data.sresources.star_crystals;
+        _minerals = data.sresources.minerals;
+        _arelics = data.sresources.arelics;
+        _erelics = data.sresources.erelics;
+        _mrelics = data.sresources.mrelics;
 
         CityUIManager cui = c.city_ui;
         for (int i = 0; i < cui.upgrades.Count; i++) {
-            cui.purchase_upgrade(cui.upgrades[i].ID);
+            cui.selected_upgrade_ID = cui.upgrades[i].ID;
+            cui.purchase_upgrade();
         }
     }
 }  

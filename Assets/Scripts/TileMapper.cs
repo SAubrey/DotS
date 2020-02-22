@@ -148,6 +148,7 @@ public class TileMapper : MonoBehaviour, ISaveLoad {
     }
 
     private void new_game() {
+        clear_data();
         scouting = false;
         waiting_for_second_gate = false;
         populate_decks();
@@ -280,6 +281,10 @@ public class TileMapper : MonoBehaviour, ISaveLoad {
 
     public bool is_at_city(Discipline disc) {
         return ((int)disc.pos.x == 10 && (int)disc.pos.y == 10);
+    }
+
+    public MapCell get_city_cell() {
+        return map[new Pos(10, 10)];
     }
 
     public GameData save() {

@@ -143,17 +143,18 @@ public class Slot : MonoBehaviour {
         // Change attack icon based on attack type.
         if (get_unit().is_range) {
             attfgI.sprite = range_icon;
-            attfgI.color = Color.white;
             attbgI.sprite = range_icon;
         } else {
             attfgI.sprite = melee_icon;
-            attfgI.color = Color.white;
             attbgI.sprite = melee_icon;
         }
+        attfgI.color = Color.white;
+        deffgI.color = Color.white;
 
         // Show enemy as always defending if def > 0
-        if (get_unit().is_enemy)
+        if (get_unit().is_enemy) {
             show_defending(get_unit().get_defense() > 0);
+        }
         update_UI();
     }
 
@@ -197,7 +198,7 @@ public class Slot : MonoBehaviour {
         float hp_boost = get_unit().get_stat_boost(Unit.HEALTH_BOOST)
             + get_unit().get_bonus_health();
 
-        string str = hp + " / " + get_unit().max_health.ToString();
+        string str = hp + "/" + get_unit().max_health.ToString();
         if (hp_boost > 0) 
             str += "+" + hp_boost.ToString();
         return str;
@@ -319,8 +320,14 @@ public class Slot : MonoBehaviour {
     public void face_text_to_cam() {
         info_canv.transform.LookAt(cam.transform); 
         info_canv.transform.forward *= -1; 
+    }
+
+    public void rotate_unit_img_to_direction(int direction) {
         unit_img.transform.LookAt(cam.transform);
-        unit_img.transform.forward *= -1;
+        if (direction == 0 || direction == 180) {
+            unit_img.transform.rotation = Quaternion.AngleAxis(0, Vector3.up);
+        } else 
+            unit_img.transform.rotation = Quaternion.AngleAxis(180, Vector3.up);
     }
     // ---End UI--- 
     

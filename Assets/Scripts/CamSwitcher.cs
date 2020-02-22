@@ -16,18 +16,20 @@ public class CamSwitcher : MonoBehaviour {
     public GameObject map_canvas;
     public GameObject mapUI_canvas;
 
-    public GameObject pause_panel;
+    public GameObject pause_panel, battle_pause_panel;
     
     private Controller c;
     private BatLoader bat_loader;
 
     private bool paused = false;
-    public int current_cam = MAP;
+    public int current_cam = MENU;
+    public int previous_cam = MAP;
     
     void Start() {
         c = GameObject.Find("Controller").GetComponent<Controller>();
         bat_loader = c.bat_loader;
         pause_panel.SetActive(false);
+        battle_pause_panel.SetActive(false);
         set_active(MENU, true);
     }
 
@@ -35,9 +37,7 @@ public class CamSwitcher : MonoBehaviour {
         if (Input.GetKeyDown(KeyCode.C)) {
             cycle();
         } else if (Input.GetKeyDown(KeyCode.Escape)) {
-            if (current_cam == MAP) {
-                toggle_paused();
-            }
+            toggle_paused();
         }
     }
 
@@ -52,7 +52,11 @@ public class CamSwitcher : MonoBehaviour {
 
     public void toggle_paused() {
         paused = !paused;
-        pause_panel.SetActive(paused);
+        if (current_cam == MAP) {
+            pause_panel.SetActive(paused);
+        } else if (current_cam == BATTLE) {
+            battle_pause_panel.SetActive(paused);
+        }
     }
 
     // Called by buttons
@@ -70,6 +74,18 @@ public class CamSwitcher : MonoBehaviour {
         } else if (current_cam == BATTLE) {
             set_active(MAP, true);
         }
+    }
+
+    public void flip_menu_battle() {
+        if (current_cam == MENU) {
+            set_active(BATTLE, true);
+        } else if (current_cam == BATTLE) {
+            set_active(MENU, true);
+        }
+    }
+
+    public void return_previous_cam() {
+        set_active(previous_cam, true);
     }
 
     public void set_active(int screen, bool active) {
@@ -103,7 +119,9 @@ public class CamSwitcher : MonoBehaviour {
             }
         }
 
-        if (active) 
+        if (active) {
+            previous_cam = current_cam;
             current_cam = screen;
+        }
     }
 }

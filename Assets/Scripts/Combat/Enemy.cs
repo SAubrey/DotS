@@ -45,7 +45,6 @@ public class Enemy : Unit {
         base.init(name, att, hp, style, atr1, atr2, atr3);
         type = ENEMY;
         this.xp = xp;
-        defending = true;
     }
 
     public static Enemy create_enemy(int ID) {

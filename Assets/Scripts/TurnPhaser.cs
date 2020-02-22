@@ -134,21 +134,12 @@ public class TurnPhaser : MonoBehaviour {
         if (tc != null) {
             handle_travelcard(tc);
         } else if (cell.has_enemies) { // Someone retreated from here.
-            c.get_active_bat().in_battle = true;
-            if (cell.get_enemies().Count > 0) { // either mini retreat or 
-                enemy_loader.load_existing_enemies(cell.get_enemies());
-
-            } else { // Resume battle exactly as it was.
-                c.formation.load_board(c.active_disc_ID);
-            }
-            cs.set_active(CamSwitcher.BATTLE, true);
+            resume_battle();
             return;
         } 
 
         Debug.Log("no travelcard, no enemies in tile. Can mine?");
-        if (check_mineable(cell)) {
-            map_ui.enable_mineB();
-        } 
+        check_action_buttons();
         c.map_ui.set_active_next_stageB(true);
         //if () check then enable build button
 
@@ -168,6 +159,23 @@ public class TurnPhaser : MonoBehaviour {
                 StartCoroutine(c.get_disc().adjust_resources_visibly(tc.consequence));
                 c.get_disc().complete_travelcard();
             }
+        } 
+    }
+
+    private void resume_battle() {
+        c.get_active_bat().in_battle = true;
+        if (cell.get_enemies().Count > 0) { // Mini retreat, reload enemies.
+            enemy_loader.load_existing_enemies(cell.get_enemies());
+        } else { // Resume battle exactly as it was.
+            c.formation.load_board(c.active_disc_ID);
+        }
+        cs.set_active(CamSwitcher.BATTLE, true);
+    }
+
+    private void check_action_buttons() {
+        // rune gate operation happens in movement, and thus in TileMapper.
+        if (check_mineable(cell)) {
+            map_ui.enable_mineB();
         } 
     }
 

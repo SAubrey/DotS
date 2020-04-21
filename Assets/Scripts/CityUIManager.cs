@@ -252,7 +252,6 @@ public class CityUIManager : MonoBehaviour {
     }
 
 
-
     // ---Hire units UI---
     public void update_stat_text(int calling_class, string field, int val, int sum, int capacity) {
         Text t = null;

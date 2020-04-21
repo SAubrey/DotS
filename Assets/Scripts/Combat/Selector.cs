@@ -31,6 +31,9 @@ public class Selector : MonoBehaviour {
         }
         if (selected_slot == null)
             return;
+            
+        if (!Input.anyKeyDown)
+            return;
 
         // Unit actions requiring a selected unit.
         if (Input.GetKeyDown(KeyCode.A)) {

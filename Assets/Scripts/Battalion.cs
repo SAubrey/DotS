@@ -42,8 +42,16 @@ public class Battalion {
     }
 
     public void lose_random_unit() {
-        int roll = Random.Range(0, units.Count);
-        units[roll].RemoveAt(0);
+        // Get indices with available units.
+        List<int> spawned_unit_types = new List<int>();
+        for (int i = 0; i < units.Count; i++) {
+            if (units[i].Count > 0) {
+                spawned_unit_types.Insert(i, i);
+            }
+        }
+
+        int roll = Random.Range(0, spawned_unit_types.Count);
+        units[spawned_unit_types[roll]].RemoveAt(0);
     }
 
     public void reset_all_stage_actions() {

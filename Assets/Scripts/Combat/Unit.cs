@@ -237,13 +237,15 @@ public class Unit {
         return defense > 0 && !out_of_actions;
     }
 
+    // Checks range for each direction additively, forming a diamond.
     public static bool in_range(int range, int x, int y, int x1, int y1) {
         int dx = Mathf.Abs(x - x1);
         int dy = Mathf.Abs(y - y1);
         return dx + dy <= range;
     }
 
-    public bool in_range_of_reach(int range, int x, int y, int x1, int y1) {
+    // Checks range for each direction separately, forming a square.
+    public static bool in_range_of_reach(int range, int x, int y, int x1, int y1) {
         int dx = Mathf.Abs(x - x1);
         int dy = Mathf.Abs(y - y1);
         return dx <= range && dy <= range;

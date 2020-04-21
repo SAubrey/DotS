@@ -62,6 +62,10 @@ public class Controller : MonoBehaviour, ISaveLoad {
     public IDictionary<int, Discipline> discs = new Dictionary<int, Discipline>();
 
     void Awake() {
+        astra.ID = ASTRA;
+        martial.ID = MARTIAL;
+        endura.ID = ENDURA;
+        city.ID = CITY;
         discs.Add(ASTRA, astra);
         discs.Add(MARTIAL, martial);
         discs.Add(ENDURA, endura);

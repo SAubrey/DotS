@@ -138,7 +138,7 @@ public class TurnPhaser : MonoBehaviour {
             return;
         } 
 
-        Debug.Log("no travelcard, no enemies in tile. Can mine?");
+        //Debug.Log("no travelcard, no enemies in tile. Can mine?");
         check_action_buttons();
         c.map_ui.set_active_next_stageB(true);
         //if () check then enable build button

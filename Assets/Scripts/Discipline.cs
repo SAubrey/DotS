@@ -66,7 +66,7 @@ public class Discipline : Storeable, ISaveLoad {
     public void complete_travelcard() {
         if (travelcard == null)
             return;
-        MapCell mc = c.tile_mapper.get_cell(pos);
+        MapCell mc = c.map.get_cell(pos);
         if (bat.in_battle) {
             bat.in_battle = false;
             StartCoroutine(adjust_resources_visibly(travelcard.consequence));
@@ -77,7 +77,7 @@ public class Discipline : Storeable, ISaveLoad {
 
     public void set_travelcard(TravelCard tc) {
         travelcard = tc;
-        MapCell mc = c.tile_mapper.get_cell(pos);
+        MapCell mc = c.map.get_cell(pos);
         mc.set_travelcard(tc);
     }
 

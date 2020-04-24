@@ -7,9 +7,6 @@ public class LightFlickerer : MonoBehaviour {
     Randomly walks light intensity proportionally to radius.
     */
     public UnityEngine.Experimental.Rendering.LWRP.Light2D light2d;
-    private float minOuterLightRadius = 3.5f;
-    private float maxOuterLightRadius = 4f;
-    //private float minInnerLightRadius = .3f;
     private float minIntensity = 1.6f;
     private float maxIntensity = 1.8f;
     //private float intensity

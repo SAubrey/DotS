@@ -54,12 +54,13 @@ public class BattlePhaser : MonoBehaviour {
         c.formation.reset_groups_dir();
         c.formation.clear_battlefield();
         stage = PLACEMENT;
+        update_phase_text();
     }
 
     public void advance_stage() {
         selector.deselect();
         stage = _stage + 1;
-        update_advB_text();
+        update_phase_text();
     }
 
     /*
@@ -173,14 +174,13 @@ public class BattlePhaser : MonoBehaviour {
     public void post_battle() {
         if (stage == ASSESSMENT) advance_phase();
         can_skip = true;
-        Debug.Log(c.get_active_bat().get_all_placed_units().Count);
         check_finished();
     }
 
     private void advance_phase() {
         c.formation.rotate_actioned_player_groups();
         c.get_active_bat().post_phase(); // reset movement/attacks
-        enemy_brain.post_phase(); 
+        c.map.get_current_cell().post_phase();
         phase++;
     }
 
@@ -200,7 +200,6 @@ public class BattlePhaser : MonoBehaviour {
             if (mini_retreating) { // Fall back and regroup.
                 Debug.Log("Mini retreating.");
                 c.get_active_bat().mini_retreating = true;
-                save_enemies_to_map();
             } else // Save the board exactly as is to resume next turn.
                 c.formation.save_board(c.active_disc_ID);
         }
@@ -208,23 +207,16 @@ public class BattlePhaser : MonoBehaviour {
         tp.advance_stage();
     }
 
-    private void save_enemies_to_map() {
-        // Save enemies on battle field into map cell storage.
-        MapCell mc = c.tile_mapper.get_cell(c.get_disc().pos);
-        mc.save_enemies(c.formation.get_all_full_slots(Unit.ENEMY));
-    }
-
     // Called by Unity button. 
     public void retreat() {
         if (!player_units_on_field || player_won)
             return;
 
-        save_enemies_to_map();
         // Penalize retreat.
         c.get_disc().change_var(Storeable.UNITY, -1, true);
         c.get_disc().set_travelcard(null);
         // Move unit back to previous space
-        c.tile_mapper.move_player(c.get_disc().prev_pos);
+        c.map.move_player(c.get_disc().prev_pos);
         reset();
         tp.advance_stage();
     }
@@ -269,12 +261,12 @@ public class BattlePhaser : MonoBehaviour {
         if (!init_placement_stage)
             return;
 
-        // EDIT FOR TESTING---------------------
+        // EDIT FOR TESTING------------------------------------------------------------------------------------
         can_skip = true;
         //can_skip = units_in_reserve ? false : true; // use 
     }
 
-    private void update_advB_text() {
+    private void update_phase_text() {
         Text txt = adv_stageB.GetComponentInChildren<Text>();
         string basestr = "Advance to ";
         if (stage == PLACEMENT) {

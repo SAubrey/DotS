@@ -13,14 +13,15 @@ public class Slot : MonoBehaviour {
 
     // --VISUAL-- 
     public Text namefg_T, namebg_T;
-    public Color unselected_color;
-    public Color dead, injured;
-    private Color TRANSPARENT = new Color(0, 0, 0, 0);
-    private Color healthbar_fill_color = new Color(1, 1, 1, .8f);
-    public Color healthbar_bg_color;
+    public static Color unselected_color;
+    public static Color dead, injured;
+    private static Color TRANSPARENT = new Color(0, 0, 0, 0);
+    private static Color healthbar_fill_color = new Color(1, 1, 1, .8f);
+    public static Color healthbar_bg_color;
     public Slider healthbar;
     public Canvas info_canv;
     public Image healthbar_bg, healthbar_fill;
+    public UnityEngine.Experimental.Rendering.LWRP.Light2D light2d;
     public Sprite range_icon, melee_icon;
     private int healthbar_inc_width = 15;
 
@@ -42,6 +43,8 @@ public class Slot : MonoBehaviour {
     void Awake() {
         c = GameObject.Find("Controller").GetComponent<Controller>();
         cam = GameObject.Find("BattleCamera").GetComponent<Camera>();
+        light2d.enabled = false;
+
         col = group.col;
         row = group.row;
         button = GetComponent<Button>();
@@ -68,6 +71,8 @@ public class Slot : MonoBehaviour {
         set_nameT(unit.get_name());
         set_sprite(u.get_ID());
         set_active_UI(true);
+        if (u.is_playerunit)
+            toggle_light(true);
         return true;
     }
 
@@ -78,10 +83,12 @@ public class Slot : MonoBehaviour {
             unit.set_slot(null);
             unit = null;
         }
+
         set_sprite(PlayerUnit.EMPTY);
         set_active_UI(false);
         set_nameT("");
         show_selection(false);
+        toggle_light(false);
         if (validate)
             group.validate_unit_order();
         return removed_unit;
@@ -328,6 +335,10 @@ public class Slot : MonoBehaviour {
             unit_img.transform.rotation = Quaternion.AngleAxis(0, Vector3.up);
         } else 
             unit_img.transform.rotation = Quaternion.AngleAxis(180, Vector3.up);
+    }
+
+    private void toggle_light(bool state) {
+        light2d.enabled = state;
     }
     // ---End UI--- 
     

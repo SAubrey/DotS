@@ -25,7 +25,7 @@ public class TravelCard {
 
     public const int FOG = 10;
 
-    public int enemies;
+    public int enemy_count;
     //public Dictionary<string, int> rewards = new Dictionary<string, int>();
     // Can be positive or negative.
     public Dictionary<string, int> consequence = new Dictionary<string, int>();
@@ -70,50 +70,50 @@ public class TravelCard {
 
 public class Att : TravelCard {
     public Att(int ID, Sprite sprite) : base(ID, COMBAT, sprite) {
-        this.enemies = 7;
+        this.enemy_count = 7;
         set_rule(ENTER_COMBAT, true);
     }
 }
 
 public class Att1_1 : Att {
     public Att1_1(Sprite sprite) : base(TravelDeck.ATT1_1, sprite) {
-        this.enemies = 7;
+        this.enemy_count = 7;
     }
 }
 
 public class Att2_1 : Att {
     public Att2_1(Sprite sprite)  : base(TravelDeck.ATT2_1, sprite) {
-        this.enemies = 8;
+        this.enemy_count = 8;
     }
 }
 
 public class Att3_1 : Att {
     public Att3_1(Sprite sprite) : base(TravelDeck.ATT3_1, sprite) {
-        this.enemies = 7;
+        this.enemy_count = 7;
     }
 }
 
 public class Att4_1 : Att {
     public Att4_1( Sprite sprite) : base(TravelDeck.ATT4_1, sprite) {
-        this.enemies = 7;
+        this.enemy_count = 7;
     }
 }
 
 public class Att5_1 : Att {
     public Att5_1( Sprite sprite) : base(TravelDeck.ATT5_1, sprite) {
-        this.enemies = 5;
+        this.enemy_count = 5;
     }
 }
 
 public class Att6_1 : Att {
     public Att6_1( Sprite sprite) : base(TravelDeck.ATT6_1, sprite) {
-        this.enemies = 6;
+        this.enemy_count = 6;
     }
 }
 
 public class Att7_1 : Att {
     public Att7_1(Sprite sprite) : base(TravelDeck.ATT7_1, sprite) {
-        this.enemies = 5;
+        this.enemy_count = 5;
     }
 }
 
@@ -129,7 +129,7 @@ public class Chance : TravelCard {
 
 public class Chance1_1 : Chance {
     public Chance1_1(Sprite sprite) : base(TravelDeck.CHANCE1_1, sprite) {
-        this.enemies = 6;
+        this.enemy_count = 6;
         die_num_sides = 6;
     }
 
@@ -142,7 +142,7 @@ public class Chance1_1 : Chance {
 
 public class Chance2_1 : Chance {
     public Chance2_1(Sprite sprite) : base(TravelDeck.CHANCE2_1, sprite) {
-        this.enemies = 0;
+        this.enemy_count = 0;
     }
 
     public override void use_roll_result(int result, Controller c) {
@@ -160,7 +160,7 @@ public class Chance2_1 : Chance {
 
 public class Chance3_1 : Chance {
     public Chance3_1(Sprite sprite) : base(TravelDeck.CHANCE3_1, sprite) {
-        this.enemies = 10;
+        this.enemy_count = 10;
         die_num_sides = 6;
     }
 
@@ -179,7 +179,7 @@ public class CaveCard : TravelCard {
 public class Cave1_1 : CaveCard {
     public Cave1_1(Sprite sprite) : base(TravelDeck.CAVE1_1, sprite) {
         set_rule(AFFECT_RESOURCES, true);
-        enemies = 5;
+        enemy_count = 5;
         consequence[Storeable.MINERALS] = 4;
         consequence[Storeable.STAR_CRYSTALS] = 4;
     }
@@ -188,7 +188,7 @@ public class Cave1_1 : CaveCard {
 public class Cave2_1 : CaveCard {
     public Cave2_1(Sprite sprite) : base(TravelDeck.CAVE2_1, sprite) {
         set_rule(AFFECT_RESOURCES, true);
-        enemies = 7;
+        enemy_count = 7;
         consequence[Storeable.STAR_CRYSTALS] = 2;
         // 1 equipment
     }
@@ -234,7 +234,7 @@ public class Ruins3_1 : RuinsCard {
     public Ruins3_1(Sprite sprite) : base(TravelDeck.RUINS3_1, sprite) {
         set_rule(ENTER_COMBAT, true);
         set_rule(AFFECT_RESOURCES, true);
-        enemies = 5;
+        enemy_count = 5;
         consequence[Storeable.ERELICS] = 2;
         consequence[Storeable.MRELICS] = 2;
         consequence[Storeable.STAR_CRYSTALS] = 3;
@@ -244,7 +244,7 @@ public class Ruins3_1 : RuinsCard {
 public class Ruins4_1 : RuinsCard {
     public Ruins4_1(Sprite sprite) : base(TravelDeck.RUINS4_1, sprite) {
         set_rule(ENTER_COMBAT, true);
-        enemies = 7;
+        enemy_count = 7;
         // +1 EQUIPMENT
     }
 }
@@ -261,7 +261,7 @@ public class Location1_1 : LocationCard {
     }
 
     public override void action(TravelCardManager tcm) {
-        tcm.c.tile_mapper.build_rune_gate(tcm.c.get_disc().get_Pos());
+        tcm.c.map.build_rune_gate(tcm.c.get_disc().get_Pos());
     }
 }
 
@@ -306,7 +306,7 @@ public class Event3_1 : Event {
     public Event3_1(Sprite sprite) : base(TravelDeck.EVENT3_1, sprite) {
     }
     public override void action(TravelCardManager tcm) {
-        tcm.c.tile_mapper.move_player(tcm.c.get_disc().prev_pos);
+        tcm.c.map.move_player(tcm.c.get_disc().prev_pos);
     }
 }
 public class Event4_1 : Event {

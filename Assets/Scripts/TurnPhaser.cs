@@ -80,7 +80,7 @@ public class TurnPhaser : MonoBehaviour {
 
     public void reset() { // New game, new player
         tc = null;
-        cell = c.tile_mapper.get_cell(c.get_disc().pos);
+        cell = c.map.get_cell(c.get_disc().pos);
         map_ui.set_active_next_stageB(false);
         map_ui.set_active_rune_gateB(false);
         map_ui.set_active_ask_to_enterP(false);
@@ -96,7 +96,7 @@ public class TurnPhaser : MonoBehaviour {
         moving = false;
         _stage = TRAVEL_CARD;
         map_ui.set_next_stageB_text("Travel Card");
-        cell = c.tile_mapper.get_cell(c.get_disc().pos);
+        cell = c.map.get_cell(c.get_disc().pos);
 
         // Load forced travel card from a previous save.
         if (c.get_disc().restart_battle_from_drawn_card) {
@@ -111,7 +111,7 @@ public class TurnPhaser : MonoBehaviour {
             if (cell.creates_travelcard) { // Cell can have cards drawn.
                 
                 // DRAW CARD
-                tc = td.draw_card(cell.tier, cell.ID);
+                tc = td.draw_card(cell.tier, cell.biome_ID);
                 c.get_disc().set_travelcard(tc);
                 td.display_card(tc);
                 tc.action(c.travel_card_manager);
@@ -164,7 +164,7 @@ public class TurnPhaser : MonoBehaviour {
 
     private void resume_battle() {
         c.get_active_bat().in_battle = true;
-        if (cell.get_enemies().Count > 0) { // Mini retreat, reload enemies.
+        if (cell.has_enemies) { // Mini retreat, reload enemies.
             enemy_loader.load_existing_enemies(cell.get_enemies());
         } else { // Resume battle exactly as it was.
             c.formation.load_board(c.active_disc_ID);
@@ -183,20 +183,20 @@ public class TurnPhaser : MonoBehaviour {
         Debug.Log("setting in_battle to " + c.get_active_bat().in_battle + 
         "for " + c.active_disc_ID + " at " + cell.pos.x + ", " + cell.pos.y);
         c.get_active_bat().in_battle = true; 
-        enemy_loader.load(cell.ID, cell.tier, tc.enemies);
+        enemy_loader.place_new_enemies(cell, tc.enemy_count);
         cs.set_active(CamSwitcher.BATTLE, true);
     }
 
     public void mine() {
         map_ui.disable_mineB();
         int mine_qty = c.get_active_bat().mine_qty;
-        if (cell.ID == MapCell.TITRUM_ID || cell.ID == MapCell.MOUNTAIN_ID) {
+        if (cell.biome_ID == MapCell.TITRUM_ID || cell.biome_ID == MapCell.MOUNTAIN_ID) {
             if (cell.minerals >= mine_qty) {
                 c.get_disc().change_var(Storeable.MINERALS, mine_qty, true);
             } else {
                 c.get_disc().change_var(Storeable.MINERALS, cell.minerals, true);
             }
-        } else if (cell.ID == MapCell.STAR_ID) {
+        } else if (cell.biome_ID == MapCell.STAR_ID) {
             if (cell.star_crystals >= mine_qty) {
                 c.get_disc().change_var(Storeable.STAR_CRYSTALS, mine_qty, true);
             } else {

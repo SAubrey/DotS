@@ -102,20 +102,23 @@ public class BatLoader : MonoBehaviour {
             load_text(b, type);
     }
 
-    public void load_text(Battalion b, int type) {
+    /*
+    Load unit counts in unit placement sidebar.
+    */
+    public void load_text(Battalion b, int ID) {
         MapUI map_ui = c.map_ui;
-        if (!texts.ContainsKey(type) || !map_ui.unit_countsT.ContainsKey(type))
+        if (!texts.ContainsKey(ID) || !map_ui.unit_countsT.ContainsKey(ID))
             return;
 
-        string num = b.count_placeable(type).ToString();
-        int total_num = b.units[type].Count;
-        int num_injured = b.count_injured(type);
+        string num = b.count_placeable(ID).ToString();
+        int total_num = b.units[ID].Count;
+        int num_injured = b.count_injured(ID);
 
-        texts[type].text = num + " / " + total_num.ToString() + "    " + num_injured;
+        texts[ID].text = num + " / " + total_num.ToString() + "    " + num_injured;
 
-        map_ui.unit_countsT[type].text = (total_num - num_injured) + 
+        map_ui.unit_countsT[ID].text = (total_num - num_injured) + 
             "         " + num_injured;
-        unit_buttons[type].interactable = total_num > 0;
+        unit_buttons[ID].interactable = total_num > 0;
     }
 
     // Called by battalion selection buttons

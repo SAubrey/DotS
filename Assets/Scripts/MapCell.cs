@@ -72,7 +72,7 @@ public class MapCell {
     public int tier;
     public bool discovered = false;
     public string name;
-    public int ID;
+    public int biome_ID;
     public int minerals, star_crystals = 0;
     public int tile_ID;
     public bool creates_travelcard = true;
@@ -83,11 +83,39 @@ public class MapCell {
     private List<Enemy> enemies = new List<Enemy>();
     
 
-    public MapCell(int tier, Tile tile, Pos pos, int ID) {
+    public MapCell(int tier, Tile tile, Pos pos, int biome_ID) {
         this.tile = tile;
         this.tier = tier;
         this.pos = pos;
-        this.ID = ID;
+        this.biome_ID = biome_ID;
+    }
+
+    public void post_battle() {
+        clear_dead();
+        foreach (Enemy e in enemies)
+            e.get_slot().update_UI();
+    }
+
+    public void post_phase() {
+        foreach (Enemy e in enemies)
+            e.post_phase();
+    }
+
+    private void clear_dead() {
+        // Don't modify enemies while iterating.
+        List<Enemy> dead = new List<Enemy>();
+        foreach (Enemy e in enemies) {
+            if (e.is_dead)
+                dead.Add(e);
+        }
+        foreach (Enemy e in dead) 
+            kill_enemy(e);
+    }
+ 
+    public void kill_enemy(Enemy enemy) {
+        if (enemy.get_slot() != null)
+            enemy.get_slot().empty(); // validate as you go?
+        enemies.Remove(enemy);
     }
 
     public void discover() {
@@ -115,6 +143,11 @@ public class MapCell {
         Debug.Log("Saved " + enemies.Count + " enemies at " + pos.x + ", " + pos.y);
     }
 
+    public void add_enemy(Enemy e) {
+        if (e != null)
+            enemies.Add(e);
+    }
+
     public List<Enemy> get_enemies() {
         Debug.Log("Retrieving " + enemies.Count + " enemies from " + pos.x + ", " + pos.y);
         return enemies;
@@ -122,16 +155,7 @@ public class MapCell {
 
     private bool _has_enemies = false;
     public bool has_enemies { 
-        get { 
-            return (get_enemies().Count > 0 || _has_enemies);
-        } 
-        set {
-            if (get_enemies().Count > 0) {
-                _has_enemies = true;
-            } else {
-                _has_enemies = value;
-            }
-        }
+        get { return (get_enemies().Count > 0); } 
     }
 
     public void clear_enemies() {

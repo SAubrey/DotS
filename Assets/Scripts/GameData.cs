@@ -24,17 +24,17 @@ public class MapData : GameData {
     public List<int> t2_bag = new List<int>();
     public List<int> t3_bag = new List<int>();
     public List<SMapCell> cells = new List<SMapCell>();
-    public MapData(TileMapper tm, string name) {
+    public MapData(Map map, string name) {
         this.name = name;
 
-        foreach (int num in tm.bags[1]) 
+        foreach (int num in map.bags[1]) 
             t1_bag.Add(num);
-        foreach (int num in tm.bags[2]) 
+        foreach (int num in map.bags[2]) 
             t2_bag.Add(num);
-        foreach (int num in tm.bags[3]) 
+        foreach (int num in map.bags[3]) 
             t3_bag.Add(num);
 
-        foreach (MapCell mc in tm.map.Values) {
+        foreach (MapCell mc in map.map.Values) {
             SMapCell mcs = 
                 new SMapCell(mc.tile_ID,
                         mc.pos.x, mc.pos.y, 

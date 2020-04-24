@@ -167,11 +167,10 @@ public class Battalion {
     public void post_battle() {
         remove_expired_units();
         foreach (PlayerUnit pu in get_all_placed_units()) {
-            Slot s = pu.get_slot();
-            s.get_unit().health = s.get_unit().get_boosted_max_health();
-            if (s.get_punit().defending)
-                s.get_punit().defending = false;
-            s.update_UI();
+            pu.health = pu.get_boosted_max_health();
+            if (pu.defending)
+                pu.defending = false;
+            pu.get_slot().update_UI();
         }
     }
 
@@ -184,7 +183,7 @@ public class Battalion {
     }
  
     private void remove_expired_units() {
-        // Remove duplicates. Don't injure a dead unit.
+        // Remove duplicates. A dead unit isn't injured.
         foreach (PlayerUnit du in dead_units) {
             foreach (PlayerUnit iu in injured_units) {
                 if (du == iu)
@@ -208,7 +207,7 @@ public class Battalion {
         foreach (PlayerUnit du in injured_units) {
             du.get_slot().empty(false);
         }
-        injured_units.Clear();
+        injured_units.Clear(); // Clear temp list.
     }
 
     

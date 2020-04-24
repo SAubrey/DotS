@@ -27,6 +27,7 @@ public class EnemyLoader : MonoBehaviour {
     public const int T2 = 2;
     public const int T3 = 3;
 
+    private Controller c;
     private Formation f;
     public System.Random rand;
 
@@ -47,6 +48,7 @@ public class EnemyLoader : MonoBehaviour {
     public List<List<List<int>>> cave_tiers = new List<List<List<int>>>();
 
     void Start() {
+        c = GameObject.Find("Controller").GetComponent<Controller>();
         f = GameObject.Find("Formation").GetComponent<Formation>();
         rand = new System.Random();
         images.Add(Enemy.GALTSA, galtsa);
@@ -118,11 +120,12 @@ public class EnemyLoader : MonoBehaviour {
         left_second_zone.reset();
     }
 
-    public void load(int biome, int tier, int quantity) {
+    public void place_new_enemies(MapCell cell, int quantity) {
         for (int i = 0; i < quantity; i++) {
             int rarity = roll_rarity(); 
-            int enemyID = pick_enemy(biome, tier, rarity);
+            int enemyID = pick_enemy(cell.biome_ID, cell.tier, rarity);
             Enemy e = Enemy.create_enemy(enemyID);
+            cell.add_enemy(e);
             slot_enemy(e);
         }
         reset();

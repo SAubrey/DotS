@@ -106,15 +106,13 @@ public class Unit {
     }
 
     protected int type; // Player or Enemy
-    protected int ID; // Code for the particular unit type.
+    protected int ID; // Code for the particular unit type. (not unique to unit)
     protected string name;
     // Unique identifier for looking up drawn attack lines and aggregating attacks.
     public int attack_id;
 
     protected Slot slot = null;
     protected bool dead = false; // Used to determine what to remove in the Battalion.
-    protected bool placed = false;
-
 
     private static int static_unique_ID = 0;
     private int unique_ID = static_unique_ID;
@@ -128,7 +126,7 @@ public class Unit {
     public virtual bool set_attribute_active(bool state) {
         attribute_active = state && can_activate_attribute();
         Debug.Log("turning attr " + attribute_active);
-        if (slot != null)
+        if (is_placed)
             slot.update_UI();
         return attribute_active;
     }
@@ -217,9 +215,6 @@ public class Unit {
 
     public void attack() {
         attack_set = false;
-        if (has_attribute(GROUPING_1) || has_attribute(GROUPING_2)) {
-            Debug.Log(is_actively_grouping);
-        }
         if (is_actively_grouping) {
             foreach (Slot s in slot.get_group().get_full_slots()) {
                 s.get_unit().num_actions--;
@@ -402,7 +397,6 @@ public class Unit {
 
     public void set_slot(Slot s) {
         slot = s;
-        placed = slot != null;
     }
 
     public bool is_actively_grouping { 
@@ -418,5 +412,5 @@ public class Unit {
     public bool is_enemy { get { return type == ENEMY; } }
     public bool is_playerunit { get { return type == PLAYER; } }
     public bool is_dead { get { return dead; } }
-    public bool is_placed { get { return placed; } }
+    public bool is_placed { get { return slot != null; } }
 }

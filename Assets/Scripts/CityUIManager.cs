@@ -445,8 +445,8 @@ public class CityUIManager : MonoBehaviour {
             unlock_unit_purchase(PlayerUnit.SEEKER);
         }
         if (ID == RUNE_PORT) {
-            c.tile_mapper.get_city_cell().has_rune_gate = true;
-            c.tile_mapper.get_city_cell().restored_rune_gate = true;
+            c.map.get_city_cell().has_rune_gate = true;
+            c.map.get_city_cell().restored_rune_gate = true;
         }
         else if (ID == SHARED_WISDOM) {
             c.astra.base_unity += 10;

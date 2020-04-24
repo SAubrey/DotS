@@ -1,4 +1,5 @@
-﻿
+﻿using UnityEngine;
+
 public class Enemy : Unit {
     public const int COMMON = 0;
     public const int UNCOMMON = 1;
@@ -100,7 +101,7 @@ public class Enemy : Unit {
     }
 
     public override int take_damage(int dmg) {
-        health -= dmg;
+        health = Mathf.Max(0, health - dmg);
         slot.update_healthbar();
 
         if (health <= 0) {

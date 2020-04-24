@@ -132,7 +132,7 @@ public class MapUI : MonoBehaviour {
     }
 
     public void toggle_city_panel() {
-        if (c.tile_mapper.is_at_city(c.get_disc())) {
+        if (c.map.is_at_city(c.get_disc())) {
             c.city_ui.toggle_city_panel();
         } else {
             city_panel_active = !city_panel_active;

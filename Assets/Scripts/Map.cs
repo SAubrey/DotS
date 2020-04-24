@@ -2,10 +2,9 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
-using System;
 using UnityEngine.EventSystems;
 
-public class TileMapper : MonoBehaviour, ISaveLoad {
+public class Map : MonoBehaviour, ISaveLoad {
     public const int PLAINS_1 = 0;
     public const int FOREST_1 = 1;
     public const int RUINS_1 = 2;
@@ -67,7 +66,7 @@ public class TileMapper : MonoBehaviour, ISaveLoad {
         {STAR_1, 4},
         {TITRUM_1, 2},
     };
-    private Dictionary<int, int> t2_bag_count = new Dictionary<int, int>() {
+    private Dictionary<int, int> t2_bag_count = new Dictionary<int, int>() { // 96
         {PLAINS_2, 14},
         {FOREST_2, 14},
         {RUINS_2, 12},
@@ -81,8 +80,19 @@ public class TileMapper : MonoBehaviour, ISaveLoad {
         {MOUNTAIN_2, 14},
         {RUNE_GATE, 2},
     };  
-    private Dictionary<int, int> t3_bag_count = new Dictionary<int, int>() {
-        {PLAINS_2, 212},
+    private Dictionary<int, int> t3_bag_count = new Dictionary<int, int>() { // 212
+        {PLAINS_2, 38},
+        {FOREST_2, 38},
+        {RUINS_2, 24},
+        {CLIFF_2, 4},
+        {CAVE_2, 12},
+        {STAR_2, 14},
+        {TITRUM_2, 16},
+        {MIRE, 20},
+        {SETTLEMENT, 4},
+        {LUSH_LAND_2, 10},
+        {MOUNTAIN_2, 28},
+        {RUNE_GATE, 4},
     };
     
     public Dictionary<Pos, MapCell> map = new Dictionary<Pos, MapCell>();
@@ -217,7 +227,7 @@ public class TileMapper : MonoBehaviour, ISaveLoad {
         }
         
         // 
-        if ((cell.ID == MapCell.CAVE_ID || cell.ID == MapCell.RUINS_ID) 
+        if ((cell.biome_ID == MapCell.CAVE_ID || cell.biome_ID == MapCell.RUINS_ID) 
                 && !cell.travelcard_complete) {
             c.map_ui.set_active_ask_to_enterP(true);
             return false;        
@@ -261,7 +271,7 @@ public class TileMapper : MonoBehaviour, ISaveLoad {
         }
     }
 
-    public void create_tile(int tier, int x, int y) {
+    public void create_cell(int tier, int x, int y) {
         Pos pos = new Pos(x, y);
         Tile tile = grab_tile(tier);
         map.Add(pos, MapCell.create_cell(
@@ -273,6 +283,10 @@ public class TileMapper : MonoBehaviour, ISaveLoad {
         if (x >= 0 && y >= 0) 
             return tm.GetTile(new Vector3Int((int)x, (int)y, 0));
         return null;  
+    }
+
+    public MapCell get_current_cell(Discipline disc=null) {
+        return disc == null ? get_cell(c.get_disc().pos) : get_cell(disc.pos);
     }
 
     public void place_tile(Tile tile, int x, int y) {
@@ -288,7 +302,7 @@ public class TileMapper : MonoBehaviour, ISaveLoad {
     }
 
     public GameData save() {
-        return new MapData(this, Controller.TILE_MAPPER);
+        return new MapData(this, Controller.MAP);
     }
  
     public void load(GameData generic) {
@@ -343,7 +357,7 @@ public class TileMapper : MonoBehaviour, ISaveLoad {
                     map.Add(pos, mc);
                     place_tile(city, x, y);
                 } else {
-                    create_tile(1, x, y);
+                    create_cell(1, x, y);
                 }
             } 
         }
@@ -355,16 +369,16 @@ public class TileMapper : MonoBehaviour, ISaveLoad {
         // Horizontal bars
         for (int x = 5; x < 16; x++) {
             for (int y = 5; y < 8; y++) {
-                create_tile(2, x, y);
-                create_tile(2, x, y + 8);
+                create_cell(2, x, y);
+                create_cell(2, x, y + 8);
             }
         }
 
         // Vertical bars
         for (int x = 5; x < 8; x++) {
             for (int y = 8; y < 13; y++) {
-                create_tile(2, x, y);
-                create_tile(2, x + 8, y);
+                create_cell(2, x, y);
+                create_cell(2, x + 8, y);
             }
         }
     }
@@ -374,29 +388,29 @@ public class TileMapper : MonoBehaviour, ISaveLoad {
         // Horizontal protrusion
         for (int x = 6; x < 15; x++) {
             for (int y = 0; y < 3; y++) {
-                create_tile(3, x, y);
-                create_tile(3, x, y + 18);
+                create_cell(3, x, y);
+                create_cell(3, x, y + 18);
             }
         }
         // Vertical protrusion
         for (int x = 0; x < 3; x++) {
             for (int y = 6; y < 15; y++) {
-                create_tile(3, x, y);
-                create_tile(3, x + 18, y);
+                create_cell(3, x, y);
+                create_cell(3, x + 18, y);
             }
         }
         // Horizontal bar
         for (int x = 3; x < 18; x++) {
             for (int y = 3; y < 5; y++) {
-                create_tile(3, x, y);
-                create_tile(3, x, y + 13);
+                create_cell(3, x, y);
+                create_cell(3, x, y + 13);
             }
         }
         // Vertical bar
         for (int x = 3; x < 5; x++) {
             for (int y = 5; y < 16; y++) {
-                create_tile(3, x, y);
-                create_tile(3, x + 13, y);
+                create_cell(3, x, y);
+                create_cell(3, x + 13, y);
             }
         }
     }

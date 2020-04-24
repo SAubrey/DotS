@@ -60,7 +60,7 @@ public class PlayerUnit : Unit {
        than half its resilience rounded down. Returns true if dead.
        Returns 1 if dead, 2 if injured, 0 if no effect. 
        ! Do not remove a slot's unit directly! Cleanup happens after the
-       battle sequence in Battalion
+       battle sequence in Battalion.
        final damage = (attack power + flank damage) - defense
        */ 
     public override int take_damage(int final_dmg) {
@@ -73,6 +73,7 @@ public class PlayerUnit : Unit {
             injured = true;
             slot.show_injured();
             slot.c.get_active_bat().add_injured_unit(this);
+            slot.c.bat_loader.load_text(slot.c.get_active_bat(), ID);
         } else if (state == DEAD) {
             dead = true;
             slot.show_dead(); 
@@ -121,16 +122,15 @@ public class PlayerUnit : Unit {
 
     // Passed damage should have already accounted for possible defense reduction.
     public override float calc_hp_remaining(int dmg) {
-        float damaged_hp = health - dmg;
-        return damaged_hp;
+        return Mathf.Max(health - dmg, 0);
     }
 
     // Passed damage should have already accounted for possible defense reduction.
     public override int get_post_dmg_state(int dmg_after_def) {
-        float damaged_resilience = health - dmg_after_def;
+        float damaged_resilience = calc_hp_remaining(dmg_after_def);
         if (damaged_resilience <= 0) {
             return DEAD;
-        } else if (damaged_resilience < (health / 2f)) {
+        } else if (damaged_resilience < ((float)health / 2f)) {
             return INJURED;
         }
         return ALIVE;
@@ -150,7 +150,7 @@ public class PlayerUnit : Unit {
                     continue;
 
                 foreach (Slot s in g.slots) {
-                    if (!s.has_punit)
+                    if (!s.has_punit) // Skip empty or enemies.
                         continue;
                         
                     if (s.get_punit().boosted) {
@@ -219,6 +219,8 @@ public class Inspirator : PlayerUnit {
     }
 
     public override bool set_attribute_active(bool state) {
+        if (attribute_active == state)
+            return false; // prevent double application/depplication
         bool active = base.set_attribute_active(state);
         if (active) {
             apply_surrounding_effect(HEALTH_BOOST, 1, get_forward3x1_coords());
@@ -321,6 +323,8 @@ public class Drummer : PlayerUnit {
     }
 
     public override bool set_attribute_active(bool state) {
+        if (attribute_active == state)
+            return false; // prevent double application/depplication
         bool active = base.set_attribute_active(state);
         if (active) {
             apply_surrounding_effect(DEFENSE_BOOST, 1, get_forward3x1_coords());

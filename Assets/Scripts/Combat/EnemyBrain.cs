@@ -125,35 +125,4 @@ public class EnemyBrain : MonoBehaviour{
         int dy = Mathf.Abs(start.row - end.row);
         return dx + dy;
     }
-
-    public void post_battle() {
-        clear_dead_enemies();
-        foreach (Slot s in c.formation.get_all_full_slots(Unit.ENEMY)) {
-            s.update_UI();
-        }
-    }
-
-    public void post_phase() {
-        List<Slot> enemies = f.get_all_full_slots(Unit.ENEMY);
-        foreach (Slot s in enemies) {
-            s.get_unit().post_phase();
-        }
-    }
-
-    private void clear_dead_enemies() {
-        List<Slot> enemy_slots = f.get_all_full_slots(Unit.ENEMY);
-        foreach (Slot s in enemy_slots) {
-            if (s.get_enemy().is_dead) {
-                s.empty(false);
-            }
-        }
-        validate_all_enemies();
-    }
-
-    private void validate_all_enemies() {
-        List<Group> enemy_groups = f.get_all_nonempty_groups(Unit.ENEMY);
-        foreach (Group g in enemy_groups) {
-            g.validate_unit_order();
-        }
-    }
 }

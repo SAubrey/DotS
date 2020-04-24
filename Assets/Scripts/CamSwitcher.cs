@@ -35,7 +35,7 @@ public class CamSwitcher : MonoBehaviour {
 
     void Update() {
         if (Input.GetKeyDown(KeyCode.C)) {
-            cycle();
+            //cycle();
         } else if (Input.GetKeyDown(KeyCode.Escape)) {
             toggle_paused();
         }

@@ -125,10 +125,6 @@ public class Formation : MonoBehaviour {
                 }
             }
         }
-        if (d.Count > 0) {
-            MapCell mc = c.tile_mapper.get_cell(c.get_disc().pos);
-            mc.has_enemies = true;
-        }
     }
 
     public void load_board(int discipline) {

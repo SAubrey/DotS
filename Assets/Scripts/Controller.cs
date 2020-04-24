@@ -8,7 +8,7 @@ public class Controller : MonoBehaviour, ISaveLoad {
     public const int MARTIAL = 2;
     public const int CITY = 4;
 
-    public const string TILE_MAPPER = "TileMapper";
+    public const string MAP = "Map";
     public const string CONTROLLER = "Controller";
     public const string TRAVEL_DECK = "TravelDeck";
 
@@ -26,7 +26,7 @@ public class Controller : MonoBehaviour, ISaveLoad {
     public CamSwitcher cam_switcher;
     public BatLoader bat_loader;
     public TravelDeck travel_deck;
-    public TileMapper tile_mapper;
+    public Map map;
     public EnemyLoader enemy_loader;
     public LineDrawer line_drawer;
     public EnemyBrain enemy_brain;
@@ -80,7 +80,7 @@ public class Controller : MonoBehaviour, ISaveLoad {
         cam_switcher = GameObject.Find("CamSwitcher").GetComponent<CamSwitcher>();
         bat_loader = GameObject.Find("BatLoader").GetComponent<BatLoader>();
         travel_deck = GameObject.Find(TRAVEL_DECK).GetComponent<TravelDeck>();
-        tile_mapper = GameObject.Find(TILE_MAPPER).GetComponent<TileMapper>();
+        map = GameObject.Find(MAP).GetComponent<Map>();
         enemy_loader = GameObject.Find("EnemyLoader").GetComponent<EnemyLoader>();
         map_ui = GameObject.Find("MapUI").GetComponent<MapUI>();
         unit_panel_man = GameObject.Find("UnitPanelManager").GetComponent<UnitPanelManager>();
@@ -99,7 +99,7 @@ public class Controller : MonoBehaviour, ISaveLoad {
 
     public void init(bool from_save) {
         game_has_begun = true;
-        tile_mapper.init(from_save);
+        map.init(from_save);
         travel_deck.init(from_save);
 
         // Clear fields not overwritten by possible load.
@@ -116,7 +116,7 @@ public class Controller : MonoBehaviour, ISaveLoad {
         
         save_warningP.SetActive(false);
         List<GameData> serializables = new List<GameData>() {
-            { tile_mapper.save() },
+            { map.save() },
             { save() },
             { astra.save() },
             { martial.save() },
@@ -135,7 +135,7 @@ public class Controller : MonoBehaviour, ISaveLoad {
         if (cdata == null)
             return;
 
-        tile_mapper.load(FileIO.load_game(TILE_MAPPER));
+        map.load(FileIO.load_game(MAP));
         astra.load(FileIO.load_game("astra"));
         martial.load(FileIO.load_game("martial"));
         endura.load(FileIO.load_game("endura"));

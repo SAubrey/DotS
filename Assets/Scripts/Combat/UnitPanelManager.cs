@@ -10,6 +10,7 @@ public class UnitPanelManager : MonoBehaviour {
     }
 
     public void update(Slot slot) {
+        Debug.Log("updating");
         if (slot.has_punit) {
             player_panel.update_panel(slot);
         } else if (slot.has_enemy) {

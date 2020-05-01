@@ -144,7 +144,7 @@ public class Formation : MonoBehaviour {
                 if (group.is_empty)
                     continue;
                 //if (group.get(0).get_unit().out_of_actions) {
-                    group.rotate_units();
+                    //group.rotate_units();
                 //}
             }
         }

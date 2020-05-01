@@ -21,7 +21,7 @@ public class Slot : MonoBehaviour {
     public Slider healthbar;
     public Canvas info_canv;
     public Image healthbar_bg, healthbar_fill;
-    public UnityEngine.Experimental.Rendering.LWRP.Light2D light2d;
+    public UnityEngine.Experimental.Rendering.Universal.Light2D light2d;
     public Sprite range_icon, melee_icon;
     private int healthbar_inc_width = 15;
 
@@ -172,7 +172,9 @@ public class Slot : MonoBehaviour {
         update_attack();
         update_defense();
         update_num_actions(get_unit().num_actions);
-        c.unit_panel_man.update_text(this);
+        if (c.unit_panel_man.player_panel.slot == this) {
+            c.unit_panel_man.update_text(this); 
+        }
     }
 
     public void update_healthbar() {

@@ -183,7 +183,7 @@ public class Unit {
 
         s.get_unit().num_actions--;
         num_actions--;
-        Unit u = s.empty();
+        Unit u = s.empty(false); 
         slot.fill(u);
         s.fill(this);
         return true;
@@ -224,6 +224,19 @@ public class Unit {
         }
     }
 
+    // Called at the end of a battle phase.
+    public void post_phase() {
+        num_actions = max_num_actions;
+        has_acted_in_stage = false;
+        attack_set = false;
+        
+        set_attribute_active(false);
+        //remove_boost();
+        if (slot != null) { // Not all units are placed.
+            slot.update_UI();
+        }
+    }
+
     public bool can_attack() {
         return attack_dmg > 0 && !out_of_actions;
     }
@@ -244,19 +257,6 @@ public class Unit {
         int dx = Mathf.Abs(x - x1);
         int dy = Mathf.Abs(y - y1);
         return dx <= range && dy <= range;
-    }
-
-    // Called at the end of a battle phase.
-    public void post_phase() {
-        num_actions = max_num_actions;
-        has_acted_in_stage = false;
-        attack_set = false;
-        
-        set_attribute_active(false);
-        remove_boost();
-        if (slot != null) { // Not all units are placed.
-            slot.update_UI();
-        }
     }
 
     public int get_boosted_max_health( ) {

@@ -153,7 +153,6 @@ public class MapCell {
         return enemies;
     }
 
-    private bool _has_enemies = false;
     public bool has_enemies { 
         get { return (get_enemies().Count > 0); } 
     }

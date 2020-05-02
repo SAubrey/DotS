@@ -15,7 +15,7 @@ public class CamSwitcher : MonoBehaviour {
     public Camera mapCam;
     public GameObject map_canvas;
     public GameObject mapUI_canvas;
-    public SoundManager soundManager;
+    public SoundManager sound_manager;
 
     public GameObject pause_panel, battle_pause_panel;
     
@@ -28,7 +28,7 @@ public class CamSwitcher : MonoBehaviour {
     
     void Start() {
         c = GameObject.Find("Controller").GetComponent<Controller>();
-        soundManager = GameObject.Find("SoundManager").GetComponent<SoundManager>();
+        sound_manager = GameObject.Find("SoundManager").GetComponent<SoundManager>();
         bat_loader = c.bat_loader;
         pause_panel.SetActive(false);
         battle_pause_panel.SetActive(false);
@@ -124,7 +124,7 @@ public class CamSwitcher : MonoBehaviour {
         if (active) { // If not turning this screen off.
             previous_cam = current_cam;
             current_cam = screen;
-            soundManager.activate_screen(screen);
+            sound_manager.background_SFX_player.activate_screen(screen);
         }
     }
 }

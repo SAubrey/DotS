@@ -32,6 +32,7 @@ public class Controller : MonoBehaviour, ISaveLoad {
     public EnemyBrain enemy_brain;
     public CityUIManager city_ui;
     public TravelCardManager travel_card_manager;
+    public SoundManager sound_manager;
 
     public Button loadB, saveB, resumeB;
     public GameObject save_warningP, new_game_warningP, load_warningP;
@@ -88,6 +89,7 @@ public class Controller : MonoBehaviour, ISaveLoad {
         enemy_brain = GameObject.Find("EnemyBrain").GetComponent<EnemyBrain>();
         travel_card_manager = GameObject.Find("TravelCardPanel").GetComponent<TravelCardManager>();
         city_ui = GameObject.Find("CityUIManager").GetComponent<CityUIManager>();
+        sound_manager = GameObject.Find("SoundManager").GetComponent<SoundManager>();
     }
 
     void Start() {

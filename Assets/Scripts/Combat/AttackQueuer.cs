@@ -81,23 +81,25 @@ public class AttackQueuer : MonoBehaviour {
             sum_dmg += a.get_raw_dmg();
             a.get_start_unit().attack();
         }
+
         Unit end_u = attacks[0].get_end_unit();
         int state = end_u.take_damage(end_u.calc_dmg_taken(sum_dmg));
-
         foreach (Attack a in attacks) {
             a.post_attack(state);
             line_drawer.get_line(a.get_start_unit().attack_id).begin_fade();
         }
         create_hitsplat(sum_dmg, state, attacks[0].get_end_slot());
+        c.sound_manager.impact_player.play_hit_from_damage(sum_dmg, state == Unit.DEAD); // Audio
     }
 
     private void attack(Attack att) {
         int dmg = att.calc_dmg_taken();
         int state = att.get_end_unit().get_post_dmg_state(dmg);
+        c.sound_manager.impact_player.play_hit_from_damage(dmg, state == Unit.DEAD); // Audio
         create_hitsplat(dmg, state, att.get_end_slot());
-        
         int attack_id = att.get_start_unit().attack_id;
         line_drawer.get_line(attack_id).begin_fade();
+
         att.attack();
     }
 

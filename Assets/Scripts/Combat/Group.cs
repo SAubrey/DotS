@@ -93,13 +93,11 @@ public class Group : MonoBehaviour {
     }
 
     public void rotate(int direction) {
-        transform.localEulerAngles = new Vector3(0, 0, direction);
-
-        foreach (Slot s in slots) {
-            s.face_text_to_cam();
-            s.rotate_unit_img_to_direction(direction);
-        }
         this.direction = direction;
+        transform.localEulerAngles = new Vector3(0, 0, direction);
+        foreach (Slot s in slots) {
+            s.update_UI_from_dir(get_dir());
+        }
     }
 
     public void rotate_towards_target(Group target) {

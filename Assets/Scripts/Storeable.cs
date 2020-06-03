@@ -105,7 +105,6 @@ public class Storeable : MonoBehaviour, ISaveLoad {
 
     public void change_var(string var, int val, bool show=false) {
         val = get_valid_change_amount(var, val);
-        Debug.Log(var);
 
         if (var == LIGHT)
             _light += val;

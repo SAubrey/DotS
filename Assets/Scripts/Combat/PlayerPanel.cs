@@ -19,6 +19,27 @@ public class PlayerPanel : UnitPanel {
         aq = c.attack_queuer;
     }
 
+    void Update() {
+        if (!Input.anyKeyDown)
+            return;
+        
+        // Unit actions requiring a selected unit.
+        if (Input.GetKeyDown(KeyCode.A)) {
+            if (attackB.interactable)
+                attack();
+        } else if (Input.GetKeyDown(KeyCode.D)) {
+            if (defB.interactable)
+                defend();
+        } else if (Input.GetKeyDown(KeyCode.R)) {
+            if (returnB.interactable)
+                c.selector.return_unit();
+        } else if (Input.GetKeyDown(KeyCode.S)) {
+            if (moveB.interactable)
+                move();
+        }
+        
+    }
+
     /* 
     Limit what a player can do with a unit based on game logic.
     */

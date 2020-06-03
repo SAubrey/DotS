@@ -22,17 +22,34 @@ public class BatLoader : MonoBehaviour {
         seeker_B, guardian_B, arbalest_B, skirmisher_B, paladin_B, mender_B, carter_B, dragoon_B,
         scout_B, drummer_B, shield_maiden_B, pikeman_B;
 
+
     // Drawn unit images.
     public Dictionary<int, Sprite> unit_images = new Dictionary<int, Sprite>();
     public Sprite warrior_I, spearman_I, archer_I, miner_I, inspirator_I, seeker_I,
         guardian_I, arbalest_I, skirmisher_I, paladin_I, mender_I, carter_I, dragoon_I,
         scout_I, drummer_I, shield_maiden_I, pikeman_I;
 
+
+    // Generic unit sprites as placeholders until art is finalized.
+    public Dictionary<int, Sprite> generic_punit_sprites = new Dictionary<int, Sprite>();
+    public Sprite punit_up, punit_down, punit_left, punit_right;
+    public Dictionary<int, Sprite> generic_enemy_sprites = new Dictionary<int, Sprite>();
+    public Sprite enemy_up, enemy_down, enemy_left, enemy_right;
+
     public bool selecting_for_heal = false;
     public PlayerUnit healing_unit;
     private int selected_unit_type = 0;
 
     void Awake() {
+        generic_punit_sprites.Add(Group.UP, punit_up);
+        generic_punit_sprites.Add(Group.DOWN, punit_down);
+        generic_punit_sprites.Add(Group.LEFT, punit_left);
+        generic_punit_sprites.Add(Group.RIGHT, punit_right);
+        generic_enemy_sprites.Add(Group.UP, enemy_up);
+        generic_enemy_sprites.Add(Group.DOWN, enemy_down);
+        generic_enemy_sprites.Add(Group.LEFT, enemy_left);
+        generic_enemy_sprites.Add(Group.RIGHT, enemy_right);
+
         texts.Add(PlayerUnit.WARRIOR, warrior_t);
         texts.Add(PlayerUnit.SPEARMAN, spearman_t);
         texts.Add(PlayerUnit.ARCHER, archer_t);

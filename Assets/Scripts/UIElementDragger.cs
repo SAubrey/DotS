@@ -3,13 +3,8 @@ using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 public class UIElementDragger : EventTrigger {
-
     private bool dragging;
-    private Camera cam;
 
-    void Start() {
-        cam = GameObject.Find("BattleCamera").GetComponent<Camera>();
-    }
     public void Update() {
         if (dragging) {
             Vector3 pos = (Input.mousePosition);

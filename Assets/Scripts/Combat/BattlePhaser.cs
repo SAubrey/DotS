@@ -76,13 +76,22 @@ public class BattlePhaser : MonoBehaviour {
             _stage = value;
             int phase_stage = stage;
 
-            if (phase_stage == PLACEMENT) placement();
-            else if (phase_stage == INTUITIVE) intuitive();
-            else if (phase_stage == RANGE) range();
-            else if (phase_stage == MOVEMENT1) movement1();
-            else if (phase_stage == COMBAT1) combat1();
-            else if (phase_stage == MOVEMENT2) movement2();
-            else if (phase_stage == COMBAT2) combat2();
+            if (phase_stage == PLACEMENT) {
+                placement();
+            } else if (phase_stage == INTUITIVE) {
+                intuitive();
+            }
+            else if (phase_stage == RANGE) { 
+                range();
+            }
+            else if (phase_stage == MOVEMENT1) {
+                range_stage = false;
+                movement();
+            } else if (phase_stage == COMBAT1) combat();
+            else if (phase_stage == MOVEMENT2) {
+                combat_stage = false;
+                movement();
+            } else if (phase_stage == COMBAT2) combat();
             else if (phase_stage == ASSESSMENT) assessment();
 
             c.get_active_bat().reset_all_stage_actions();
@@ -95,7 +104,6 @@ public class BattlePhaser : MonoBehaviour {
         set {
             _phase = value; 
             phaseT.text = "Phase " + phase;
-
             if (_phase > 3) {
                 post_phases();
             }
@@ -129,34 +137,18 @@ public class BattlePhaser : MonoBehaviour {
         enemy_brain.stage_range_attacks();
     }
 
-    private void movement1() {
-        range_stage = false;
+    private void movement() {
         battle(); // range attacks
 
         movement_stage = true;
     }
 
-    private void combat1() {
+    private void combat() {
         movement_stage = false;
         enemy_brain.move_units();
         enemy_brain.stage_attacks();
 
         combat_stage = true;
-    }
-
-    private void movement2() {
-        combat_stage = false;
-        battle(); // will clear attacks
-
-        movement_stage = true;
-    }
-
-    private void combat2() {
-        movement_stage = false;
-        enemy_brain.move_units();
-
-        combat_stage = true;
-        enemy_brain.stage_attacks();
     }
 
     private void assessment() {
@@ -216,6 +208,7 @@ public class BattlePhaser : MonoBehaviour {
         c.get_disc().change_var(Storeable.UNITY, -1, true);
         c.get_disc().set_travelcard(null);
         // Move unit back to previous space
+        c.get_active_bat().in_battle = false;
         c.map.move_player(c.get_disc().prev_pos);
         reset();
         tp.advance_stage();

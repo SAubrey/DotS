@@ -2,56 +2,59 @@ using System.Collections.Generic;
 using UnityEngine;
 
 
-public class EnemyBrain : MonoBehaviour{
+public class EnemyBrain : MonoBehaviour {
     private Controller c;
     private Formation f;
+
+    private List<Enemy> enemies {
+        get { return c.map.get_enemies_here(); }
+    }
 
     void Start() {
         c = GameObject.Find("Controller").GetComponent<Controller>();
         f = c.formation;
     }
 
-    public void attack(Slot enemy_slot) {
-        Slot target = enemy_slot.get_enemy().get_target();
-        if (target == null)
+    public void attack(Enemy enemy) {
+        Slot target = enemy.target;
+        if (!target)
             return;
-        enemy_slot.get_group().rotate_towards_target(target.get_group());
-        bool successful = enemy_slot.get_unit().attempt_set_up_attack(target);
-        if (successful) {
-        }
+        // Ignore enemies not in slot 0 of group.
+        if (enemy.get_slot().get_group().slots[0] != enemy.get_slot())
+            return;
+        enemy.get_slot().get_group().rotate_towards_target(target.get_group());
+        bool successful = enemy.attempt_set_up_attack(target);
     }
 
     public void move_units() {
         retarget();
-        List<Slot> enemies = f.get_highest_full_slots(Unit.ENEMY);
-        foreach (Slot slot in enemies) {
-            if (in_range(slot, slot.get_enemy().get_target()))
+        foreach (Enemy enemy in enemies) {
+            // Don't move if within attacking distance.
+            if (in_attack_range(enemy.get_slot(), enemy.target))
                 continue;
 
             Slot destination = 
-                find_closest_adjacent_move(slot, slot.get_enemy().get_target());
-            if (destination != null) {
-                slot.get_enemy().attempt_move(destination);
+                find_closest_adjacent_move(enemy.get_slot(), enemy.target);
+            if (destination) {
+                enemy.attempt_move(destination);
             }
         }
     }
 
     public void stage_attacks() {
         retarget();
-        List<Slot> enemies = f.get_highest_full_slots(Unit.ENEMY);
-        foreach (Slot slot in enemies) {
-            if (in_range(slot, slot.get_enemy().get_target()))
-                attack(slot);
+        foreach (Enemy enemy in enemies) {
+            if (in_attack_range(enemy.get_slot(), enemy.target))
+                attack(enemy);
         }
     }
 
     public void stage_range_attacks() {
         retarget();
-        List<Slot> enemies = f.get_highest_full_slots(Unit.ENEMY);
-        foreach (Slot slot in enemies) {
-            if (slot.get_enemy().is_range && 
-                    in_range(slot, slot.get_enemy().get_target())) {
-                attack(slot);
+        foreach (Enemy enemy in enemies) {
+            if (enemy.is_range && 
+                    in_attack_range(enemy.get_slot(), enemy.target)) {
+                attack(enemy);
             }
         }
     }
@@ -60,32 +63,30 @@ public class EnemyBrain : MonoBehaviour{
     Targets are maintained unless the target is off the board. 
     */
     public void retarget() {
-        // control for melee vs flying, 
-        List<Slot> enemies = f.get_highest_full_slots(Unit.ENEMY);
-        foreach (Slot slot in enemies) {
-            Slot target = slot.get_enemy().get_target();
-            if (target != null) {
-                if (target.has_punit)
-                    continue;
-            } else 
-                find_nearest_target(slot);
+        foreach (Enemy enemy in enemies) {
+            if (enemy.target == null)
+                find_nearest_target(enemy);
         }
     }
 
-    private void find_nearest_target(Slot enemy_slot) {
+    private void find_nearest_target(Enemy enemy) {
         List<Slot> punits = f.get_highest_full_slots(Unit.PLAYER);
+        Debug.Log("punit count: " + punits.Count);
+
         Slot nearest_punit_slot = null;
         int nearest_distance = 100;
         foreach (Slot slot in punits) {
-            if (!enemy_slot.get_enemy().can_target(slot)) continue;
+            if (!enemy.can_target(slot)) // Control for melee vs flying
+                continue;
             
-            int distance = calc_distance(enemy_slot, slot);
+            int distance = calc_distance(enemy.get_slot(), slot);
             if (distance < nearest_distance) {
                 nearest_distance = distance;
                 nearest_punit_slot = slot;
             }
         }
-        enemy_slot.get_enemy().set_target(nearest_punit_slot);
+        //Debug.Log("setting target: " + nearest_punit_slot.get_punit());
+        enemy.target = nearest_punit_slot;
     }
 
     public Slot find_closest_adjacent_move(Slot start, Slot end) {
@@ -114,7 +115,7 @@ public class EnemyBrain : MonoBehaviour{
         return calc_distance(start, end) == 1 ? true : false;
     }
 
-    private bool in_range(Slot start, Slot end) {
+    private bool in_attack_range(Slot start, Slot end) {
         int range = start.get_enemy().attack_range;
         //Debug.Log("range: " + range + " distance: " + calc_distance(start, end));
         return calc_distance(start, end) <= range ? true : false;

@@ -24,7 +24,7 @@ public class UnitPanel : MonoBehaviour {
 
     public void reposition(Slot slot) {
         Vector3 slot_pos = cam.WorldToScreenPoint(slot.transform.position);
-        panel.transform.position = new Vector3(slot_pos.x, slot_pos.y - 200f, 0);
+        panel.transform.position = new Vector3(slot_pos.x, slot_pos.y - 100f, 0);
     }
     
     public void set_name(string s) {

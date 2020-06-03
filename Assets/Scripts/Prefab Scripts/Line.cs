@@ -8,7 +8,7 @@ public class Line : MonoBehaviour {
     public bool fading = false;
     public LineRenderer lr;
     public int id;
-    public void init(GameObject parent, Unit u, int id, 
+    public virtual void init(Unit u, int id, 
                 Vector3 start_pos, Vector3 end_pos) {
         this.id = id;
         draw(u, start_pos, end_pos);

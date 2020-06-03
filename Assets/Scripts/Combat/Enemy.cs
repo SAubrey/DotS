@@ -39,7 +39,19 @@ public class Enemy : Unit {
     public int xp;
     public bool xp_taken = false;
 
-    private Slot target = null; // player unit to be moved towards and attacked
+    // player unit to be moved towards and attacked
+    private Slot _target;
+    public Slot target {
+        get {
+            if (_target != null) {
+                if (_target.has_punit) 
+                    return _target;
+            } else 
+                _target = null;
+            return null;
+        }
+        set { _target = value; }
+    } 
 
     protected void init(string name, int att, int hp, int xp, 
             int style, int atr1=0, int atr2=0, int atr3=0) {
@@ -82,10 +94,10 @@ public class Enemy : Unit {
         return e;
     }
 
-    public bool attempt_move(Slot end) {
-        if (!in_range(1, slot.col, slot.row, end.col, end.row))
+    public bool attempt_move(Slot dest) {
+        if (!can_move(dest))
             return false;
-        move(end);
+        move(dest);
         return true;
     }
 
@@ -95,9 +107,7 @@ public class Enemy : Unit {
 
         bool melee_vs_flying = combat_style == Unit.MELEE && 
                     punit.get_unit().has_attribute(Unit.FLYING);
-        if (melee_vs_flying) 
-            return false; 
-        return true;
+        return melee_vs_flying ? false : true;
     }
 
     public override int take_damage(int dmg) {
@@ -133,13 +143,6 @@ public class Enemy : Unit {
 
     public void clear_target() {
         target = null;
-    }
-
-    public void set_target(Slot punit) {
-        target = punit;
-    }
-    public Slot get_target() {
-        return target;
     }
 
     public int take_xp_from_death() {

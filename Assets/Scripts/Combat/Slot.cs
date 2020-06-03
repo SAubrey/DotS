@@ -25,6 +25,8 @@ public class Slot : MonoBehaviour {
     public Sprite range_icon, melee_icon;
     private int healthbar_inc_width = 15;
 
+    public Color punit_sprite_color, enemy_sprite_color;
+
     public Text attfgT, attbgT;
     public Image attfgI, attbgI;
     public Text deffgT, defbgT;
@@ -69,7 +71,7 @@ public class Slot : MonoBehaviour {
         set_unit(u);
         init_UI();
         set_nameT(unit.get_name());
-        set_sprite(u.get_ID());
+        update_UI_from_dir(group.get_dir());
         set_active_UI(true);
         if (u.is_playerunit)
             toggle_light(true);
@@ -84,7 +86,7 @@ public class Slot : MonoBehaviour {
             unit = null;
         }
 
-        set_sprite(PlayerUnit.EMPTY);
+        update_UI_from_dir(group.get_dir());
         set_active_UI(false);
         set_nameT("");
         show_selection(false);
@@ -114,27 +116,6 @@ public class Slot : MonoBehaviour {
         return null;
     }
 
-    // Update slot button image and slot unit image.
-    private void set_sprite(int image_ID) { 
-        if (has_punit) {
-            //img.sprite = bl.images[image_ID]; // tile img
-            img.sprite = bl.white_fade_img;
-            if (bl.unit_images.ContainsKey(image_ID)) {
-                if (bl.unit_images[image_ID] != null) {
-                    unit_img.color = Color.white;
-                    unit_img.sprite = bl.unit_images[image_ID];
-                }
-            }
-        } else if (has_enemy) {
-            img.sprite = bl.dark_fade_img;
-            unit_img.color = TRANSPARENT;
-            //img.sprite = c.enemy_loader.images[image_ID]; // tile img
-        } else {
-            img.sprite = bl.empty; // empty
-            unit_img.color = TRANSPARENT;
-        }
-    }
-
     public bool disabled {
         get { return _disabled; }
         set { 
@@ -145,7 +126,7 @@ public class Slot : MonoBehaviour {
     }
 
 
-    // ---UI---
+    // ---GRAPHICAL---
     public void init_UI() {
         // Change attack icon based on attack type.
         if (get_unit().is_range) {
@@ -326,23 +307,52 @@ public class Slot : MonoBehaviour {
         }
     }
 
+    // Update slot button image and slot unit image.
+    public void update_UI_from_dir(int dir) { 
+        if (has_punit) {
+            //img.sprite = bl.white_fade_img; // slot outline
+            unit_img.color = punit_sprite_color; // Make visible
+            unit_img.sprite = bl.generic_punit_sprites[group.get_dir()];
+
+            /*
+            if (bl.unit_images.ContainsKey(image_ID)) {
+                if (bl.unit_images[image_ID] != null) {
+                    unit_img.color = Color.white;
+                    unit_img.sprite = bl.unit_images[image_ID]; // unit.get_ID();
+                }
+            }*/
+        } else if (has_enemy) {
+            unit_img.color = enemy_sprite_color;
+            unit_img.sprite = c.bat_loader.generic_enemy_sprites[group.get_dir()];
+            //img.sprite = bl.dark_fade_img;
+        } else {
+            //img.sprite = bl.empty; // empty
+            unit_img.color = TRANSPARENT;
+        }
+        rotate_unit_img_to_direction(dir); 
+        face_text_to_cam();
+    }
+
+    public void rotate_unit_img_to_direction(int direction) {
+        unit_img.transform.LookAt(cam.transform);
+        //unit_img.transform.forward *= -1;
+         // Used if only using forward/back images to mirror them for right/left.
+        if (direction == 0 || direction == 180) {
+            unit_img.transform.rotation = Quaternion.AngleAxis(0, Vector3.up);
+        } else 
+            unit_img.transform.rotation = Quaternion.AngleAxis(180, Vector3.up);
+        
+    }
+
     public void face_text_to_cam() {
         info_canv.transform.LookAt(cam.transform); 
         info_canv.transform.forward *= -1; 
     }
 
-    public void rotate_unit_img_to_direction(int direction) {
-        unit_img.transform.LookAt(cam.transform);
-        if (direction == 0 || direction == 180) {
-            unit_img.transform.rotation = Quaternion.AngleAxis(0, Vector3.up);
-        } else 
-            unit_img.transform.rotation = Quaternion.AngleAxis(180, Vector3.up);
-    }
-
     private void toggle_light(bool state) {
         light2d.enabled = state;
     }
-    // ---End UI--- 
+    // ---End GRAPHICAL--- 
     
     public bool is_type(int type) {
         return group.type == type;

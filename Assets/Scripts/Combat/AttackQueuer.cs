@@ -22,21 +22,14 @@ public class AttackQueuer : MonoBehaviour {
         line_drawer = c.line_drawer;
     }
 
-    public bool attempt_attack(Slot start, Slot end) {
+    public void add_attack(Slot start, Slot end) {
         Unit attacker = start.get_unit();
-        if (end.get_unit() == null)
-            return false;
-        if (start.get_unit().can_hit(end)) {
-            if (attacker.is_playerunit) {
-                get_player_queue().add_attack(start, end, attack_id, line_drawer);
-            } else {
-                get_enemy_queue().add_attack(start, end, attack_id, line_drawer);
-            }
-            attack_id++;
-            attacker.attack_set = true;
-            return true;
-        }
-        return false;
+        if (attacker.is_playerunit) 
+            get_player_queue().add_attack(start, end, attack_id, line_drawer);
+        else 
+            get_enemy_queue().add_attack(start, end, attack_id, line_drawer);
+        attack_id++;
+        attacker.attack_set = true;
     }
 
     /*

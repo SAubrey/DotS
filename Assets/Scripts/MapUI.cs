@@ -42,7 +42,7 @@ public class MapUI : MonoBehaviour {
     Controller c;
     public IDictionary<string, Text> disc_inv = new Dictionary<string, Text>();
     public Text map_discT, battle_discT, map_cellT, battle_cellT;
-    public Button next_stageB, rune_gateB, scoutB, mineB;
+    public Button next_stageB, mineB;
     public GameObject ask_to_enterP;
 
     void Awake() {
@@ -166,10 +166,6 @@ public class MapUI : MonoBehaviour {
         ask_to_enterP.SetActive(state);
     }
 
-    public void set_active_rune_gateB(bool state) {
-        rune_gateB.interactable = state;
-    }
-
     public void toggle_units_panel() {
         unitsP_active = !unitsP_active;
         unitsP.SetActive(unitsP_active);
@@ -183,19 +179,7 @@ public class MapUI : MonoBehaviour {
         mineB.interactable = false;
     }
 
-    public void disable_scoutB() {
-        scoutB.interactable = false;
-    }
-
-    public void enable_scoutB() {
-        scoutB.interactable = true;
-    }
-
     public void set_active_mineB(bool state) {
         mineB.interactable = state;
-    }
-
-    public void set_active_scoutB(bool state) {
-        scoutB.interactable = state;
     }
 }

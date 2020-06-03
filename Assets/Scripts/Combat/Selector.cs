@@ -11,7 +11,18 @@ public class Selector : MonoBehaviour {
     private BattlePhaser bp;
     private UnitPanelManager unit_panel_man;
     private PlayerPanel player_panel;
-    public bool selecting_target = false;
+    private bool _selecting_target;
+    public bool selecting_target {
+        get { return _selecting_target; }
+        set {
+            _selecting_target = value;
+            if (_selecting_target) {
+                c.line_drawer.preview_line.draw(selected_slot.transform.position);
+            } else {
+                c.line_drawer.preview_line.erase();
+            }
+        }
+    }
     public bool selecting_move = false;
     public Slot selected_slot;
 
@@ -35,20 +46,7 @@ public class Selector : MonoBehaviour {
         if (!Input.anyKeyDown)
             return;
 
-        // Unit actions requiring a selected unit.
-        if (Input.GetKeyDown(KeyCode.A)) {
-            if (player_panel.attackB.interactable)
-                player_panel.attack();
-        } else if (Input.GetKeyDown(KeyCode.D)) {
-            if (player_panel.defB.interactable)
-                player_panel.defend();
-        } else if (Input.GetKeyDown(KeyCode.R)) {
-            if (player_panel.returnB.interactable)
-                return_unit();
-        } else if (Input.GetKeyDown(KeyCode.S)) {
-            if (player_panel.moveB.interactable)
-                player_panel.move();
-        } else if (Input.GetKeyDown(KeyCode.X)) {
+        if (Input.GetKeyDown(KeyCode.X)) {
             unit_panel_man.close();
         }
     }
@@ -95,6 +93,7 @@ public class Selector : MonoBehaviour {
     private void attempt_action(Slot slot) {
         if (selecting_target) { // ---Attack---
             selecting_target = false;
+            c.unit_panel_man.player_panel.attB_pressed = false;
 
             // Range units can attack units not in the front slot.
             Slot highest_enemy_slot;
@@ -106,13 +105,10 @@ public class Selector : MonoBehaviour {
             if (highest_enemy_slot != null) {
                 bool successful_att = 
                     selected_slot.get_unit().attempt_set_up_attack(highest_enemy_slot);
-                if (successful_att)
-                    return;
             }
-            // Failed to attack.
-
         } else if (selecting_move) { // ---Move---
             selecting_move = false;
+            c.unit_panel_man.player_panel.moveB_pressed = false;
 
             // Units are either moved up automatically or can be swapped. 
             if (slot.is_empty) {

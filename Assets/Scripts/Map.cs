@@ -49,7 +49,9 @@ public class Map : MonoBehaviour, ISaveLoad {
     public Tile city;
     public Tile shadow;
     private System.Random rand;
-    private Controller c;
+    public Controller c;
+    public GameObject cell_UI_prefab;
+    public MapCellUI open_cell_UI_script;
 
     private static IDictionary<int, Tile> tiles = new Dictionary<int, Tile>();
     private static IDictionary<Tile, int> tile_to_tileID = new Dictionary<Tile, int>();
@@ -151,8 +153,18 @@ public class Map : MonoBehaviour, ISaveLoad {
     void Update() {
         if (cs.current_cam == CamSwitcher.MAP) {
             if (Input.GetMouseButtonDown(0)) {
-                if (!EventSystem.current.IsPointerOverGameObject()) 
+                
+                // Close the open cell window if clicking anywhere other than on the window.
+                // (The tilemap does not register as a game object)
+                GameObject obj = EventSystem.current.currentSelectedGameObject;
+                if (obj) {
+                    if (obj.tag != "Cell Window" && open_cell_UI_script)
+                        open_cell_UI_script.close();
+                } else {
+                    if (open_cell_UI_script)
+                        open_cell_UI_script.close();
                     handle_left_click();
+                }
             }
         }
     }
@@ -172,75 +184,68 @@ public class Map : MonoBehaviour, ISaveLoad {
         bags[2].Clear();
         bags[3].Clear();
         map.Clear();
+        if (open_cell_UI_script)
+            open_cell_UI_script.close();
+        open_cell_UI_script = null;
     }
 
     private void handle_left_click() {
         if (tp.moving) {
             Vector3 pos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+
             if (get_tile(pos.x, pos.y) == null)
                 return;
-            if (scouting) {
-                if (scout(pos)) {
-                    scouting = false;
-                    c.map_ui.set_active_scoutB(false);
-                    c.turn_phaser.advance_stage();
-                }
-            }
-            else if (move_player(pos)) {
-                tp.advance_stage(); // Movement stage to travel card
-            }
+
+            generate_cell_UI(get_cell(pos));
         }
     }
 
-    public bool move_player(Vector3 pos) {
-        if (get_tile(pos.x, pos.y) == null) 
-            return false;
-        
-        Discipline d = c.get_disc();
-        int x = (int)pos.x;
-        int y = (int)pos.y;
-        MapCell cell = map[new Pos(x, y)];
+    private void generate_cell_UI(MapCell cell) {
+        GameObject cell_UI = Instantiate(cell_UI_prefab);
+        MapCellUI cell_UI_script = cell_UI.GetComponentInChildren<MapCellUI>();
+        cell_UI_script.init(this, cell);
+        cell_UI.transform.SetParent(GameObject.Find("MapUICanvas").transform);
+        open_cell_UI_script = cell_UI_script;
+    }
 
-        // Failed to click on a rune gate (not-adjacent) after
-        // clicking on the runegate teleport button. 
-        if (waiting_for_second_gate && !cell.has_rune_gate) {
-            return false;
-        } else if (!check_adjacent(pos, d.pos)) {
-            return false;
-        }
+    public void move_player(Vector3 pos) {
+        MapCell cell = get_cell(pos);
         c.get_disc().pos = pos;
         c.map_ui.update_cell_text(cell.name);
-        
-        if (cell.discovered) {
-            if (cell.has_rune_gate) {
-                if (waiting_for_second_gate) {
-                    // Rune Gate button has been activated, move to
-                    // the rune gate that has just been clicked.
-                    waiting_for_second_gate = false;
-                    c.map_ui.set_active_rune_gateB(false);
-                } else {
-                    c.map_ui.set_active_rune_gateB(true);
-                }
-            }
-        } else { // Not discovered, draw tile
-            tm.SetTile(new Vector3Int(x, y, 0), cell.tile);
+
+        if (!cell.discovered) {
+            tm.SetTile(new Vector3Int((int)pos.x, (int)pos.y, 0), cell.tile);
         }
         
-        // 
         if ((cell.biome_ID == MapCell.CAVE_ID || cell.biome_ID == MapCell.RUINS_ID) 
                 && !cell.travelcard_complete) {
             c.map_ui.set_active_ask_to_enterP(true);
-            return false;        
+            return;        
         }
-        return true;
+        tp.advance_stage();
     }
 
-    private bool scout(Vector3 pos) {
-        if (get_tile(pos.x, pos.y) == null || !check_adjacent(pos, c.get_disc().pos)) 
-            return false;
+    public bool can_move(Vector3 destination) {
+        Vector3 current_pos = new Vector3(get_current_cell().pos.x, get_current_cell().pos.y, 0);
+        return check_adjacent(destination, current_pos);
+    }
+
+    public void scout(Vector3 pos) {
         MapCell cell = map[new Pos((int)pos.x, (int)pos.y)];
         tm.SetTile(new Vector3Int((int)pos.x, (int)pos.y, 0), cell.tile);
-        return true;
+        tp.advance_stage();
+    }
+
+    public bool can_scout(Vector3 pos) {
+        return get_tile(pos.x, pos.y) != null && check_adjacent(pos, c.get_disc().pos) && 
+            c.get_active_bat().get_unit(PlayerUnit.SCOUT) != null &&
+            get_current_cell() != get_cell(pos) && get_cell(pos) != get_city_cell();
+    }
+
+    public bool can_teleport(Vector3 pos) {
+        MapCell cell = get_cell(pos);
+        return cell.restored_rune_gate && get_current_cell().restored_rune_gate &&
+            get_current_cell() != cell && cell != get_city_cell();
     }
 
     public static bool check_adjacent(Vector3 pos1, Vector3 pos2) {
@@ -274,14 +279,16 @@ public class Map : MonoBehaviour, ISaveLoad {
     public void create_cell(int tier, int x, int y) {
         Pos pos = new Pos(x, y);
         Tile tile = grab_tile(tier);
-        map.Add(pos, MapCell.create_cell(
+        map.Add(pos, MapCell.create_cell(this,
             tier, tile_to_tileID[tile], tile, pos));
+        tm.SetTileFlags(new Vector3Int(y, x, 0), TileFlags.None);
+        tile.color = Color.white;
         place_tile(shadow, pos.x, pos.y);
     }
 
-    public TileBase get_tile(float x, float y) {
+    public Tile get_tile(float x, float y) {
         if (x >= 0 && y >= 0) 
-            return tm.GetTile(new Vector3Int((int)x, (int)y, 0));
+            return tm.GetTile<Tile>(new Vector3Int((int)x, (int)y, 0));
         return null;  
     }
 
@@ -319,7 +326,7 @@ public class Map : MonoBehaviour, ISaveLoad {
         // Recreate map.
         foreach (SMapCell mcs in data.cells) {
             Pos pos = new Pos(mcs.x, mcs.y);
-            MapCell cell = MapCell.create_cell(
+            MapCell cell = MapCell.create_cell(this,
                 mcs.tier, mcs.tile_type, tiles[mcs.tile_type], pos);
             cell.minerals = mcs.minerals;
             cell.star_crystals = mcs.star_crystals;
@@ -340,11 +347,15 @@ public class Map : MonoBehaviour, ISaveLoad {
     public List<Enemy> get_enemies(Vector3 pos) {
         return get_cell(pos).get_enemies();
     }
+
+    public List<Enemy> get_enemies_here() {
+        return get_cell(c.get_disc().pos).get_enemies();
+    }
     
     public void build_rune_gate(Pos pos) {
         MapCell mc = map[pos];
         mc.has_rune_gate = true;
-        c.map_ui.set_active_rune_gateB(true);
+        mc.restored_rune_gate = true;
     }
 
     void generate_t1(Tilemap tm) {
@@ -352,7 +363,7 @@ public class Map : MonoBehaviour, ISaveLoad {
             for (int y = 8; y < 13; y++) {
                 if (x == 10 && y == 10) {
                     Pos pos = new Pos(x, y);
-                    MapCell mc = MapCell.create_cell(1, CITY, city, pos);
+                    MapCell mc = MapCell.create_cell(this, 1, CITY, city, pos);
                     mc.name = "City";
                     map.Add(pos, mc);
                     place_tile(city, x, y);

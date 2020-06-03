@@ -31,7 +31,7 @@ public class MapCell {
     public const int SETTLEMENT_ID = 10;
     public const int RUNE_GATE_ID = 11;
 
-    public static MapCell create_cell(int tier, int tile_ID, Tile tile, Pos pos) {
+    public static MapCell create_cell(Map map, int tier, int tile_ID, Tile tile, Pos pos) {
         MapCell mc = null;
         string[] splits = tile.ToString().Split('_');
 
@@ -64,6 +64,7 @@ public class MapCell {
             mc = new MapCell(tier, tile, pos, 0);
         }
         mc.tile_ID = tile_ID;
+        mc.map = map;
         return mc;
     }
 
@@ -81,6 +82,7 @@ public class MapCell {
     public bool travelcard_complete = false;
     private TravelCard travelcard;
     private List<Enemy> enemies = new List<Enemy>();
+    public Map map;
     
 
     public MapCell(int tier, Tile tile, Pos pos, int biome_ID) {
@@ -88,6 +90,7 @@ public class MapCell {
         this.tier = tier;
         this.pos = pos;
         this.biome_ID = biome_ID;
+        //this.tile.color = Color.green;
     }
 
     public void post_battle() {
@@ -110,12 +113,26 @@ public class MapCell {
         }
         foreach (Enemy e in dead) 
             kill_enemy(e);
+
+        set_tile_color();
     }
  
-    public void kill_enemy(Enemy enemy) {
+    private void kill_enemy(Enemy enemy) {
         if (enemy.get_slot() != null)
             enemy.get_slot().empty(); // validate as you go?
         enemies.Remove(enemy);
+    }
+
+    private void set_tile_color() {
+        if (enemies.Count > 0) {
+            Map map = GameObject.Find("Controller").GetComponent<Controller>().map;
+            Vector3Int vec = new Vector3Int(pos.x, pos.y, 0);
+            map.tm.SetTileFlags(vec, TileFlags.None);
+            map.tm.SetColor(vec, Color.red);
+        } else {
+            Debug.Log("setting white");
+            tile.color = Color.white;
+        }
     }
 
     public void discover() {
@@ -132,33 +149,21 @@ public class MapCell {
     public void complete_travelcard() {
         travelcard = null;
         travelcard_complete = true;
-        clear_enemies(); // If enemies were stored to resume battle, clear them out.
-    }
-
-    public void save_enemies(List<Slot> enemy_slots) {
-        enemies.Clear();
-        foreach (Slot es in enemy_slots) {
-            enemies.Add(es.get_enemy());
-        }
-        Debug.Log("Saved " + enemies.Count + " enemies at " + pos.x + ", " + pos.y);
     }
 
     public void add_enemy(Enemy e) {
         if (e != null)
             enemies.Add(e);
+        set_tile_color();
     }
 
     public List<Enemy> get_enemies() {
-        Debug.Log("Retrieving " + enemies.Count + " enemies from " + pos.x + ", " + pos.y);
+        //Debug.Log("Retrieving " + enemies.Count + " enemies from " + pos.x + ", " + pos.y);
         return enemies;
     }
 
     public bool has_enemies { 
         get { return (get_enemies().Count > 0); } 
-    }
-
-    public void clear_enemies() {
-        enemies.Clear();
     }
 }
 

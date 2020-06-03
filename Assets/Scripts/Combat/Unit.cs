@@ -125,7 +125,7 @@ public class Unit {
     public virtual int get_defense() { return defense; }
     public virtual bool set_attribute_active(bool state) {
         attribute_active = state && can_activate_attribute();
-        Debug.Log("turning attr " + attribute_active);
+        //Debug.Log("turning attr " + attribute_active);
         if (is_placed)
             slot.update_UI();
         return attribute_active;
@@ -158,16 +158,14 @@ public class Unit {
     }
 
     public bool can_move(Slot dest) {
-        bool out_of_range = !in_range(slot.get_punit().movement_range, 
+        bool out_of_range = !in_range(movement_range, 
                 slot.col, slot.row,
                 dest.col, dest.row);
         bool opposite_unit = false;
         if (dest.has_unit)
             opposite_unit = dest.get_unit().type != type;
 
-        if (out_of_actions || has_acted_in_stage || opposite_unit || out_of_range)
-            return false;
-        return true;
+        return !(out_of_actions || has_acted_in_stage || opposite_unit || out_of_range);
     }
     
     protected void move(Slot end) {
@@ -189,28 +187,33 @@ public class Unit {
         return true;
     }
 
+    public bool attempt_set_up_attack(Slot target_slot) {
+        if (!target_slot)
+            return false;
+        if (!target_slot.has_unit)
+            return false;
+        if (!can_hit(target_slot))
+            return false;
+
+        slot.c.attack_queuer.add_attack(slot, target_slot);
+        slot.update_attack();
+        return true;
+    }
+
     // Check against game-rule limitations.
     public bool can_hit(Slot end) {
-        bool attacking_self = slot.get_unit().get_type() == end.get_unit().get_type();
+        bool attacking_self = type == end.get_unit().get_type();
         bool melee_vs_flying = slot.get_unit().combat_style == Unit.MELEE && 
                                 end.get_unit().has_attribute(Unit.FLYING);
        
         bool out_of_range = has_attribute(REACH) ? 
-            !in_range_of_reach(slot.get_unit().attack_range,
+            !in_range_of_reach(attack_range,
                      slot.col, slot.row, end.col, end.row) :
-            !in_range(slot.get_unit().attack_range,
+            !in_range(attack_range,
                      slot.col, slot.row, end.col, end.row);
 
-        return !(attacking_self || melee_vs_flying 
-                || out_of_range || out_of_actions);
-    }
-
-    public bool attempt_set_up_attack(Slot target_slot) {
-        bool successful = slot.c.attack_queuer.attempt_attack(slot, target_slot);
-        if (successful) {
-            slot.update_attack();
-        }
-        return successful;
+        return !attacking_self && !melee_vs_flying 
+                && !out_of_range && !out_of_actions;
     }
 
     public void attack() {

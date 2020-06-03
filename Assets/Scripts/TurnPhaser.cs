@@ -29,8 +29,6 @@ public class TurnPhaser : MonoBehaviour {
         map_ui = c.map_ui;
 
         map_ui.disable_mineB();
-        map_ui.disable_scoutB();
-        map_ui.set_active_rune_gateB(false);
         stage = MOVEMENT;
     }
 
@@ -64,7 +62,6 @@ public class TurnPhaser : MonoBehaviour {
             }
             else if (_stage > ACTION) {
                 advance_player();
-                stage = MOVEMENT;
             }
         }
     }
@@ -82,11 +79,9 @@ public class TurnPhaser : MonoBehaviour {
         tc = null;
         cell = c.map.get_cell(c.get_disc().pos);
         map_ui.set_active_next_stageB(false);
-        map_ui.set_active_rune_gateB(false);
         map_ui.set_active_ask_to_enterP(false);
         map_ui.set_active_game_lossP(false);
         map_ui.set_active_mineB(check_mineable(cell));
-        map_ui.set_active_scoutB(c.get_active_bat().get_unit(PlayerUnit.SCOUT) != null);
         map_ui.update_cell_text(cell.name);
         stage = MOVEMENT;
     }
@@ -180,8 +175,8 @@ public class TurnPhaser : MonoBehaviour {
     }
 
     private void begin_new_combat(TravelCard tc) {
-        Debug.Log("setting in_battle to " + c.get_active_bat().in_battle + 
-        "for " + c.active_disc_ID + " at " + cell.pos.x + ", " + cell.pos.y);
+        Debug.Log("setting in_battle to true from " + c.get_active_bat().in_battle + 
+        " for " + c.active_disc_ID + " at " + cell.pos.x + ", " + cell.pos.y);
         c.get_active_bat().in_battle = true; 
         enemy_loader.place_new_enemies(cell, tc.enemy_count);
         cs.set_active(CamSwitcher.BATTLE, true);

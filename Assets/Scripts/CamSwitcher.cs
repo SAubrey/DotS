@@ -118,6 +118,8 @@ public class CamSwitcher : MonoBehaviour {
                 set_active(MAP, false);
                 set_active(MENU, false);
                 bat_loader.load_text();
+            } else {
+                c.unit_panel_man.close();
             }
         }
 

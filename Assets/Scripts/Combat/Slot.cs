@@ -3,7 +3,7 @@ using UnityEngine.UI;
 using UnityEngine.EventSystems;
 
 
-public class Slot : MonoBehaviour {
+public class Slot : EventTrigger {
     private Unit unit;
     public Image img, unit_img;
     public Controller c;
@@ -13,7 +13,8 @@ public class Slot : MonoBehaviour {
 
     // --VISUAL-- 
     public Text namefg_T, namebg_T;
-    public static Color unselected_color;
+    public static Color selected_color = new Color(1, 1, 1, .5f);
+    public static Color unselected_color = new Color(1, 1, 1, .1f);
     public static Color dead, injured;
     private static Color TRANSPARENT = new Color(0, 0, 0, 0);
     private static Color healthbar_fill_color = new Color(1, 1, 1, .8f);
@@ -57,6 +58,10 @@ public class Slot : MonoBehaviour {
 
     void Start() {
         bl = c.bat_loader;
+    }
+
+    public override void OnPointerDown(PointerEventData eventData) {
+        Debug.Log("slot clicked");
     }
 
     public void click() {
@@ -126,7 +131,31 @@ public class Slot : MonoBehaviour {
     }
 
 
-    // ---GRAPHICAL---
+    // ----- GRAPHICAL -----
+    private bool showing_preview_damage = false;
+    public override void OnPointerEnter(PointerEventData eventData) {
+        if (c.selector.selecting_target && has_enemy && group.get_highest_enemy_slot() == this) {
+            showing_preview_damage = true;
+            show_preview_damage(true, c.selector.selected_slot.get_unit().get_attack_dmg());
+        }
+    }
+
+    public override void OnPointerExit(PointerEventData eventData) {
+        if (showing_preview_damage) {
+            showing_preview_damage = false;
+            show_preview_damage(false);
+        }
+    }
+
+    public void show_preview_damage(bool showing, int dmg=0) {
+        if (showing) {
+            update_healthbar(unit.calc_hp_remaining(dmg), dmg);
+        } else {
+            if (!unit.attack_set)
+                update_healthbar(get_unit().health);
+        }
+    }
+
     public void init_UI() {
         // Change attack icon based on attack type.
         if (get_unit().is_range) {
@@ -149,7 +178,7 @@ public class Slot : MonoBehaviour {
     // Updated when a boost is removed or applied,
     // or an attribute is activated or deactivated.
     public void update_UI() {
-        update_healthbar();
+        update_healthbar(get_unit().health);
         update_attack();
         update_defense();
         update_num_actions(get_unit().num_actions);
@@ -158,13 +187,19 @@ public class Slot : MonoBehaviour {
         }
     }
 
-    public void update_healthbar() {
-        float hp = get_unit().health; // This will already include the boost but not the bonus.
+    public void update_healthbar(float hp, float preview_damage=0) {
+        //float hp = get_unit().health; // This will already include the boost but not the bonus.
 
         healthbar.maxValue = get_unit().get_boosted_max_health();
-        healthbar.value = get_unit().health;
+        healthbar.value = hp;
         size_healthbar(healthbar.maxValue);
+        update_healthbar_color();
+        
+        hpfgT.text = build_health_string(hp, preview_damage);
+        hpbgT.text = hpfgT.text;
+    }
 
+    private void update_healthbar_color() {
         if (unit.is_playerunit) {
             if (healthbar.value < healthbar.maxValue / 2)
                 healthbar.fillRect.GetComponent<Image>().color = injured;
@@ -172,9 +207,6 @@ public class Slot : MonoBehaviour {
             float red = ((float)get_enemy().health / (float)get_enemy().max_health);
             healthbar.fillRect.GetComponent<Image>().color = new Color(1, red, red, 1);
         }
-        
-        hpfgT.text = build_health_string();
-        hpbgT.text = hpfgT.text;
     }
 
     private void size_healthbar(float max_hp) {
@@ -183,12 +215,15 @@ public class Slot : MonoBehaviour {
         t.sizeDelta = new Vector2(healthbar_inc_width * max_hp, t.sizeDelta.y);
     }
 
-    public string build_health_string() {
-        float hp = get_unit().health; // This will already include the boost but not the bonus.
+    public string build_health_string(float hp, float preview_damage=0) {
+        //float hp = get_unit().health; // This will already include the boost but not the bonus.
         float hp_boost = get_unit().get_stat_boost(Unit.HEALTH_BOOST)
             + get_unit().get_bonus_health();
 
-        string str = hp + "/" + get_unit().max_health.ToString();
+        string str = hp.ToString();
+        if (preview_damage > 0)
+            str += "-" + preview_damage.ToString();
+        str += "/" + get_unit().max_health.ToString();
         if (hp_boost > 0) 
             str += "+" + hp_boost.ToString();
         return str;
@@ -250,6 +285,7 @@ public class Slot : MonoBehaviour {
             healthbar_fill.color = TRANSPARENT;
         }
         healthbar.enabled = state;
+        healthbar_bg.enabled = state;
         hpfgT.enabled = state;
         hpbgT.enabled = state;
 
@@ -269,7 +305,7 @@ public class Slot : MonoBehaviour {
 
     public void show_selection(bool showing) {
         if (img != null) {
-            img.color = showing ? Color.gray : Color.white;
+            img.color = showing ? selected_color : unselected_color;
         }
     }
 
@@ -309,11 +345,13 @@ public class Slot : MonoBehaviour {
 
     // Update slot button image and slot unit image.
     public void update_UI_from_dir(int dir) { 
+        unit_img.color = Color.white;
         if (has_punit) {
             //img.sprite = bl.white_fade_img; // slot outline
-            unit_img.color = punit_sprite_color; // Make visible
+            //unit_img.color = punit_sprite_color; // Make visible
             unit_img.sprite = bl.generic_punit_sprites[group.get_dir()];
 
+            // To set unit images for specific units.
             /*
             if (bl.unit_images.ContainsKey(image_ID)) {
                 if (bl.unit_images[image_ID] != null) {
@@ -322,7 +360,7 @@ public class Slot : MonoBehaviour {
                 }
             }*/
         } else if (has_enemy) {
-            unit_img.color = enemy_sprite_color;
+            //unit_img.color = enemy_sprite_color;
             unit_img.sprite = c.bat_loader.generic_enemy_sprites[group.get_dir()];
             //img.sprite = bl.dark_fade_img;
         } else {

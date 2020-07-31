@@ -5,11 +5,8 @@ using UnityEngine;
 
 public class City : Storeable {
 
-    void Start() {
-        c = GameObject.Find("Controller").GetComponent<Controller>();
-        map_ui = c.map_ui;
-        city_ui = c.city_ui;
-        
+    protected override void Start() {
+        base.Start();
         _light = 8;
         ID = Controller.CITY;
     }

@@ -116,7 +116,6 @@ public class Selector : MonoBehaviour {
                 slot = highest_es;
                 // Prevent pointless movement within same group.
                 if (selected_slot.get_group() == highest_es.get_group()) {
-                    Debug.Log("same group, no move.");
                     return;
                 }
             }

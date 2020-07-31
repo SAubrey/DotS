@@ -22,8 +22,14 @@ public class EnemyBrain : MonoBehaviour {
         // Ignore enemies not in slot 0 of group.
         if (enemy.get_slot().get_group().slots[0] != enemy.get_slot())
             return;
+
         enemy.get_slot().get_group().rotate_towards_target(target.get_group());
+
         bool successful = enemy.attempt_set_up_attack(target);
+        if (successful) {
+            target.show_preview_damage(true, 
+                (int)target.get_unit().calc_hp_remaining(enemy.get_attack_dmg()));
+        }
     }
 
     public void move_units() {

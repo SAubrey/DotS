@@ -64,10 +64,9 @@ public class PlayerUnit : Unit {
        final damage = (attack power + flank damage) - defense
        */ 
     public override int take_damage(int final_dmg) {
-        //int dmg_after_def = calc_dmg_taken(raw_dmg);
         int state = get_post_dmg_state(final_dmg);
         health = (int)calc_hp_remaining(final_dmg);
-        slot.update_healthbar();
+        slot.update_healthbar(health);
 
         if (state == INJURED) {
             injured = true;
@@ -90,11 +89,11 @@ public class PlayerUnit : Unit {
     public bool attempt_move(Slot end) {
         if (!can_move(end))
             return false;
-        if (end.get_punit() != null) {
-            if (!end.get_punit().out_of_actions) {
-                return swap_places(end);
-            }
+        if (end.get_punit() != null && !end.get_punit().out_of_actions) {
+            return swap_places(end);
         } else {
+            if (attack_set)
+                slot.c.attack_queuer.get_player_queue().remove_attack(attack_id, slot.c.line_drawer);
             move(end);
         }
         return true;

@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 using UnityEngine.Tilemaps;
 using UnityEngine.EventSystems;
 
@@ -101,6 +102,8 @@ public class Map : MonoBehaviour, ISaveLoad {
     public bool waiting_for_second_gate { get; set; } = false;
     public bool scouting { get; set; } = false;
 
+    public GraphicRaycaster graphic_raycaster;
+
     void Start() {
         c = GameObject.Find("Controller").GetComponent<Controller>();
         tm = GameObject.Find("MapTilemap").GetComponent<Tilemap>();
@@ -149,21 +152,31 @@ public class Map : MonoBehaviour, ISaveLoad {
             new_game();
         }
     }
-
+    
     void Update() {
         if (cs.current_cam == CamSwitcher.MAP) {
             if (Input.GetMouseButtonDown(0)) {
-                
+                PointerEventData m_PointerEventData = new PointerEventData(EventSystem.current);
+                m_PointerEventData.position = Input.mousePosition;
+                List<RaycastResult> objects = new List<RaycastResult>();
+
+                graphic_raycaster.Raycast(m_PointerEventData, objects);
+                Debug.Log(objects.Count);
                 // Close the open cell window if clicking anywhere other than on the window.
                 // (The tilemap does not register as a game object)
-                GameObject obj = EventSystem.current.currentSelectedGameObject;
-                if (obj) {
-                    if (obj.tag != "Cell Window" && open_cell_UI_script)
-                        open_cell_UI_script.close();
-                } else {
+                bool hit_cell_window = false;
+                foreach (RaycastResult o in objects) {
+                    if (o.gameObject.tag == "Cell Window") {
+                        hit_cell_window = true;
+                        continue;
+                    }
+                }
+                Debug.Log(hit_cell_window);
+                if (!hit_cell_window) {
                     if (open_cell_UI_script)
                         open_cell_UI_script.close();
-                    handle_left_click();
+                    if (objects.Count <= 0)
+                        handle_left_click();
                 }
             }
         }
@@ -191,7 +204,7 @@ public class Map : MonoBehaviour, ISaveLoad {
 
     private void handle_left_click() {
         if (tp.moving) {
-            Vector3 pos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+            Vector3 pos = c.cam_switcher.mapCam.ScreenToWorldPoint(Input.mousePosition);
 
             if (get_tile(pos.x, pos.y) == null)
                 return;
@@ -201,14 +214,13 @@ public class Map : MonoBehaviour, ISaveLoad {
     }
 
     private void generate_cell_UI(MapCell cell) {
-        GameObject cell_UI = Instantiate(cell_UI_prefab);
+        GameObject cell_UI = Instantiate(cell_UI_prefab, GameObject.Find("MapUICanvas").transform);
         MapCellUI cell_UI_script = cell_UI.GetComponentInChildren<MapCellUI>();
         cell_UI_script.init(this, cell);
-        cell_UI.transform.SetParent(GameObject.Find("MapUICanvas").transform);
         open_cell_UI_script = cell_UI_script;
     }
 
-    public void move_player(Vector3 pos) {
+    public void move_player(Vector3 pos, bool advance_stage) {
         MapCell cell = get_cell(pos);
         c.get_disc().pos = pos;
         c.map_ui.update_cell_text(cell.name);
@@ -222,7 +234,8 @@ public class Map : MonoBehaviour, ISaveLoad {
             c.map_ui.set_active_ask_to_enterP(true);
             return;        
         }
-        tp.advance_stage();
+        if (advance_stage)
+            tp.advance_stage();
     }
 
     public bool can_move(Vector3 destination) {

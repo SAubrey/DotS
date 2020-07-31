@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
+
 public class MapCellUI : MonoBehaviour {
     public Text cell_typeT, enemy_countT, star_crystalsT;
     public Button scoutB, teleportB, moveB;
@@ -25,8 +26,9 @@ public class MapCellUI : MonoBehaviour {
         star_crystalsT.text = map.c.get_disc().get_var(Storeable.STAR_CRYSTALS).ToString();
 
         Vector3 pos = new Vector3(cell.pos.x, cell.pos.y, 0);
-        transform.position =
-            map.c.cam_switcher.mapCam.WorldToScreenPoint(new Vector3(pos.x + 0.5f, pos.y - 2.5f, 0));
+        //transform.position =
+            //map.c.cam_switcher.mapCam.WorldToScreenPoint(new Vector3(pos.x + 0.5f, pos.y - 2.5f, 0));
+            transform.position = new Vector3(pos.x + 0.5f, pos.y - 2.5f, 0); // camera mode, not overlay
 
         enable_button(moveB, map.can_move(pos));
         enable_button(scoutB, map.can_scout(pos));
@@ -44,7 +46,9 @@ public class MapCellUI : MonoBehaviour {
     }
 
     public void move() {
-        map.move_player(new Vector3(cell.pos.x + 0.5f, cell.pos.y + 0.5f, 0));
+        float randx = Random.Range(0.4f, 0.6f); // simulate human placement, prevent perfect overlap
+        float randy = Random.Range(0.4f, 0.6f);
+        map.move_player(new Vector3(cell.pos.x + randx, cell.pos.y + randy, 0), true);
         close();
     }
 
@@ -60,7 +64,7 @@ public class MapCellUI : MonoBehaviour {
     }
 
     public void teleport() {
-        map.move_player(new Vector3(cell.pos.x, cell.pos.y, 0));
+        map.move_player(new Vector3(cell.pos.x, cell.pos.y, 0), true);
         close();
     }
 

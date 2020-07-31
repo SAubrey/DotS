@@ -91,7 +91,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3b83ccc7f08cdd94d859687b25bf806b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  neutral_color: {r: 1, g: 1, b: 1, a: 0.39215687}
+  neutral_color: {r: 1, g: 1, b: 1, a: 0.19607843}
   player_color: {r: 0.3443396, g: 0.4147825, b: 1, a: 0.39215687}
   enemy_color: {r: 0.8509804, g: 0.5176471, b: 0.5437064, a: 0.39215687}
   periphery_color: {r: 0.5356733, g: 0.8490566, b: 0.5166429, a: 0.39215687}

@@ -14,6 +14,9 @@ public class Controller : MonoBehaviour, ISaveLoad {
 
     // UI CONSTANTS
     public static Color GREY = new Color(.78125f, .78125f, .78125f, 1);
+    public static Color ASTRA_COLOR = new Color(.7f, .7f, 1, 1);
+    public static Color ENDURA_COLOR = new Color(1, 1f, .7f, 1);
+    public static Color MARTIAL_COLOR = new Color(1, .7f, .7f, 1);
 
     // Inspector gameobjects
     public Formation formation;

@@ -20,16 +20,18 @@ public class Storeable : MonoBehaviour, ISaveLoad {
     public CityUIManager city_ui;
     public GameObject rising_info_prefab;
     public GameObject origin_of_rise_obj;
+    public GameObject map_UI_canvas;
     public int ID;
     public const int INITIAL_CAPACITY = 72;
     public int capacity = INITIAL_CAPACITY;
     public const int INITIAL_LIGHT_REFRESH_AMOUNT = 4;
     public int light_refresh_amount = INITIAL_LIGHT_REFRESH_AMOUNT;
 
-    void Start() {
+    protected virtual void Start() {
         c = GameObject.Find("Controller").GetComponent<Controller>();
         map_ui = c.map_ui;
         city_ui = c.city_ui;
+        map_UI_canvas = GameObject.Find("MapUICanvas");
     }
 
     public virtual GameData save() { return null; }
@@ -77,11 +79,17 @@ public class Storeable : MonoBehaviour, ISaveLoad {
     }
 
     public void create_rising_info(string type, int value) {
-        GameObject ri = GameObject.Instantiate(rising_info_prefab);
-        ri.transform.SetParent(origin_of_rise_obj.transform, false); 
+        GameObject ri = GameObject.Instantiate(rising_info_prefab, map_UI_canvas.transform);
         ri.transform.position = origin_of_rise_obj.transform.position;
+
         RisingInfo ri_script = ri.GetComponent<RisingInfo>();
-        ri_script.init(type, value);
+        if (name == "Astra")
+            ri_script.init(type, value, Controller.ASTRA_COLOR);
+        else if (name == "Martial")
+            ri_script.init(type, value, Controller.MARTIAL_COLOR);
+        else if (name == "Endura")
+            ri_script.init(type, value, Controller.ENDURA_COLOR);
+        ri_script.show();
     }
 
     // Use != 0 with result to use as boolean.

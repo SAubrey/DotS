@@ -133,7 +133,6 @@ public class TurnPhaser : MonoBehaviour {
             return;
         } 
 
-        //Debug.Log("no travelcard, no enemies in tile. Can mine?");
         check_action_buttons();
         c.map_ui.set_active_next_stageB(true);
         //if () check then enable build button
@@ -168,7 +167,6 @@ public class TurnPhaser : MonoBehaviour {
     }
 
     private void check_action_buttons() {
-        // rune gate operation happens in movement, and thus in TileMapper.
         if (check_mineable(cell)) {
             map_ui.enable_mineB();
         } 

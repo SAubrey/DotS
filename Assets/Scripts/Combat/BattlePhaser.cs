@@ -209,7 +209,7 @@ public class BattlePhaser : MonoBehaviour {
         c.get_disc().set_travelcard(null);
         // Move unit back to previous space
         c.get_active_bat().in_battle = false;
-        c.map.move_player(c.get_disc().prev_pos);
+        c.map.move_player(c.get_disc().prev_pos, false);
         reset();
         tp.advance_stage();
     }

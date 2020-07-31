@@ -9,11 +9,9 @@ public class Discipline : Storeable, ISaveLoad {
     public bool restart_battle_from_drawn_card = false;
     public int base_unity = 10;
 
-    void Start() {
-        c = GameObject.Find("Controller").GetComponent<Controller>();
+    protected override void Start() {
+        base.Start();
         bat = new Battalion(c, ID);
-        map_ui = c.map_ui;
-        city_ui = c.city_ui;
 
         _light = 4;
         _unity = base_unity;

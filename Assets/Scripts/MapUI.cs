@@ -4,13 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 
 public class MapUI : MonoBehaviour {
-
-    private Color astra_color = new Color(.8f, .8f, 1, 1); // Astra blue
-    private Color endura_color = new Vector4(1, 1f, .8f, 1); // Endura orange
-    private Color martial_color = new Color(1, .8f, .8f, 1); // Martial red
-    
     public Text turn_number_t;
-
 
     // ---City UI---
     public GameObject cityP;
@@ -119,13 +113,13 @@ public class MapUI : MonoBehaviour {
     private void highlight_discipline(int discipline) {
         if (discipline == Controller.ASTRA) {
             map_discT.text = "Astra";
-            map_discT.color = astra_color;
+            map_discT.color = Controller.ASTRA_COLOR;
         } else if (discipline == Controller.MARTIAL) {
             map_discT.text = "Martial";
-            map_discT.color = martial_color;
+            map_discT.color = Controller.MARTIAL_COLOR;
         } else if (discipline == Controller.ENDURA) {
             map_discT.text = "Endura";
-            map_discT.color = endura_color;
+            map_discT.color = Controller.ENDURA_COLOR;
         }
         battle_discT.text = map_discT.text;
         battle_discT.color = map_discT.color;

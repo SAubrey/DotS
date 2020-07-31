@@ -306,7 +306,7 @@ public class Event3_1 : Event {
     public Event3_1(Sprite sprite) : base(TravelDeck.EVENT3_1, sprite) {
     }
     public override void action(TravelCardManager tcm) {
-        tcm.c.map.move_player(tcm.c.get_disc().prev_pos);
+        tcm.c.map.move_player(tcm.c.get_disc().prev_pos, true);
     }
 }
 public class Event4_1 : Event {

@@ -165,6 +165,45 @@ public class MapCell {
     public bool has_enemies { 
         get { return (get_enemies().Count > 0); } 
     }
+
+    public bool requires_unlock {
+        get {
+            if (has_rune_gate && !restored_rune_gate) {
+                return true;
+            } else if (travelcard != null) {
+                if (travelcard.unlockable != null)
+                    return true;
+            }
+            return false;
+        }
+    }
+
+    public TravelCardUnlockable get_unlockable() {
+        return travelcard.unlockable;
+    }
+
+    public int get_unlock_cost() {
+        if (has_rune_gate) 
+            return 10;
+        else if (travelcard.unlockable != null)
+            return travelcard.unlockable.resource_cost;
+        return 0;
+    }
+
+    public string get_unlock_type() {
+        if (has_rune_gate)
+            return Storeable.STAR_CRYSTALS;
+        else    
+            return travelcard.unlockable.resource_type;
+    }
+
+    public bool has_travelcard {
+        get { return travelcard != null; }
+    }
+
+    public Dictionary<string, int> get_travelcard_consequence() {
+        return travelcard.consequence;
+    }
 }
 
 public class Plains : MapCell {
@@ -240,5 +279,6 @@ public class Settlement : MapCell {
 public class RuneGate : MapCell {
     public RuneGate(int tier, Tile tile, Pos pos) : base(tier, tile, pos, RUNE_GATE_ID) {
         name = RUNE_GATE;
+        has_rune_gate = true;
     }
 }

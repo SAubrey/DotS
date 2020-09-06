@@ -13,14 +13,13 @@ public class TravelCard {
     public const int LOCATION = 6;
     public const int RUINS = 7;
     public const int QUEST = 8;
+    
     // ---RULE CODES---
-
     public const int ENTER_COMBAT = -1;
     public const int CHARGE = 0; // bonus attack phase before p1.
     public const int AMBUSH = 1; // skip init range stage
     public const int OFF_GUARD = 2; // att3, 2 units in reserve.
     public const int BLESSING1 = 3;
-
     public const int AFFECT_RESOURCES = 4;
 
     public const int FOG = 10;
@@ -42,6 +41,7 @@ public class TravelCard {
     private static int[] RULE_FIELDS = { ENTER_COMBAT, CHARGE, AMBUSH, OFF_GUARD,
         BLESSING1, AFFECT_RESOURCES, FOG, };
     public bool requires_seeker = false;
+    public TravelCardUnlockable unlockable;
 
     public virtual void action(TravelCardManager tcm) { }
     public virtual void use_roll_result(int result, Controller c) { }
@@ -64,6 +64,21 @@ public class TravelCard {
 
     protected void set_rule(int rule, bool state) {
         rules[rule] = state;
+    }
+}
+
+
+public class TravelCardUnlockable {
+    public string resource_type;
+    public bool unlocked = false;
+    public int resource_cost;
+    public bool requires_seeker = false;
+    public TravelCardUnlockable(string type, int cost) {
+        resource_type = type;
+        resource_cost = cost;
+    }
+    public TravelCardUnlockable(bool requires_seeker) {
+        this.requires_seeker = requires_seeker;
     }
 }
 
@@ -257,18 +272,15 @@ public class LocationCard : TravelCard {
 
 public class Location1_1 : LocationCard {
     public Location1_1(Sprite sprite) : base(TravelDeck.LOCATION1_1, sprite) {
+        // Aesthetic. Prompts rune gate image. 
         // rune gate activated with 10 SC.
-    }
-
-    public override void action(TravelCardManager tcm) {
-        tcm.c.map.build_rune_gate(tcm.c.get_disc().get_Pos());
+        //unlockable = new TravelCardUnlockable(Storeable.STAR_CRYSTALS, 10);
     }
 }
 
 public class Location2_1 : LocationCard {
     public Location2_1(Sprite sprite) : base(TravelDeck.LOCATION2_1, sprite) {
-        //consequence[]
-        //  if activated, -5 sc
+        unlockable = new TravelCardUnlockable(Storeable.STAR_CRYSTALS, 5);
         //+ 1 equipment
     }
 }
@@ -279,7 +291,7 @@ public class Location3_1 : LocationCard {
         consequence[Storeable.ARELICS] = 1;
         consequence[Storeable.ERELICS] = 1;
         consequence[Storeable.MRELICS] = 1;
-        requires_seeker = true;
+        unlockable = new TravelCardUnlockable(true);
     }
 }
 

@@ -223,9 +223,16 @@ public class Inspirator : PlayerUnit {
         bool active = base.set_attribute_active(state);
         if (active) {
             apply_surrounding_effect(HEALTH_BOOST, 1, get_forward3x1_coords());
+            // affecting num actions directly bypasses one-way street to allow
+            // the user to undo and redo the buff. This means has_acted_in_stage
+            // does not get enabled for inspirator, which only matters if units
+            // are cycling after having acted.
+            _num_actions--;
         } else {
             apply_surrounding_effect(HEALTH_BOOST, -1, get_forward3x1_coords());
+            _num_actions++;
         }
+        slot.update_staminabar(num_actions);
         return active;
     }
 }

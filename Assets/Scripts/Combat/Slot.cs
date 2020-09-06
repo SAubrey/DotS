@@ -17,11 +17,15 @@ public class Slot : EventTrigger {
     public static Color unselected_color = new Color(1, 1, 1, .1f);
     public static Color dead, injured;
     private static Color TRANSPARENT = new Color(0, 0, 0, 0);
-    private static Color healthbar_fill_color = new Color(1, 1, 1, .8f);
-    public static Color healthbar_bg_color;
+    private static Color healthbar_fill_color = new Color(.8f, .1f, .1f, .5f);
+    private static Color staminabar_fill_color = new Color(.1f, .8f, .1f, .5f);
+    public static Color healthbar_bg_color = new Color(.4f, .4f, .4f, .5f);
     public Slider healthbar;
+    public Slider staminabar;
     public Canvas info_canv;
     public Image healthbar_bg, healthbar_fill;
+    public Image staminabar_bg, staminabar_fill;
+    public GameObject staminabar_obj, healthbar_obj;
     public UnityEngine.Experimental.Rendering.Universal.Light2D light2d;
     public Sprite range_icon, melee_icon;
     private int healthbar_inc_width = 15;
@@ -33,6 +37,7 @@ public class Slot : EventTrigger {
     public Text deffgT, defbgT;
     public Image deffgI, defbgI;
     public Text hpfgT, hpbgT;
+    public Text stamfgT, stambgT;
     public Text num_actionsfgT, num_actionsbgT;
     public Color attfgI_c, deffgI_c;
 
@@ -58,6 +63,10 @@ public class Slot : EventTrigger {
 
     void Start() {
         bl = c.bat_loader;
+        healthbar_fill.color = healthbar_fill_color;
+        staminabar_fill.color = staminabar_fill_color;
+        staminabar_bg.color = healthbar_bg_color;
+        healthbar_bg.color = healthbar_bg_color;
     }
 
     public override void OnPointerDown(PointerEventData eventData) {
@@ -133,8 +142,14 @@ public class Slot : EventTrigger {
 
     // ----- GRAPHICAL -----
     private bool showing_preview_damage = false;
+
+    public bool is_showing_damage() {
+        return showing_preview_damage;
+    }
     public override void OnPointerEnter(PointerEventData eventData) {
-        if (c.selector.selecting_target && has_enemy && group.get_highest_enemy_slot() == this) {
+        if (c.selector.selecting_target && has_enemy && 
+                (group.get_highest_enemy_slot() == this || 
+                c.selector.selected_slot.unit.combat_style == Unit.RANGE)) {
             showing_preview_damage = true;
             show_preview_damage(true, c.selector.selected_slot.get_unit().get_attack_dmg());
         }
@@ -151,7 +166,7 @@ public class Slot : EventTrigger {
         if (showing) {
             update_healthbar(unit.calc_hp_remaining(dmg), dmg);
         } else {
-            if (!unit.attack_set)
+            if (!c.selector.selected_slot.unit.attack_set)
                 update_healthbar(get_unit().health);
         }
     }
@@ -179,9 +194,9 @@ public class Slot : EventTrigger {
     // or an attribute is activated or deactivated.
     public void update_UI() {
         update_healthbar(get_unit().health);
+        update_staminabar(get_unit().num_actions);
         update_attack();
         update_defense();
-        update_num_actions(get_unit().num_actions);
         if (c.unit_panel_man.player_panel.slot == this) {
             c.unit_panel_man.update_text(this); 
         }
@@ -192,11 +207,19 @@ public class Slot : EventTrigger {
 
         healthbar.maxValue = get_unit().get_boosted_max_health();
         healthbar.value = hp;
-        size_healthbar(healthbar.maxValue);
-        update_healthbar_color();
+        //size_healthbar(healthbar.maxValue);
+        //update_healthbar_color();
         
         hpfgT.text = build_health_string(hp, preview_damage);
         hpbgT.text = hpfgT.text;
+    }
+
+    public void update_staminabar(int stam) {
+        staminabar.maxValue = get_unit().max_num_actions;
+        staminabar.value = stam;
+        
+        stamfgT.text = build_stamina_string(stam);
+        stambgT.text = stamfgT.text;
     }
 
     private void update_healthbar_color() {
@@ -223,9 +246,15 @@ public class Slot : EventTrigger {
         string str = hp.ToString();
         if (preview_damage > 0)
             str += "-" + preview_damage.ToString();
-        str += "/" + get_unit().max_health.ToString();
+        //str += "/" + get_unit().max_health.ToString();
         if (hp_boost > 0) 
-            str += "+" + hp_boost.ToString();
+            str += "(" + hp_boost.ToString() + ")";
+            //str += "+" + hp_boost.ToString();
+        return str;
+    }
+
+    public string build_stamina_string(float stam) {
+        string str = stam.ToString();
         return str;
     }
 
@@ -261,11 +290,6 @@ public class Slot : EventTrigger {
         show_defending(u.defending);
     }
 
-    public void update_num_actions(int value) {
-        num_actionsbgT.text = value.ToString();
-        num_actionsfgT.text = num_actionsbgT.text;
-    }
-
     public string build_def_string() {
         float def_boost = get_unit().get_stat_boost(Unit.DEFENSE_BOOST)
             + get_unit().get_bonus_def();
@@ -277,18 +301,31 @@ public class Slot : EventTrigger {
     }
 
     public void set_active_UI(bool state) {
+        staminabar_obj.SetActive(state);
+        healthbar_obj.SetActive(state);
+        /*
+        staminabar_bg.color = healthbar_bg_color;
         if (state) {
             healthbar_bg.color = healthbar_bg_color;
             healthbar_fill.color = healthbar_fill_color;
+            // stamina
+           // staminabar_bg.color = healthbar_bg_color;
+            staminabar_fill.color = stamina_fill_color;
         } else {
             healthbar_bg.color = TRANSPARENT;
             healthbar_fill.color = TRANSPARENT;
-        }
-        healthbar.enabled = state;
-        healthbar_bg.enabled = state;
-        hpfgT.enabled = state;
-        hpbgT.enabled = state;
 
+            //staminabar_bg.color = healthbar_bg_color;
+            staminabar_fill.color = stamina_fill_color;
+        }
+        //healthbar.enabled = state;
+        //healthbar_bg.enabled = state;
+        //hpfgT.enabled = state;
+        //hpbgT.enabled = state;
+
+        //staminabar.enabled = state;
+        */
+/*
         attfgT.enabled = state;
         attbgT.enabled = state;
         attfgI.enabled = state;
@@ -298,9 +335,9 @@ public class Slot : EventTrigger {
         defbgT.enabled = state;
         deffgI.enabled = state;
         defbgI.enabled = state;
-
-        num_actionsbgT.enabled = state;
-        num_actionsfgT.enabled = state;
+*/
+        //num_actionsbgT.enabled = state;
+        //num_actionsfgT.enabled = state;
     }
 
     public void show_selection(bool showing) {
@@ -347,24 +384,10 @@ public class Slot : EventTrigger {
     public void update_UI_from_dir(int dir) { 
         unit_img.color = Color.white;
         if (has_punit) {
-            //img.sprite = bl.white_fade_img; // slot outline
-            //unit_img.color = punit_sprite_color; // Make visible
-            unit_img.sprite = bl.generic_punit_sprites[group.get_dir()];
-
-            // To set unit images for specific units.
-            /*
-            if (bl.unit_images.ContainsKey(image_ID)) {
-                if (bl.unit_images[image_ID] != null) {
-                    unit_img.color = Color.white;
-                    unit_img.sprite = bl.unit_images[image_ID]; // unit.get_ID();
-                }
-            }*/
+            unit_img.sprite = bl.get_unit_img(unit, dir);
         } else if (has_enemy) {
-            //unit_img.color = enemy_sprite_color;
             unit_img.sprite = c.bat_loader.generic_enemy_sprites[group.get_dir()];
-            //img.sprite = bl.dark_fade_img;
         } else {
-            //img.sprite = bl.empty; // empty
             unit_img.color = TRANSPARENT;
         }
         rotate_unit_img_to_direction(dir); 

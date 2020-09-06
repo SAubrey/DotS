@@ -5,8 +5,6 @@ using UnityEngine.UI;
 
 public class BatLoader : MonoBehaviour {
     private Controller c;
-    public Battalion astra_battalion, endura_battalion, martial_battalion;
-
     public Sprite white_fade_img, dark_fade_img;
     public Sprite empty; // UIMask image for a slot button image.
     // Unit quantity text fields in the unit selection scrollbar.
@@ -24,15 +22,18 @@ public class BatLoader : MonoBehaviour {
 
 
     // Drawn unit images.
-    public Dictionary<int, Sprite> unit_images = new Dictionary<int, Sprite>();
-    public Sprite warrior_I, spearman_I, archer_I, miner_I, inspirator_I, seeker_I,
+    public Dictionary<int, Sprite> unit_images_back = new Dictionary<int, Sprite>();
+    public Sprite warrior_back, spearman_I, archer_back, miner_I, inspirator_I, seeker_I,
         guardian_I, arbalest_I, skirmisher_I, paladin_I, mender_I, carter_I, dragoon_I,
         scout_I, drummer_I, shield_maiden_I, pikeman_I;
+    public Dictionary<int, Sprite> unit_images_front = new Dictionary<int, Sprite>();
+    public Sprite warrior_front, archer_front;
 
 
     // Generic unit sprites as placeholders until art is finalized.
     public Dictionary<int, Sprite> generic_punit_sprites = new Dictionary<int, Sprite>();
     public Sprite punit_up, punit_down, punit_left, punit_right;
+
     public Dictionary<int, Sprite> generic_enemy_sprites = new Dictionary<int, Sprite>();
     public Sprite enemy_up, enemy_down, enemy_left, enemy_right;
 
@@ -40,11 +41,33 @@ public class BatLoader : MonoBehaviour {
     public PlayerUnit healing_unit;
     private int selected_unit_type = 0;
 
+    public Sprite get_unit_img(Unit unit, int direction) {
+        if (unit.is_playerunit) {
+            if (unit.is_melee) {
+                return get_unit_direction_img(0, direction);
+            }
+            else if (unit.is_range) {
+                return get_unit_direction_img(2, direction);
+            }
+            else {
+                return generic_punit_sprites[direction];
+            }
+        } else 
+            return generic_enemy_sprites[direction];
+    }
+
+    private Sprite get_unit_direction_img(int unit_type, int direction) {
+        if (direction == Group.UP || direction == Group.RIGHT)
+            return unit_images_back[unit_type];
+        return unit_images_front[unit_type];
+    }
+
     void Awake() {
         generic_punit_sprites.Add(Group.UP, punit_up);
         generic_punit_sprites.Add(Group.DOWN, punit_down);
         generic_punit_sprites.Add(Group.LEFT, punit_left);
         generic_punit_sprites.Add(Group.RIGHT, punit_right);
+
         generic_enemy_sprites.Add(Group.UP, enemy_up);
         generic_enemy_sprites.Add(Group.DOWN, enemy_down);
         generic_enemy_sprites.Add(Group.LEFT, enemy_left);
@@ -87,24 +110,27 @@ public class BatLoader : MonoBehaviour {
         unit_buttons.Add(PlayerUnit.SHIELD_MAIDEN, shield_maiden_B);
         unit_buttons.Add(PlayerUnit.PIKEMAN, pikeman_B);
 
-        // Images to be loaded into slots.
-        unit_images.Add(PlayerUnit.WARRIOR, warrior_I);
-        unit_images.Add(PlayerUnit.SPEARMAN, spearman_I);
-        unit_images.Add(PlayerUnit.ARCHER, archer_I);
-        unit_images.Add(PlayerUnit.MINER, miner_I);
-        unit_images.Add(PlayerUnit.INSPIRATOR, inspirator_I);
-        unit_images.Add(PlayerUnit.SEEKER, seeker_I);
-        unit_images.Add(PlayerUnit.SHIELD_MAIDEN, shield_maiden_I);
-        unit_images.Add(PlayerUnit.ARBALEST, arbalest_I);
-        unit_images.Add(PlayerUnit.SKIRMISHER, skirmisher_I);
-        unit_images.Add(PlayerUnit.PALADIN, paladin_I);
-        unit_images.Add(PlayerUnit.MENDER, mender_I);
-        unit_images.Add(PlayerUnit.CARTER, carter_I);
-        unit_images.Add(PlayerUnit.DRAGOON, dragoon_I);
-        unit_images.Add(PlayerUnit.SCOUT, scout_I);
-        unit_images.Add(PlayerUnit.DRUMMER, drummer_I);
-        unit_images.Add(PlayerUnit.GUARDIAN, guardian_I);
-        unit_images.Add(PlayerUnit.PIKEMAN, pikeman_I);
+        // Unit images to be loaded into slots.
+        unit_images_back.Add(PlayerUnit.WARRIOR, warrior_back);
+        unit_images_back.Add(PlayerUnit.SPEARMAN, spearman_I);
+        unit_images_back.Add(PlayerUnit.ARCHER, archer_back);
+        unit_images_back.Add(PlayerUnit.MINER, miner_I);
+        unit_images_back.Add(PlayerUnit.INSPIRATOR, inspirator_I);
+        unit_images_back.Add(PlayerUnit.SEEKER, seeker_I);
+        unit_images_back.Add(PlayerUnit.SHIELD_MAIDEN, shield_maiden_I);
+        unit_images_back.Add(PlayerUnit.ARBALEST, arbalest_I);
+        unit_images_back.Add(PlayerUnit.SKIRMISHER, skirmisher_I);
+        unit_images_back.Add(PlayerUnit.PALADIN, paladin_I);
+        unit_images_back.Add(PlayerUnit.MENDER, mender_I);
+        unit_images_back.Add(PlayerUnit.CARTER, carter_I);
+        unit_images_back.Add(PlayerUnit.DRAGOON, dragoon_I);
+        unit_images_back.Add(PlayerUnit.SCOUT, scout_I);
+        unit_images_back.Add(PlayerUnit.DRUMMER, drummer_I);
+        unit_images_back.Add(PlayerUnit.GUARDIAN, guardian_I);
+        unit_images_back.Add(PlayerUnit.PIKEMAN, pikeman_I);
+
+        unit_images_front.Add(PlayerUnit.WARRIOR, warrior_front);
+        unit_images_front.Add(PlayerUnit.ARCHER, archer_front);
     }
 
     void Start() {

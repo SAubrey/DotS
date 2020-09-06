@@ -185,7 +185,7 @@ public class BattlePhaser : MonoBehaviour {
                 c.get_disc().complete_travelcard();
             } else if (enemy_won) {
                 Debug.Log("Enemy won the battle.");
-
+                
             }
             c.cam_switcher.flip_map_battle();
         } else {

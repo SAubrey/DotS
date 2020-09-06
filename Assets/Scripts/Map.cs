@@ -366,9 +366,7 @@ public class Map : MonoBehaviour, ISaveLoad {
     }
     
     public void build_rune_gate(Pos pos) {
-        MapCell mc = map[pos];
-        mc.has_rune_gate = true;
-        mc.restored_rune_gate = true;
+        map[pos].restored_rune_gate = true;
     }
 
     void generate_t1(Tilemap tm) {

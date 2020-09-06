@@ -168,8 +168,9 @@ public class Battalion {
         remove_expired_units();
         foreach (PlayerUnit pu in get_all_placed_units()) {
             pu.health = pu.get_boosted_max_health();
-            if (pu.defending)
+            if (pu.defending) {
                 pu.defending = false;
+            }
             pu.get_slot().update_UI();
         }
     }

@@ -144,15 +144,8 @@ public class TurnPhaser : MonoBehaviour {
         if (tc.follow_rule(TravelCard.ENTER_COMBAT)) { // If a combat travel card was pulled.
             begin_new_combat(tc);
         } else if (tc.follow_rule(TravelCard.AFFECT_RESOURCES)) {
-            if (tc.requires_seeker) {
-                if (c.get_active_bat().has_seeker) {
-                    StartCoroutine(c.get_disc().adjust_resources_visibly(tc.consequence));
-                    c.get_disc().complete_travelcard();
-                }    
-            } else {
-                StartCoroutine(c.get_disc().adjust_resources_visibly(tc.consequence));
-                c.get_disc().complete_travelcard();
-            }
+            StartCoroutine(c.get_disc().adjust_resources_visibly(tc.consequence));
+            c.get_disc().complete_travelcard();
         } 
     }
 

@@ -6,22 +6,15 @@ using UnityEngine.UI;
 
 public class MapCellUI : MonoBehaviour {
     public Text cell_typeT, enemy_countT, star_crystalsT;
-    public Button scoutB, teleportB, moveB;
+    public Button scoutB, teleportB, moveB, unlockB;
     private Map map;
     private MapCell cell;
     public GameObject parent;
 
-
-    void init(string cell_name, int enemy_count, bool can_teleport_to, bool discovered) {
-        cell_typeT.text = cell_name;
-        enemy_countT.text = build_enemy_countT(enemy_count, discovered);
-        enable_button(teleportB, can_teleport_to);
-    }
-
     public void init(Map map, MapCell cell) {
         this.map = map;
         this.cell = cell;
-        cell_typeT.text = cell.discovered ? cell.name : "Unknown";
+        cell_typeT.text = build_titleT();
         enemy_countT.text = build_enemy_countT(cell.get_enemies().Count, cell.discovered);
         star_crystalsT.text = map.c.get_disc().get_var(Storeable.STAR_CRYSTALS).ToString();
 
@@ -33,6 +26,17 @@ public class MapCellUI : MonoBehaviour {
         enable_button(moveB, map.can_move(pos));
         enable_button(scoutB, map.can_scout(pos));
         enable_button(teleportB, map.can_teleport(pos));
+        enable_button(unlockB, can_unlock());
+    }
+
+    private string build_titleT() {
+        string text = "";
+        if (cell.has_rune_gate) {
+            text += cell.restored_rune_gate ? "Active Rune Gate" : "Inactive Rune Gate";
+        } else {
+            text += cell.discovered ? cell.name : "Unknown";
+        }
+        return text;
     }
 
     private string build_enemy_countT(int enemy_count, bool discovered) {
@@ -68,6 +72,39 @@ public class MapCellUI : MonoBehaviour {
         close();
     }
 
+    // To determine if the unlock button can be pressed, including that the 
+    // requirements can be met if it is an unlockable cell.
+    private bool can_unlock() {
+        if (cell.has_rune_gate && map.c.get_disc().get_var(Storeable.STAR_CRYSTALS) >= 10) {
+            return true;
+        }
+        if (cell.requires_unlock) {
+            if (cell.get_unlockable().requires_seeker && map.c.get_active_bat().has_seeker) {
+                return true;
+            }
+            // Must be a resource requirement.
+            else if (map.c.get_disc().get_var(cell.get_unlockable().resource_type) >= 
+                cell.get_unlockable().resource_cost) {
+                    return true;
+            }
+        }   
+        return false;         
+    }
+
+    public void unlock() {
+        if (cell.has_rune_gate) {
+            map.c.get_disc().change_var(Storeable.STAR_CRYSTALS, -10, true);
+            cell.restored_rune_gate = true;
+        } else if (cell.has_travelcard) {
+            if (cell.get_unlockable().requires_seeker) {
+                map.c.get_disc().adjust_resources_visibly(cell.get_travelcard_consequence());
+                map.c.get_disc().complete_travelcard();
+            }
+            else {
+                map.c.get_disc().change_var(cell.get_unlock_type(), cell.get_unlock_cost(), true);
+            }
+        }
+    }
     private void enable_button(Button b, bool state) {
         b.interactable = state;
     }

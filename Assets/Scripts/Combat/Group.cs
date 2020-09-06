@@ -200,6 +200,15 @@ public class Group : MonoBehaviour {
         return full_slots;
     }
 
+    public List<Unit> get_grouped_units() {
+        List<Unit> units = new List<Unit>();
+        foreach (Slot s in get_full_slots()) {
+            if (s.get_unit().is_actively_grouping)
+                units.Add(s.get_unit());
+        }
+        return units;
+    }
+
     public bool has_punit {
         get {
             foreach (Slot slot in slots)

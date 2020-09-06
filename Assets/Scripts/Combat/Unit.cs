@@ -70,7 +70,7 @@ public class Unit {
         set {
             if (value < _num_actions) {
                 if (slot != null)
-                    slot.update_num_actions(value);
+                    slot.update_staminabar(value);
                 has_acted_in_stage = true;
             }
 
@@ -283,7 +283,7 @@ public class Unit {
     
     public int get_bonus_def() {
         int sum_def = 0;
-         if (is_actively_grouping) {
+        if (is_actively_grouping) {
             sum_def += ((1 + defense) * (count_grouped_units()));
         }
         return sum_def;

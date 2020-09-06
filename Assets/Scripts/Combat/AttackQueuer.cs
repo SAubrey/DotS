@@ -67,6 +67,8 @@ public class AttackQueuer : MonoBehaviour {
     attacked unit. This is especially necessary for player units
     given that a player unit's resilience must be calculated against 
     with a single damage sum.
+    Group attacks in this context are not attacks from a unit with
+    the grouping attribute.
     */
     private void group_attack(List<Attack> attacks) {
         int sum_dmg = 0;
@@ -189,8 +191,12 @@ public class AttackQueue {
         Attack a = find_attack(attack_id);
         if (a != null) {
             a.get_start_unit().attack_set = false;
+            if (a.get_end_slot().is_showing_damage()) { // remove preview damage text.
+                a.get_end_slot().show_preview_damage(false);
+            }
+
             groupings[a.get_end_unit()].Remove(a);
-            if (groupings[a.get_end_unit()].Count < 1)
+            if (groupings[a.get_end_unit()].Count < 1) // Remove group attack if empty.
                 groupings.Remove(a.get_end_unit());
         }
         ld.remove(attack_id);
@@ -251,10 +257,19 @@ public class Attack {
             start.c.get_disc().change_var(Storeable.EXPERIENCE, xp, true);
         }
     }
+
     public void post_enemy_attack(int state) {
         if (state == Unit.DEAD || state == Unit.INJURED) {
             enemy.clear_target();
             start.c.enemy_brain.retarget();
+        }
+
+        // If the attack triggers grouping, reduce the actions of grouped units.
+        if (punit.defending && punit.is_actively_grouping) {
+            foreach (Unit u in punit.get_slot().get_group().get_grouped_units()) {
+                u.num_actions--;
+                punit.set_attribute_active(false);
+            }
         }
     }
 

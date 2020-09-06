@@ -52,7 +52,7 @@ public class TravelDeck : MonoBehaviour, ISaveLoad {
         {ATT1_1, 1}, {ATT2_1, 1}, {ATT3_1, 1}, {ATT4_1, 1}, {ATT5_1, 1}, {ATT6_1, 1}, {ATT7_1, 1},
         {CHANCE1_1, 1}, {CHANCE2_1, 1}, {CHANCE3_1, 1},
         {CAVE1_1, 1}, {CAVE2_1, 1},
-        {RUINS1_1, 1}, {RUINS2_1, 1}, {RUINS3_1, 1}, {RUINS4_1, 1},
+        {RUINS1_1, 1}, {RUINS2_1, 1}, {RUINS3_1, 1}, {RUINS4_1, 0},
         {LOCATION2_1, 1}, {LOCATION3_1, 1},
         {EVENT1_1, 1}, {EVENT2_1, 1}, {EVENT3_1, 1}, {EVENT4_1, 1}, {EVENT5_1, 1},
     };
@@ -60,11 +60,17 @@ public class TravelDeck : MonoBehaviour, ISaveLoad {
         {ATT1_1, 1}, {ATT2_1, 1}, {ATT3_1, 1}, {ATT4_1, 1}, {ATT5_1, 1}, {ATT6_1, 1}, {ATT7_1, 1},
         {CHANCE1_1, 1}, {CHANCE2_1, 1}, {CHANCE3_1, 1},
         {CAVE1_1, 1}, {CAVE2_1, 1},
-        {RUINS1_1, 1}, {RUINS2_1, 1}, {RUINS3_1, 1}, {RUINS4_1, 1},
+        {RUINS1_1, 1}, {RUINS2_1, 1}, {RUINS3_1, 1}, {RUINS4_1, 0},
         {LOCATION2_1, 1}, {LOCATION3_1, 1},
         {EVENT1_1, 1}, {EVENT2_1, 1}, {EVENT3_1, 1}, {EVENT4_1, 1}, {EVENT5_1, 1},
     };
     private Dictionary<int, int> t3_card_counts = new Dictionary<int, int>() {
+        {ATT1_1, 1}, {ATT2_1, 1}, {ATT3_1, 1}, {ATT4_1, 1}, {ATT5_1, 1}, {ATT6_1, 1}, {ATT7_1, 1},
+        {CHANCE1_1, 1}, {CHANCE2_1, 1}, {CHANCE3_1, 1},
+        {CAVE1_1, 1}, {CAVE2_1, 1},
+        {RUINS1_1, 1}, {RUINS2_1, 1}, {RUINS3_1, 1}, {RUINS4_1, 0},
+        {LOCATION2_1, 1}, {LOCATION3_1, 1},
+        {EVENT1_1, 1}, {EVENT2_1, 1}, {EVENT3_1, 1}, {EVENT4_1, 1}, {EVENT5_1, 1},
     };
 
     // List allows fair random choice for draws from decks with more than 1 of a card type. 
@@ -213,8 +219,8 @@ public class TravelDeck : MonoBehaviour, ISaveLoad {
     // Cards are drawn without replacement. Cards that are allowed
     // in the map cell biome are pulled from the deck then chosen from randomly.
     public TravelCard draw_card(int tier, int biome_ID) {
+        // Negate or bypass random draw.
         if (biome_ID == MapCell.LUSH_LAND_ID || biome_ID == MapCell.STAR_ID) {
-            // don't draw a card.
             return null;
         } else if (biome_ID == MapCell.RUNE_GATE_ID) {
             return cards[LOCATION1_1];
@@ -226,14 +232,16 @@ public class TravelDeck : MonoBehaviour, ISaveLoad {
             // Draw from deck
             List<int> drawable_cards = aggregate_drawable_cards(tier, biome_ID);
             if (drawable_cards.Count <= 0) {
-                // out of cards for this biome (unlikely but possible)
-                // just draw any applicable one.
+                // Out of cards for this biome (unlikely but possible).
+                // Just draw any applicable one.
                 return get_random_matching_card(biome_ID);
             }
+
+            // Draw
             int index = rand.Next(0, drawable_cards.Count);
             int card_id = drawable_cards[index];
 
-            // Remove card
+            // Remove drawn card
             decks[tier].Remove(card_id);
             return cards[card_id];
         }

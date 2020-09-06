@@ -60,7 +60,7 @@ public class PlayerPanel : UnitPanel {
         bool combat_staging = (bp.range_stage && punit.is_range) || 
                                 (bp.combat_stage);
 
-        if (bp.movement_stage)
+        if (bp.movement_stage || bp.placement_stage)
             enable_rotateB();
         if (!punit.out_of_actions && !punit.has_acted_in_stage && 
                 (bp.movement_stage || ranging)) {
@@ -180,6 +180,7 @@ public class PlayerPanel : UnitPanel {
     public bool attributeB_pressed {
         get { return _attributeB_pressed; }
         set {
+            // Attribute may require att/def being enabled first.
             if (punit.attribute_requires_action
                     && (!attB_pressed && !defB_pressed)) {
                 _attributeB_pressed = false;

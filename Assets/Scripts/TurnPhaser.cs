@@ -121,7 +121,6 @@ public class TurnPhaser : MonoBehaviour {
     }
 
     // Called by the continue button of the travel card. 
-    // 
     public void action() {
         _stage = ACTION;
         map_ui.set_next_stageB_text("End Turn");
@@ -170,6 +169,7 @@ public class TurnPhaser : MonoBehaviour {
         " for " + c.active_disc_ID + " at " + cell.pos.x + ", " + cell.pos.y);
         c.get_active_bat().in_battle = true; 
         enemy_loader.place_new_enemies(cell, tc.enemy_count);
+        
         cs.set_active(CamSwitcher.BATTLE, true);
     }
 

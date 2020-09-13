@@ -150,7 +150,7 @@ public class Enemy : Unit {
     }
 }
 
-
+// Plains
 public class Galtsa : Enemy {
     public Galtsa() {
         ID = GALTSA;
@@ -199,6 +199,8 @@ public class Goliath : Enemy {
         init("Goliath", 12, 8, 6, MELEE, TERROR_3, CHARGE);
     }
 }
+
+// Forest
 public class Kverm : Enemy {
     public Kverm() {
         ID = KVERM;
@@ -252,6 +254,8 @@ public class Ketemcol : Enemy {
         defense = 1;
     }
 }
+
+// Titrum
 public class Mahukin : Enemy {
     public Mahukin() {
         ID = MAHUKIN;
@@ -294,6 +298,8 @@ public class Muatem : Enemy {
         defense = 5;
     }
 }
+
+// Mountain/Cliff
 public class Drak : Enemy {
     public Drak() {
         ID = DRAK;
@@ -312,6 +318,8 @@ public class Gokin : Enemy {
         init("Gokin", 2, 2, 2, MELEE, FLANKING, GROUPING_2);
     }
 }
+
+// Cave
 public class Tajaqar : Enemy {
     public Tajaqar() {
         ID = TAJAQAR;

@@ -17,9 +17,9 @@ public class Slot : EventTrigger {
     public static Color unselected_color = new Color(1, 1, 1, .1f);
     public static Color dead, injured;
     private static Color TRANSPARENT = new Color(0, 0, 0, 0);
-    private static Color healthbar_fill_color = new Color(.8f, .1f, .1f, .5f);
-    private static Color staminabar_fill_color = new Color(.1f, .8f, .1f, .5f);
-    public static Color healthbar_bg_color = new Color(.4f, .4f, .4f, .5f);
+    private static Color healthbar_fill_color = new Color(.8f, .1f, .1f, .3f);
+    private static Color staminabar_fill_color = new Color(.1f, .8f, .1f, .3f);
+    public static Color statbar_bg_color = new Color(.4f, .4f, .4f, .3f);
     public Slider healthbar;
     public Slider staminabar;
     public Canvas info_canv;
@@ -51,6 +51,7 @@ public class Slot : EventTrigger {
     void Awake() {
         c = GameObject.Find("Controller").GetComponent<Controller>();
         cam = GameObject.Find("BattleCamera").GetComponent<Camera>();
+        //bl = c.bat_loader;
         light2d.enabled = false;
 
         col = group.col;
@@ -65,8 +66,8 @@ public class Slot : EventTrigger {
         bl = c.bat_loader;
         healthbar_fill.color = healthbar_fill_color;
         staminabar_fill.color = staminabar_fill_color;
-        staminabar_bg.color = healthbar_bg_color;
-        healthbar_bg.color = healthbar_bg_color;
+        staminabar_bg.color = statbar_bg_color;
+        healthbar_bg.color = statbar_bg_color;
     }
 
     public override void OnPointerDown(PointerEventData eventData) {
@@ -382,14 +383,19 @@ public class Slot : EventTrigger {
 
     // Update slot button image and slot unit image.
     public void update_UI_from_dir(int dir) { 
+        if (unit == null)
+            Debug.Log("Unit is null");
         unit_img.color = Color.white;
-        if (has_punit) {
-            unit_img.sprite = bl.get_unit_img(unit, dir);
-        } else if (has_enemy) {
-            unit_img.sprite = c.bat_loader.generic_enemy_sprites[group.get_dir()];
-        } else {
-            unit_img.color = TRANSPARENT;
+        if (bl == null) {
+            Debug.Log("Reassigning BL");
+            bl = GameObject.Find("BatLoader").GetComponent<BatLoader>();
+            Debug.Log("Bl: " + bl);
         }
+        Debug.Log(bl);
+        Debug.Log(bl.get_unit_img(unit, dir));
+        unit_img.sprite = bl.get_unit_img(unit, dir);
+        if (unit_img.sprite == null)
+            unit_img.color = TRANSPARENT;
         rotate_unit_img_to_direction(dir); 
         face_text_to_cam();
     }

@@ -30,15 +30,17 @@ public class EnemyLoader : MonoBehaviour {
     private Controller c;
     private Formation f;
     public System.Random rand;
-
+    public Dictionary<int, List<List<List<int>>>> biomes = 
+        new Dictionary<int, List<List<List<int>>>>();
+    /*
     public Dictionary<int, Sprite> images = new Dictionary<int, Sprite>();
     public Sprite galtsa, grem, endu, korote, molner, etuena, clypte, goliath, kverm,
         latu, eke_tu, oetem, eke_fu, eke_shi_ami, eke_lord, ketemcol, mahukin, drongo, maheket,
         calute, etalket, muatem, drak, zerrku, gokin, tajaqar, tajaero, terra_qual, duale;
-   
-    public Dictionary<int, List<List<List<int>>>> biomes = 
-        new Dictionary<int, List<List<List<int>>>>();
+     */
+    
 
+    // Assign possible enemy spawns (by ID) per biome, per enemy tier, per spawn rate.
     //biomes[PLAINS][1][Enemy.UNCOMMON]
     public List<List<List<int>>> plains_tiers = new List<List<List<int>>>();
     public List<List<List<int>>> forest_tiers = new List<List<List<int>>>();
@@ -46,11 +48,13 @@ public class EnemyLoader : MonoBehaviour {
     public List<List<List<int>>> cliff_tiers = new List<List<List<int>>>();
     public List<List<List<int>>> mountain_tiers = new List<List<List<int>>>();
     public List<List<List<int>>> cave_tiers = new List<List<List<int>>>();
+   
 
     void Start() {
         c = GameObject.Find("Controller").GetComponent<Controller>();
         f = GameObject.Find("Formation").GetComponent<Formation>();
         rand = new System.Random();
+        /*
         images.Add(Enemy.GALTSA, galtsa);
         images.Add(Enemy.GREM, grem);
         images.Add(Enemy.ENDU, endu);
@@ -80,6 +84,7 @@ public class EnemyLoader : MonoBehaviour {
         images.Add(Enemy.TAJAERO, tajaero);
         images.Add(Enemy.TERRA_QUAL, terra_qual);
         images.Add(Enemy.DUALE, duale);
+        */
 
         make_biome(plains_tiers);
         make_biome(forest_tiers);

@@ -8,6 +8,7 @@ public class RisingInfo : MonoBehaviour {
     protected float time_alive = 0;
     public Text fg_T;
     public Text bg_T;
+    protected float translation_distance = 0.01f;
 
     public void init(string resource, int value, Color color) {
         string readout = "";
@@ -21,7 +22,7 @@ public class RisingInfo : MonoBehaviour {
 
     protected virtual void Update() {
         time_alive += Time.deltaTime;
-        translate_up(.01f);
+        translate_up(translation_distance);
         fade();
         if (time_alive > timeout)
             die(); 

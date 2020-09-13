@@ -36,6 +36,7 @@ public class Controller : MonoBehaviour, ISaveLoad {
     public CityUIManager city_ui;
     public TravelCardManager travel_card_manager;
     public SoundManager sound_manager;
+    public BackgroundLoader background_loader;
 
     public Button loadB, saveB, resumeB;
     public GameObject save_warningP, new_game_warningP, load_warningP;
@@ -93,6 +94,7 @@ public class Controller : MonoBehaviour, ISaveLoad {
         travel_card_manager = GameObject.Find("TravelCardPanel").GetComponent<TravelCardManager>();
         city_ui = GameObject.Find("CityUIManager").GetComponent<CityUIManager>();
         sound_manager = GameObject.Find("SoundManager").GetComponent<SoundManager>();
+        background_loader = GameObject.Find("BackgroundLoader").GetComponent<BackgroundLoader>();
     }
 
     void Start() {
@@ -109,7 +111,7 @@ public class Controller : MonoBehaviour, ISaveLoad {
 
         // Clear fields not overwritten by possible load.
         formation.reset();
-        battle_phaser.reset();
+        battle_phaser.reset(from_save);
         turn_phaser.reset();
         
         cam_switcher.flip_menu_map();

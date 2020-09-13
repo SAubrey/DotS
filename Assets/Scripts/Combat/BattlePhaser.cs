@@ -37,12 +37,10 @@ public class BattlePhaser : MonoBehaviour {
         selector = c.selector;
         aq = c.attack_queuer;
         enemy_brain = c.enemy_brain;
-
-        reset();
     }
 
     // Called at the end of 3 phases.
-    public void reset() {
+    public void reset(bool reset_battlefield=true) {
         phase = 1;
         can_skip = false;
 
@@ -51,8 +49,10 @@ public class BattlePhaser : MonoBehaviour {
         range_stage = false;
         movement_stage = false;
         combat_stage = false;
-        c.formation.reset_groups_dir();
-        c.formation.clear_battlefield();
+        if (reset_battlefield) {
+            c.formation.reset_groups_dir();
+            c.formation.clear_battlefield();
+        }
         stage = PLACEMENT;
         update_phase_text();
     }

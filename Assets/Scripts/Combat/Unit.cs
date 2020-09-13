@@ -175,12 +175,13 @@ public class Unit {
         end.get_group().validate_unit_order();
     }
 
+    // Moving within a group does not cost stamina.
     protected bool swap_places(Slot s) {
         if (!can_move(s) || !s.get_unit().can_move(slot))
             return false;
 
-        s.get_unit().num_actions--;
-        num_actions--;
+        //s.get_unit().num_actions--;
+        //num_actions--;
         Unit u = s.empty(false); 
         slot.fill(u);
         s.fill(this);

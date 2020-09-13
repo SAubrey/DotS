@@ -91,15 +91,7 @@ public class Group : MonoBehaviour {
             set(i, us[place]);
         }
     }
-
-    public void rotate(int direction) {
-        this.direction = direction;
-        transform.localEulerAngles = new Vector3(0, 0, direction);
-        foreach (Slot s in slots) {
-            s.update_UI_from_dir(get_dir());
-        }
-    }
-
+    
     public void rotate_towards_target(Group target) {
         int dx = target.col - col;
         int dy = target.row - row;
@@ -115,6 +107,34 @@ public class Group : MonoBehaviour {
                 rotate(RIGHT);
             else if (dx < 0)
                 rotate(LEFT);
+        }
+    }
+
+    public void rotate(int direction) {
+        this.direction = direction;
+        transform.localEulerAngles = new Vector3(0, 0, direction);
+        foreach (Slot s in slots) {
+            s.update_UI_from_dir(get_dir());
+        }
+        reorder_slots_visually(direction);
+    }
+
+    /* Adjust the order of slots in the inspector to bring the image
+    of the closest slot to the front.
+    */
+    private void reorder_slots_visually(int direction) {
+        if (direction == UP) {
+            slots[0].transform.SetAsFirstSibling();
+            slots[1].transform.SetAsLastSibling();
+        } else if (direction == DOWN) {
+            slots[1].transform.SetAsFirstSibling();
+            slots[0].transform.SetAsLastSibling();
+        } else if (direction == LEFT) {
+            slots[2].transform.SetAsFirstSibling();
+            slots[0].transform.SetAsLastSibling();
+        } else if (direction == RIGHT) {
+            slots[0].transform.SetAsFirstSibling();
+            slots[2].transform.SetAsLastSibling();
         }
     }
     
@@ -229,7 +249,8 @@ public class Group : MonoBehaviour {
 
     public void empty() {
         foreach (Slot s in slots) 
-            s.empty(false);
+            if (!s.is_empty)
+                s.empty(false);
     }
 
     public bool is_empty {

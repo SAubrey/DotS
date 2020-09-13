@@ -20,6 +20,7 @@ public class CamSwitcher : MonoBehaviour {
     public GameObject pause_panel, battle_pause_panel;
     
     private Controller c;
+    private BackgroundLoader background_loader;
     private BatLoader bat_loader;
 
     private bool paused = false;
@@ -28,6 +29,7 @@ public class CamSwitcher : MonoBehaviour {
     
     void Start() {
         c = GameObject.Find("Controller").GetComponent<Controller>();
+        background_loader = c.background_loader;
         sound_manager = GameObject.Find("SoundManager").GetComponent<SoundManager>();
         bat_loader = c.bat_loader;
         pause_panel.SetActive(false);
@@ -109,12 +111,15 @@ public class CamSwitcher : MonoBehaviour {
                 mapCam.transform.SetPositionAndRotation(new Vector3(10, 10, -14), Quaternion.identity);
                 set_active(BATTLE, false);
                 set_active(MENU, false);
+            } else {
+                
             }
         } else if (screen == BATTLE) {
             battle_canvas.SetActive(active);
             battleCam.enabled = active;
             battleUI_canvas.SetActive(active);
             if (active) {
+                background_loader.load(c.map.get_current_cell().biome_ID);
                 set_active(MAP, false);
                 set_active(MENU, false);
                 bat_loader.load_text();

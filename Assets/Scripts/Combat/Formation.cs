@@ -13,14 +13,6 @@ public class Formation : MonoBehaviour {
     private Dictionary<int, Dictionary<int, Group>> groups = 
         new Dictionary<int, Dictionary<int, Group>>();
 
-    // For saving/loading. Maintains which units are where.
-    private Dictionary<int, Dictionary<Location, Unit>> discipline_boards = 
-        new Dictionary<int, Dictionary<Location, Unit>>() {
-            { Controller.ASTRA, new Dictionary<Location, Unit>() },
-            { Controller.ENDURA, new Dictionary<Location, Unit>() },
-            { Controller.MARTIAL, new Dictionary<Location, Unit>() }
-    };
-
     void Awake() {
         c = GameObject.Find("Controller").GetComponent<Controller>();
     }
@@ -91,8 +83,6 @@ public class Formation : MonoBehaviour {
 
     public void reset() {
         clear_battlefield();
-        foreach (Dictionary<Location, Unit> board in discipline_boards.Values)
-            board.Clear();
     }
 
     public void clear_battlefield() {
@@ -101,7 +91,7 @@ public class Formation : MonoBehaviour {
                 groups[col][row].empty();
             }
         }
-        c.selector.selected_slot = null;
+        c.selector.deselect();
         c.bat_loader.clear_placement_selection();
     }
 
@@ -113,24 +103,21 @@ public class Formation : MonoBehaviour {
         }
     }
 
-    public void save_board(int discipline) {
-        Dictionary <Location, Unit> d = discipline_boards[discipline];
-
+    // Dynamic save - not to file.
+    public void save_board(Battle b) {
         foreach (int col in groups.Keys) {
             foreach (int row in groups[col].Keys) {
                 foreach (Slot slot in groups[col][row].slots) {
-                    if (!slot.is_empty) {
-                        d.Add(new Location(col, row, slot.num), slot.get_unit());
-                    }
+                    if (!slot.is_empty)
+                        b.board.Add(new Location(col, row, slot.num), slot.get_unit());
                 }
             }
         }
     }
 
-    public void load_board(int discipline) {
-        Dictionary <Location, Unit> cb = discipline_boards[discipline];
-        foreach (Location loc in cb.Keys) {
-            groups[loc.col][loc.row].get(loc.slot_num).fill(cb[loc]);
+    public void load_board(Battle b) {
+        foreach (Location loc in b.board.Keys) {
+            groups[loc.col][loc.row].get(loc.slot_num).fill(b.board[loc]);
         }
     }
 

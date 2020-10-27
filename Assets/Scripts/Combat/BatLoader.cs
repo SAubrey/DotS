@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 
 /*
 Battalion loader.
@@ -9,11 +10,12 @@ Pertains to the player unit placement selection bar and placed player/enemy unit
 */
 public class BatLoader : MonoBehaviour {
     private Controller c;
+    private BattlePhaser bat_phaser;
     //public Sprite white_fade_img, dark_fade_img;
     public Sprite empty; // UIMask image for a slot button image.
     // Unit quantity text fields in the unit selection scrollbar.
-    public Dictionary<int, Text> texts = new Dictionary<int, Text>();
-    public Text warrior_t, spearman_t, archer_t, miner_t, inspirator_t, seeker_t,
+    public Dictionary<int, TextMeshProUGUI> texts = new Dictionary<int, TextMeshProUGUI>();
+    public TextMeshProUGUI warrior_t, spearman_t, archer_t, miner_t, inspirator_t, seeker_t,
         guardian_t, arbalest_t, skirmisher_t, paladin_t, mender_t, carter_t, dragoon_t,
         scout_t, drummer_t, shield_maiden_t, pikeman_t;
 
@@ -55,9 +57,14 @@ public class BatLoader : MonoBehaviour {
     public Sprite tajaqar_b, tajaero_b, terra_qual_b, duale_b;
     public Sprite tajaqar_f, tajaero_f, terra_qual_f, duale_f;
 
+    public Sprite meld_warrior_b, meld_spearman_b;
+    public Sprite meld_warrior_f, meld_spearman_f;
+
     public bool selecting_for_heal = false;
+    public TextMeshProUGUI discT;
     public PlayerUnit healing_unit;
     private int selected_unit_type = 0;
+
 
     public Sprite get_unit_img(Unit unit, int direction) {
         if (unit != null)
@@ -217,24 +224,33 @@ public class BatLoader : MonoBehaviour {
         enemy_images_front.Add(Enemy.TERRA_QUAL, terra_qual_f);
         enemy_images_back.Add(Enemy.DUALE, duale_b);
         enemy_images_front.Add(Enemy.DUALE, duale_f);
+
+        // Meld
+        enemy_images_back.Add(Enemy.MELD_WARRIOR, meld_warrior_b);
+        enemy_images_front.Add(Enemy.MELD_WARRIOR, meld_warrior_f);
+        
+        enemy_images_back.Add(Enemy.MELD_SPEARMAN, meld_spearman_b);
+        enemy_images_front.Add(Enemy.MELD_SPEARMAN, meld_spearman_f);
     }
 
     void Start() {
         c = GameObject.Find("Controller").GetComponent<Controller>();
+        bat_phaser = c.battle_phaser;
     }
 
     // This loads the player's battalion composition into the static
     // slots in the battle scene. 
-    public void load_text() {
-        Battalion b = c.get_active_bat();
+    public void load_bat(Battalion b) {
         foreach (int type in b.units.Keys) 
-            load_text(b, type);
+            load_unit_text(b, type);
+        Debug.Log("loading bat: " + b.disc.name);
+        c.map_ui.highlight_discipline(discT, b.disc.ID);
     }
 
     /*
     Load unit counts in unit placement sidebar.
     */
-    public void load_text(Battalion b, int ID) {
+    public void load_unit_text(Battalion b, int ID) {
         MapUI map_ui = c.map_ui;
         if (!texts.ContainsKey(ID) || !map_ui.unit_countsT.ContainsKey(ID))
             return;
@@ -258,17 +274,17 @@ public class BatLoader : MonoBehaviour {
         }
         
         if (selecting_for_heal) { // Heal attribute
-            if (c.get_active_bat().heal_injured_unit(ID)) {
-                load_text(c.get_active_bat(), ID);
+            if (bat_phaser.active_bat.heal_injured_unit(ID)) {
+                load_unit_text(bat_phaser.active_bat, ID);
                 selected_unit_type = ID;
-                unit_buttons[ID].image.color = Controller.GREY;
+                unit_buttons[ID].image.color = Statics.DISABLED_C;
             } else {
                 cancel_heal();
             }
         } else {
             // Select and change color of new selection
             selected_unit_type = ID;
-            unit_buttons[ID].image.color = Controller.GREY;
+            unit_buttons[ID].image.color = Statics.DISABLED_C;
         }
     }
 

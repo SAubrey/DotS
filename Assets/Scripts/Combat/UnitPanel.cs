@@ -1,18 +1,20 @@
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 
 public class UnitPanel : MonoBehaviour {
     protected Selector selector;
     protected BattlePhaser bp;
     public Button closeB;
     public GameObject panel;
-    public Text AttT;
-    public Text unit_name;
+    public TextMeshProUGUI AttT;
+    public TextMeshProUGUI unit_name;
     
     public Slot slot;
     public PlayerUnit punit;
     private Camera cam;
     public GameObject infoP;
+    public TextMeshProUGUI infoT;
 
     public virtual void update_panel(Slot slot) {}
 
@@ -67,7 +69,6 @@ public class UnitPanel : MonoBehaviour {
     public void update_info_panel() {
         if (slot == null)
             return;
-        Text t = infoP.GetComponentInChildren<Text>();
-        AttributeWriter.write_attribute_text(t, slot.get_unit());
+        AttributeWriter.write_attribute_text(infoT, slot.get_unit());
     }
 }

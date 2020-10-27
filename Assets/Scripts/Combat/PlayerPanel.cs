@@ -1,18 +1,13 @@
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 
 public class PlayerPanel : UnitPanel {
     Controller c;
     AttackQueuer aq;
-    public Button returnB;
-    public Button moveB;
-    public Button attackB;
-    public Button defB;
-    public Button attributeB;
+    public Button returnB, moveB, attackB, defB, attributeB;
     public Button upB, downB, leftB, rightB;
-
-    public Text DefT;
-    public Text ResT;
+    public TextMeshProUGUI DefT, ResT;
 
     void Start() {
         c = GameObject.Find("Controller").GetComponent<Controller>();
@@ -59,29 +54,34 @@ public class PlayerPanel : UnitPanel {
         bool ranging = bp.range_stage && punit.is_range;
         bool combat_staging = (bp.range_stage && punit.is_range) || 
                                 (bp.combat_stage);
+        bool can_be_controlled_by_active_battalion = 
+            c.get_active_battalion().disc.ID == punit.owner_ID;
 
         if (bp.movement_stage || bp.placement_stage)
             enable_rotateB();
         if (!punit.out_of_actions && !punit.has_acted_in_stage && 
-                (bp.movement_stage || ranging)) {
-            enable_moveB();
+                (bp.movement_stage || ranging) &&
+                can_be_controlled_by_active_battalion) {
+            moveB.interactable = true;
         } else if (bp.init_placement_stage) {
-            enable_returnB();
+            returnB.interactable = true;
         } 
 
         bool is_first_slot_in_group = slot.get_group().get_highest_player_slot() == slot;
         if (!punit.has_acted_in_stage && !punit.out_of_actions && 
-                combat_staging && is_first_slot_in_group) {
+                combat_staging && (is_first_slot_in_group || punit.is_range) &&
+                can_be_controlled_by_active_battalion) {
+
             if (punit.get_raw_attack_dmg() > 0)
                 attackB.interactable = true;
-            if (punit.get_raw_defense() > 0)                
+            if (punit.get_raw_defense() > 0)      
                 defB.interactable = true;
             if (punit.can_activate_attribute()) {
                 attributeB.interactable = true;
             }
         }
 
-        // Determine pressed buttons
+        // Remember which buttons were pressed.
         set_press_attackB(punit.attack_set);
         _attB_pressed = punit.attack_set;
         set_press_defB(punit.defending);
@@ -209,19 +209,19 @@ public class PlayerPanel : UnitPanel {
     }
 
     private void set_press_attackB(bool pressed) {
-        attackB.image.color = pressed ? Controller.GREY : Color.white;
+        attackB.image.color = pressed ? Statics.DISABLED_C : Color.white;
     }
 
     private void set_press_defB(bool pressed) {
-        defB.image.color = pressed ? Controller.GREY : Color.white;
+        defB.image.color = pressed ? Statics.DISABLED_C : Color.white;
     }
 
     private void set_press_moveB(bool pressed) {
-        moveB.image.color = pressed ? Controller.GREY : Color.white;
+        moveB.image.color = pressed ? Statics.DISABLED_C : Color.white;
     }
 
     private void set_press_attributeB(bool pressed) {
-        attributeB.image.color = pressed ? Controller.GREY : Color.white;
+        attributeB.image.color = pressed ? Statics.DISABLED_C : Color.white;
     }
 
     public override void close() {

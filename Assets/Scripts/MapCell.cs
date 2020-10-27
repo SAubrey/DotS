@@ -26,12 +26,14 @@ public class MapCell {
     public const int STAR_ID = 5;
     public const int TITRUM_ID = 6;
     public const int LUSH_LAND_ID = 7;
-    public const int MIRE_ID = 8;
+
+    // Not an actual tile type, just enemy spawn type as determined by travelcards
+    public const int MELD_ID = 8;
     public const int MOUNTAIN_ID = 9;
     public const int SETTLEMENT_ID = 10;
     public const int RUNE_GATE_ID = 11;
 
-    public static MapCell create_cell(Map map, int tier, int tile_ID, Tile tile, Pos pos) {
+    public static MapCell create_cell(Map map, int tier, int tile_type_ID, Tile tile, Pos pos) {
         MapCell mc = null;
         string[] splits = tile.ToString().Split('_');
 
@@ -52,8 +54,8 @@ public class MapCell {
             mc = new Titrum(tier, tile, pos);
         } else if (name == LUSH_LAND) {
             mc = new LushLand(tier, tile, pos);
-        } else if (name == MIRE) {
-            mc = new Mire(tier, tile, pos);
+        //} else if (name == MIRE) {
+            //mc = new Mire(tier, tile, pos);
         } else if (name == MOUNTAIN) {
             mc = new Mountain(tier, tile, pos);
         } else if (name == SETTLEMENT) {
@@ -63,34 +65,43 @@ public class MapCell {
         } else {
             mc = new MapCell(tier, tile, pos, 0);
         }
-        mc.tile_ID = tile_ID;
+        mc.tile_type_ID = tile_type_ID;
         mc.map = map;
         return mc;
     }
 
-    public Tile tile;
-    public Pos pos;
-    public int tier;
+    private static Color enemy_color = new Color(1, .5f, .5f, 1f);
+    public readonly Tile tile;
+    public readonly int tier;
+    public readonly Pos pos;
+    public readonly int biome_ID;
     public bool discovered = false;
     public string name;
-    public int biome_ID;
     public int minerals, star_crystals = 0;
-    public int tile_ID;
+    public int tile_type_ID;
     public bool creates_travelcard = true;
     public bool has_rune_gate = false;
     public bool restored_rune_gate = false;
     public bool travelcard_complete = false;
-    private TravelCard travelcard;
+    public Battle battle;
     private List<Enemy> enemies = new List<Enemy>();
     public Map map;
-    
+    private TravelCard _travelcard;
+    public TravelCard travelcard { 
+        get => _travelcard;
+        set {
+            if (value == null)
+                return;
+            travelcard_complete = false;
+            _travelcard = value;
+        }
+     }
 
     public MapCell(int tier, Tile tile, Pos pos, int biome_ID) {
         this.tile = tile;
         this.tier = tier;
         this.pos = pos;
         this.biome_ID = biome_ID;
-        //this.tile.color = Color.green;
     }
 
     public void post_battle() {
@@ -128,27 +139,54 @@ public class MapCell {
             Map map = GameObject.Find("Controller").GetComponent<Controller>().map;
             Vector3Int vec = new Vector3Int(pos.x, pos.y, 0);
             map.tm.SetTileFlags(vec, TileFlags.None);
-            map.tm.SetColor(vec, Color.red);
+            map.tm.SetColor(vec, enemy_color); // Dark red
         } else {
-            Debug.Log("setting white");
             tile.color = Color.white;
         }
     }
 
     public void discover() {
         discovered = true;
-    }
-
-    public void set_travelcard(TravelCard tc) {
-        if (tc == null)
-            return;
-        travelcard_complete = false;
-        travelcard = tc;
+        map.adjust_light_size(this);
     }
 
     public void complete_travelcard() {
         travelcard = null;
         travelcard_complete = true;
+    }
+
+    public void assign_group_leader() {
+        battle = new Battle(map, this, map.c.get_disc(), true);
+        begin_color_oscillation();
+    }
+
+    public void clear_battle() {
+        foreach (Discipline d in battle.participants) {
+            d.bat.pending_group_battle_cell = null;
+        }
+        battle = null;
+        end_color_oscillation();
+    }
+
+    public void begin_color_oscillation() {
+        map.add_oscillating_cell(this);
+    }
+
+    public void end_color_oscillation() {
+        if (map.remove_oscillating_cell(this))
+            map.tm.SetColor(new Vector3Int(pos.x, pos.y, 0), Color.white);
+    }
+    
+    public void oscillate_color() {
+        float y = 0.75f + (Mathf.Sin(Time.time) / 4f);
+        Tile t = (Tile)map.tm.GetTile(new Vector3Int(pos.x, pos.y, 0));
+        map.tm.SetColor(new Vector3Int(pos.x, pos.y, 0), new Color(1, y, y, 1));
+    }
+
+    // Can currently only group battle if the player has retreated/scouted the tile
+    // and a group has not already been formed on this cell.
+    public bool can_setup_group_battle() {
+        return has_enemies;
     }
 
     public void add_enemy(Enemy e) {
@@ -204,6 +242,12 @@ public class MapCell {
     public Dictionary<string, int> get_travelcard_consequence() {
         return travelcard.consequence;
     }
+
+    public bool can_mine(Battalion b) {
+        return b.has_miner && !b.disc.has_mined_in_turn && 
+            map.get_cell(b.disc.pos) == this &&
+            (minerals > 0 || star_crystals > 0);
+    }
 }
 
 public class Plains : MapCell {
@@ -258,11 +302,12 @@ public class LushLand : MapCell {
         travelcard_complete = true;
     }
 }
+/*
 public class Mire : MapCell {
     public Mire(int tier, Tile tile, Pos pos) : base(tier, tile, pos, MIRE_ID) {
         name = MIRE;
     }
-}
+}*/
 public class Mountain : MapCell {
     public Mountain(int tier, Tile tile, Pos pos) : base(tier, tile, pos, MOUNTAIN_ID) {
         name = MOUNTAIN;

@@ -28,12 +28,22 @@ public class TurnPhaser : MonoBehaviour {
         td = c.travel_deck;
         map_ui = c.map_ui;
 
-        map_ui.disable_mineB();
         stage = MOVEMENT;
     }
 
     public void advance_stage() {
         stage++;
+    }
+
+    // Activatedw hen 'Continue' is pressed on travel card.
+    public void continue_travel_card() {
+        //if (tc.follow_rule(TravelCard.))
+        if ((cell.biome_ID == MapCell.CAVE_ID || cell.biome_ID == MapCell.RUINS_ID) 
+                && !cell.travelcard_complete) {
+            c.map_ui.set_active_ask_to_enterP(true);
+        } else {
+            advance_stage();
+        }
     }
 
         // Stage adjustment happens internally only. 
@@ -45,32 +55,45 @@ public class TurnPhaser : MonoBehaviour {
             _stage = value;
 
             if (_stage == MOVEMENT) {
-                map_ui.set_next_stageB_text("Movement");
-                // Don't move if resuming battle.
-                if (c.get_active_bat().in_battle) {
-                    stage = ACTION; // Bypasses travel card and action.
-                } else
-                    moving = true;
+                //map_ui.set_next_stageB_text("Movement");
+                moving = true;
             }
             else if (_stage == TRAVEL_CARD) {
-                Debug.Log("travel card stage");
+                //Debug.Log("travel card stage");
                 travel_card();
             }
             else if (_stage == ACTION) {
-                Debug.Log("action stage");
+                //Debug.Log("action stage");
                 action();
             }
             else if (_stage > ACTION) {
-                advance_player();
+                end_disciplines_turn();
             }
         }
     }
 
+    
+    public void end_disciplines_turn() {
+        c.map.close_cell_UI();
+        advance_player();
+    }
+
     private void advance_player() {
-        c.active_disc_ID = (c.active_disc_ID + 1) % 3;
+        c.active_disc_ID++;
         if (c.active_disc_ID == 0)
             c.advance_turn();
         
+        // If leader of a battle, bypass stages and enter battle.
+        Battle b = c.map.get_current_cell().battle;
+        if (b != null) {
+            if (c.get_disc() == b.leader) {
+                c.battle_phaser.resume_battle(c.map.get_current_cell());
+            // If in battle but not leader, skip turn. (Turn used in group battle)
+            } else {
+                advance_player();
+                return;
+            }
+        }
         reset();
         cs.set_active(CamSwitcher.MAP, true);
     }
@@ -78,10 +101,9 @@ public class TurnPhaser : MonoBehaviour {
     public void reset() { // New game, new player
         tc = null;
         cell = c.map.get_cell(c.get_disc().pos);
-        map_ui.set_active_next_stageB(false);
+        //map_ui.set_active_next_stageB(false);
         map_ui.set_active_ask_to_enterP(false);
         map_ui.set_active_game_lossP(false);
-        map_ui.set_active_mineB(check_mineable(cell));
         map_ui.update_cell_text(cell.name);
         stage = MOVEMENT;
     }
@@ -90,19 +112,20 @@ public class TurnPhaser : MonoBehaviour {
     public void travel_card() {
         moving = false;
         _stage = TRAVEL_CARD;
-        map_ui.set_next_stageB_text("Travel Card");
+        //map_ui.set_next_stageB_text("Travel Card");
         cell = c.map.get_cell(c.get_disc().pos);
 
         // Load forced travel card from a previous save.
         if (c.get_disc().restart_battle_from_drawn_card) {
             td.display_card(c.get_disc().get_travelcard());
             c.get_disc().restart_battle_from_drawn_card = false;
-            Debug.Log("resuming prev battle");
+            Debug.Log("resuming loaded battle");
             return;
         }
 
         if (!cell.discovered) {
             cell.discover();
+
             if (cell.creates_travelcard) { // Cell can have cards drawn.
                 
                 // DRAW CARD
@@ -123,17 +146,12 @@ public class TurnPhaser : MonoBehaviour {
     // Called by the continue button of the travel card. 
     public void action() {
         _stage = ACTION;
-        map_ui.set_next_stageB_text("End Turn");
+        //map_ui.set_next_stageB_text("End Turn");
 
         if (tc != null) {
             handle_travelcard(tc);
-        } else if (cell.has_enemies) { // Someone retreated from here.
-            resume_battle();
-            return;
-        } 
-
-        check_action_buttons();
-        c.map_ui.set_active_next_stageB(true);
+        }
+        //c.map_ui.set_active_next_stageB(true);
         //if () check then enable build button
 
         // Check for settlement and adjust UI accordingly.
@@ -141,60 +159,11 @@ public class TurnPhaser : MonoBehaviour {
 
     private void handle_travelcard(TravelCard tc) {
         if (tc.follow_rule(TravelCard.ENTER_COMBAT)) { // If a combat travel card was pulled.
-            begin_new_combat(tc);
+            c.battle_phaser.begin_new_battle(tc, cell);
         } else if (tc.follow_rule(TravelCard.AFFECT_RESOURCES)) {
             StartCoroutine(c.get_disc().adjust_resources_visibly(tc.consequence));
             c.get_disc().complete_travelcard();
         } 
-    }
-
-    private void resume_battle() {
-        c.get_active_bat().in_battle = true;
-        if (cell.has_enemies) { // Mini retreat, reload enemies.
-            enemy_loader.load_existing_enemies(cell.get_enemies());
-        } else { // Resume battle exactly as it was.
-            c.formation.load_board(c.active_disc_ID);
-        }
-        cs.set_active(CamSwitcher.BATTLE, true);
-    }
-
-    private void check_action_buttons() {
-        if (check_mineable(cell)) {
-            map_ui.enable_mineB();
-        } 
-    }
-
-    private void begin_new_combat(TravelCard tc) {
-        Debug.Log("setting in_battle to true from " + c.get_active_bat().in_battle + 
-        " for " + c.active_disc_ID + " at " + cell.pos.x + ", " + cell.pos.y);
-        c.get_active_bat().in_battle = true; 
-        enemy_loader.place_new_enemies(cell, tc.enemy_count);
-        
-        cs.set_active(CamSwitcher.BATTLE, true);
-    }
-
-    public void mine() {
-        map_ui.disable_mineB();
-        int mine_qty = c.get_active_bat().mine_qty;
-        if (cell.biome_ID == MapCell.TITRUM_ID || cell.biome_ID == MapCell.MOUNTAIN_ID) {
-            if (cell.minerals >= mine_qty) {
-                c.get_disc().change_var(Storeable.MINERALS, mine_qty, true);
-            } else {
-                c.get_disc().change_var(Storeable.MINERALS, cell.minerals, true);
-            }
-        } else if (cell.biome_ID == MapCell.STAR_ID) {
-            if (cell.star_crystals >= mine_qty) {
-                c.get_disc().change_var(Storeable.STAR_CRYSTALS, mine_qty, true);
-            } else {
-                c.get_disc().change_var(Storeable.STAR_CRYSTALS, cell.star_crystals, true);
-            }
-        }
-        c.map_ui.set_active_next_stageB(true);
-    }
-
-    private bool check_mineable(MapCell cell) {
-        return (c.get_active_bat().has_miner && 
-            (cell.minerals > 0 || cell.star_crystals > 0));
     }
 }
 

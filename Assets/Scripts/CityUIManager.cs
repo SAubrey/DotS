@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using System;
+using TMPro;
 
 public class CityUIManager : MonoBehaviour {
     public static Color LOCKED_COLOR = new Color(.4f, .4f, .4f, 1);
@@ -49,17 +50,17 @@ public class CityUIManager : MonoBehaviour {
     public const int BARRACKS2 = 33;
 
 
-    // City inventory texts
-    public Text city_capacityT, bat_capacityT;
-    public IDictionary<string, Text> city_inv = new Dictionary<string, Text>();
-    public Text c_star_crystals, c_minerals, c_arelics, c_mrelics, c_erelics, c_equimares;
-    // Discipline inventory texts
-    public IDictionary<string, Text> disc_inv = new Dictionary<string, Text>();
-    public Text d_star_crystals, d_minerals, d_arelics, d_mrelics, d_erelics, d_equimares;
+    // City inventory TextMeshProUGUIs
+    public TextMeshProUGUI city_capacityT, bat_capacityT;
+    public IDictionary<string, TextMeshProUGUI> city_inv = new Dictionary<string, TextMeshProUGUI>();
+    public TextMeshProUGUI c_star_crystals, c_minerals, c_arelics, c_mrelics, c_erelics, c_equimares;
+    // Discipline inventory TextMeshProUGUIs
+    public IDictionary<string, TextMeshProUGUI> disc_inv = new Dictionary<string, TextMeshProUGUI>();
+    public TextMeshProUGUI d_star_crystals, d_minerals, d_arelics, d_mrelics, d_erelics, d_equimares;
 
-    // Unit quantity texts - Hiring
-    public IDictionary<int, Text> unit_counts = new Dictionary<int, Text>();
-    public Text warriorT, spearmanT, archerT, minerT, inspiratorT, seekerT, guardianT,
+    // Unit quantity TextMeshProUGUIs - Hiring
+    public IDictionary<int, TextMeshProUGUI> unit_counts = new Dictionary<int, TextMeshProUGUI>();
+    public TextMeshProUGUI warriorT, spearmanT, archerT, minerT, inspiratorT, seekerT, guardianT,
         arbalestT, skirmisherT, paladinT, menderT, carterT, dragoonT, scoutT,
         drummerT, shield_maidenT, pikemanT;
 
@@ -74,7 +75,7 @@ public class CityUIManager : MonoBehaviour {
     public GameObject upgradesP;
     public GameObject astra_upgradeP, martial_upgradeP, endura_upgradeP;
     public Button astra_upgradeB, martial_upgradeB, endura_upgradeB;
-    public Text upgrade_infoT;
+    public TextMeshProUGUI upgrade_infoT;
     public Dictionary<int, Button> upgrade_buttons = new Dictionary<int, Button>();
     public Button templeB, temple2B, citadelB, shared_wisdomB, meditationB, sanctuaryB,
         temple3B, hallofadeptB, faithfulB, rune_portB, citadel2B;
@@ -90,7 +91,7 @@ public class CityUIManager : MonoBehaviour {
     private Controller c;
     public GameObject cityP;
     public bool visible = false;
-    public Text infoT;
+    public TextMeshProUGUI infoT;
 
     public int selected_upgrade_ID;
 
@@ -254,8 +255,8 @@ public class CityUIManager : MonoBehaviour {
 
     // ---Hire units UI---
     public void update_stat_text(int calling_class, string field, int val, int sum, int capacity) {
-        Text t = null;
-        if (calling_class == Controller.CITY) {
+        TextMeshProUGUI t = null;
+        if (calling_class == City.CITY) {
             city_inv.TryGetValue(field, out t);
             MapUI.update_capacity_text(city_capacityT, sum, capacity);
         } else if (calling_class == c.active_disc_ID) {
@@ -270,7 +271,7 @@ public class CityUIManager : MonoBehaviour {
     public void load_unit_counts() {
         foreach (int type in unit_counts.Keys) 
             unit_counts[type].text = 
-                c.get_active_bat().units[type].Count.ToString();
+                c.get_disc().bat.units[type].Count.ToString();
     }
 
     public void try_hire_unit(string args_str) {
@@ -280,14 +281,14 @@ public class CityUIManager : MonoBehaviour {
         int mineral_cost = Int32.Parse(args[2]);
 
         if (verify_avail_unit_resources(sc_cost, mineral_cost)) {
-            c.get_active_bat().add_units(type, 1);
+            c.get_disc().bat.add_units(type, 1);
             StartCoroutine(c.get_disc().adjust_resources_visibly(
                 new Dictionary<string, int>() {
                     {Storeable.STAR_CRYSTALS, -sc_cost},
                     {Storeable.MINERALS, -mineral_cost}
             }));
-            // Update text in city ui and map ui
-            unit_counts[type].text = c.get_active_bat().units[type].Count.ToString();
+            // Update TextMeshProUGUI in city ui and map ui
+            unit_counts[type].text = c.get_disc().bat.units[type].Count.ToString();
             c.map_ui.unit_countsT[type].text = unit_counts[type].text;
         }
     }
@@ -516,20 +517,20 @@ public class CityUIManager : MonoBehaviour {
         astra_upgradeB.image.color = UNLOCKED_COLOR;
         endura_upgradeB.image.color = UNLOCKED_COLOR;
         martial_upgradeB.image.color = UNLOCKED_COLOR;
-        if (disc == Controller.ASTRA) {
+        if (disc == Discipline.ASTRA) {
             astra_upgradeP.SetActive(true);
             astra_upgradeB.image.color = PURCHASED_COLOR;
-        } else if (disc == Controller.ENDURA) {
+        } else if (disc == Discipline.ENDURA) {
             endura_upgradeP.SetActive(true);
             endura_upgradeB.image.color = PURCHASED_COLOR;
-        } else if (disc == Controller.MARTIAL) {
+        } else if (disc == Discipline.MARTIAL) {
             martial_upgradeP.SetActive(true);
             martial_upgradeB.image.color = PURCHASED_COLOR;
         }
     }
 
     public void update_info_text(int punit_ID) {
-        AttributeWriter.write_attribute_text(infoT, PlayerUnit.create_punit(punit_ID));
+        AttributeWriter.write_attribute_text(infoT, PlayerUnit.create_punit(punit_ID, -1));
     }
 
     public void toggle_city_panel() {
@@ -574,15 +575,17 @@ public class Upgrade {
     public string build_cost_str() {
         string cost = "";
         if (star_crystals > 0)
-            cost += "SC" + star_crystals + ", ";
+            cost += "Star Crystal " + star_crystals + ", ";
         if (minerals > 0)
-            cost += "Min" + minerals + ", ";
+            cost += "Mineral " + minerals + ", ";
         if (arelics > 0)
-            cost += "A" + arelics + ", ";
+            cost += "Astra Relic " + arelics + ", ";
         if (mrelics > 0)
-            cost += "M" + mrelics + ", ";
+            cost += "Martial Relic " + mrelics + ", ";
         if (erelics > 0)
-            cost += "E" + erelics + ", ";
+            cost += "Endura Relic " + erelics + ", ";
+        cost = cost.Remove(cost.Length - 2, 2);
+        cost += ". ";
         return cost;
     }
 }

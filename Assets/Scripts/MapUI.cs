@@ -2,45 +2,47 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 
 public class MapUI : MonoBehaviour {
-    public Text turn_number_t;
+    public TextMeshProUGUI turn_number_t;
 
     // ---City UI---
     public GameObject cityP;
     private bool city_panel_active = true;
-    public Text city_capacityT;
-    public Text c_light, c_star_crystals, c_minerals, 
+    public TextMeshProUGUI city_capacityT;
+    public TextMeshProUGUI c_light, c_star_crystals, c_minerals, 
         c_arelics, c_mrelics, c_erelics, c_equimares;
-    public IDictionary<string, Text> city_inv = new Dictionary<string, Text>();
+    public IDictionary<string, TextMeshProUGUI> city_inv = new Dictionary<string, TextMeshProUGUI>();
 
 
     // Battalion Resource UI
     public GameObject invP;
     private bool inv_panel_active = true;
-    public Text b_light, b_unity, b_experience, b_star_crystals,
+    public TextMeshProUGUI b_light, b_unity, b_experience, b_star_crystals,
          b_minerals, b_arelics, b_mrelics, b_erelics, b_equimares;
 
 
     // Battalion Unit UI
     public GameObject unitsP;
     private bool unitsP_active = true;
-    public Text bat_capacityT;
-    public Dictionary<int, Text> unit_countsT = new Dictionary<int, Text>();
-    public Text warrior_count, spearman_count, archer_count, 
+    public TextMeshProUGUI bat_capacityT;
+    public Dictionary<int, TextMeshProUGUI> unit_countsT = new Dictionary<int, TextMeshProUGUI>();
+    public TextMeshProUGUI warrior_count, spearman_count, archer_count, 
         miner_count, inspirator_count, seeker_count,
         guardian_count, arbalest_count, skirmisher_count, 
         paladin_count, mender_count, carter_count, dragoon_count,
         scout_count, drummer_count, shield_maiden_count, pikeman_count;
 
     Controller c;
-    public IDictionary<string, Text> disc_inv = new Dictionary<string, Text>();
-    public Text map_discT, battle_discT, map_cellT, battle_cellT;
-    public Button next_stageB, mineB;
+    public IDictionary<string, TextMeshProUGUI> disc_inv = new Dictionary<string, TextMeshProUGUI>();
+    public TextMeshProUGUI discT, map_cellT, battle_cellT;
+    public Button next_stageB;
     public GameObject ask_to_enterP;
 
     void Awake() {
         c = GameObject.Find("Controller").GetComponent<Controller>();
+        set_next_stageB_text(c.active_disc_ID);
         
         // Populate city dictionary
         city_inv.Add(Storeable.LIGHT, c_light);
@@ -81,25 +83,36 @@ public class MapUI : MonoBehaviour {
         unit_countsT.Add(PlayerUnit.PIKEMAN, pikeman_count);
     }
 
-    public void load_stats(Storeable s) {
+    void Update() {
+        if (c.cam_switcher.current_cam != CamSwitcher.MAP)
+            return;
+        if (Input.GetKeyDown(KeyCode.Space) && next_stageB.IsActive()) {
+            c.turn_phaser.end_disciplines_turn();
+        } else if (Input.GetKeyDown(KeyCode.X)) {
+            c.map.close_cell_UI();
+        }
+    }
+
+    public void load_discipline_UI(Storeable s) {
         // Trigger resource property UI updates by non-adjusting values.
         foreach (string resource in Storeable.FIELDS) {
             s.update_text_fields(resource, s.get_var(resource));
         }
         c.city_ui.load_unit_counts();
-        highlight_discipline(c.active_disc_ID);
+        highlight_discipline(discT, c.active_disc_ID);
+        set_next_stageB_text(c.active_disc_ID);
     }
 
     
-    public static void update_capacity_text(Text text, int sum_resources, int capacity) {
+    public static void update_capacity_text(TextMeshProUGUI text, int sum_resources, int capacity) {
         if (text == null)
             return;
         text.text = sum_resources + " / " + capacity;
     }
 
     public void update_stat_text(int calling_class, string field, int val, int sum, int capacity) {
-        Text t = null;
-        if (calling_class == Controller.CITY) {
+        TextMeshProUGUI t = null;
+        if (calling_class == City.CITY) {
             city_inv.TryGetValue(field, out t);
             MapUI.update_capacity_text(city_capacityT, sum, capacity);
         } else if (calling_class == c.active_disc_ID) {
@@ -110,19 +123,15 @@ public class MapUI : MonoBehaviour {
             t.text = val.ToString();
     }
 
-    private void highlight_discipline(int discipline) {
-        if (discipline == Controller.ASTRA) {
-            map_discT.text = "Astra";
-            map_discT.color = Controller.ASTRA_COLOR;
-        } else if (discipline == Controller.MARTIAL) {
-            map_discT.text = "Martial";
-            map_discT.color = Controller.MARTIAL_COLOR;
-        } else if (discipline == Controller.ENDURA) {
-            map_discT.text = "Endura";
-            map_discT.color = Controller.ENDURA_COLOR;
+    public void highlight_discipline(TextMeshProUGUI txt, int disc_ID) {
+        if (disc_ID == Discipline.ASTRA) {
+            txt.text = "Astra";
+        } else if (disc_ID == Discipline.MARTIAL) {
+            txt.text = "Martial";
+        } else if (disc_ID == Discipline.ENDURA) {
+            txt.text = "Endura";
         }
-        battle_discT.text = map_discT.text;
-        battle_discT.color = map_discT.color;
+        txt.color = Statics.disc_colors[disc_ID];
     }
 
     public void toggle_city_panel() {
@@ -143,13 +152,20 @@ public class MapUI : MonoBehaviour {
         map_cellT.text = tile_name;
         battle_cellT.text = tile_name;
     }
-
+/*
     public void set_active_next_stageB(bool state) {
         next_stageB.interactable = state;
-    }
+    }*/
 
-    public void set_next_stageB_text(string text) {
-        next_stageB.GetComponentInChildren<Text>().text = text;
+    public void set_next_stageB_text(int disc_ID) {
+        string s = "End ";
+        if (disc_ID == Discipline.ASTRA)
+            s += "Astra's Turn";
+        if (disc_ID == Discipline.MARTIAL)
+            s += "Martial's Turn";
+        if (disc_ID == Discipline.ENDURA)
+            s += "Endura's Turn";
+        next_stageB.GetComponentInChildren<TextMeshProUGUI>().text = s;
     }
 
     public void set_active_ask_to_enterP(bool state) {
@@ -163,17 +179,5 @@ public class MapUI : MonoBehaviour {
     public void toggle_units_panel() {
         unitsP_active = !unitsP_active;
         unitsP.SetActive(unitsP_active);
-    }
-    
-    public void enable_mineB() {
-        mineB.interactable = true;
-    }
-
-    public void disable_mineB() {
-        mineB.interactable = false;
-    }
-
-    public void set_active_mineB(bool state) {
-        mineB.interactable = state;
     }
 }

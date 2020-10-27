@@ -100,9 +100,6 @@ public class AttackQueuer : MonoBehaviour {
 
     private void post_battle() {
         // Clear attacks and clean the battlefield
-        c.get_active_bat().post_battle();
-        c.map.get_current_cell().post_battle();
-        
         reset();
         c.line_drawer.clear();
         c.battle_phaser.post_battle(); // after reset

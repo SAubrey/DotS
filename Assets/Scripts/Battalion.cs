@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Collections;
 using UnityEngine;
 
 public class Battalion {
@@ -8,15 +9,15 @@ public class Battalion {
         new Dictionary<int, List<PlayerUnit>>() { };
     private List<PlayerUnit> dead_units = new List<PlayerUnit>();
     private List<PlayerUnit> injured_units = new List<PlayerUnit>();
-    public int mine_qty;
     // Unit selected for placement in battle view
     public bool in_battle = false;
-    public bool mini_retreating = false;
-    public int ID;
+    public MapCell pending_group_battle_cell = null;
+    private Discipline _disc;
+    public Discipline disc { get => _disc; private set => _disc = value; }
     
-    public Battalion(Controller c, int ID) {
+    public Battalion(Controller c, Discipline disc) {
         this.c = c;
-        this.ID = ID;
+        this.disc = disc;
 
         foreach (int unit_type in PlayerUnit.unit_types) 
             units.Add(unit_type, new List<PlayerUnit>());
@@ -29,29 +30,33 @@ public class Battalion {
 
         // Units for testing
         add_units(PlayerUnit.MENDER, 1);
-        
-        mine_qty = ID == Controller.ENDURA ? 4 : 3;
     }
 
     public void add_units(int type, int count) {
         for (int i = 0; i < count; i++) {
             if (units.ContainsKey(type)) {
-                units[type].Add(PlayerUnit.create_punit(type));
+                units[type].Add(PlayerUnit.create_punit(type, disc.ID));
             }
         }
     }
 
     public void lose_random_unit() {
         // Get indices with available units.
-        List<int> spawned_unit_types = new List<int>();
+        ArrayList spawned_unit_types = new ArrayList();
         for (int i = 0; i < units.Count; i++) {
             if (units[i].Count > 0) {
-                spawned_unit_types.Insert(i, i);
+                spawned_unit_types.Add(i);
             }
         }
+        if (spawned_unit_types.Count <= 0)
+            return; // No more units to remove.
 
-        int roll = Random.Range(0, spawned_unit_types.Count);
-        units[spawned_unit_types[roll]].RemoveAt(0);
+        int roll = Random.Range(0, spawned_unit_types.Count - 1);
+        int removed_unit_type_ID = (int)spawned_unit_types[roll];
+        string s = units[removed_unit_type_ID][0].get_name() +
+            " Your ranks crumble without the light of the stars.";
+        units[removed_unit_type_ID].RemoveAt(0);
+        disc.create_rising_info(s, -1);
     }
 
     public void reset_all_stage_actions() {

@@ -6,6 +6,15 @@ using UnityEngine.Tilemaps;
 using UnityEngine.EventSystems;
 
 public class Map : MonoBehaviour, ISaveLoad {
+    /*private static Map _instance = null;
+
+    public static Map instance { 
+        get {
+            if (_instance == null)
+                _instance = new Map();
+            return _instance;
+        }
+    }*/
     public const int PLAINS_1 = 0;
     public const int FOREST_1 = 1;
     public const int RUINS_1 = 2;
@@ -40,7 +49,6 @@ public class Map : MonoBehaviour, ISaveLoad {
     public Tile star_1, star_2;
     public Tile titrum_1, titrum_2;
     public Tile mire;
-    //public Tile mire_1;
     public Tile lush_land_2;
     public Tile mountain_2;
     
@@ -49,18 +57,20 @@ public class Map : MonoBehaviour, ISaveLoad {
 
     public Tile city;
     public Tile shadow;
-    private System.Random rand;
     public Controller c;
     public GameObject cell_UI_prefab;
     public MapCellUI open_cell_UI_script;
 
-    private static IDictionary<int, Tile> tiles = new Dictionary<int, Tile>();
-    private static IDictionary<Tile, int> tile_to_tileID = new Dictionary<Tile, int>();
+    public IDictionary<int, Tile> tiles = new Dictionary<int, Tile>();// {
+        //{CITY, city},
+        //{PLAINS_1, plains_1}
+    //};
+    public IDictionary<Tile, int> tile_to_tileID = new Dictionary<Tile, int>();
 
-    private Dictionary<int, Dictionary<int, int>> bag_counters
+    private static readonly Dictionary<int, Dictionary<int, int>> bag_counters
      = new Dictionary<int, Dictionary<int, int>>();
     public Dictionary<int, List<int>> bags = new Dictionary<int, List<int>>();
-    private Dictionary<int, int> t1_bag_count = new Dictionary<int, int>() {
+    private readonly Dictionary<int, int> t1_bag_count = new Dictionary<int, int>() {
         {PLAINS_1, 6},
         {FOREST_1, 6},
         {RUINS_1, 4},
@@ -69,7 +79,7 @@ public class Map : MonoBehaviour, ISaveLoad {
         {STAR_1, 4},
         {TITRUM_1, 2},
     };
-    private Dictionary<int, int> t2_bag_count = new Dictionary<int, int>() { // 96
+    private readonly Dictionary<int, int> t2_bag_count = new Dictionary<int, int>() { // 96
         {PLAINS_2, 14},
         {FOREST_2, 14},
         {RUINS_2, 12},
@@ -83,7 +93,7 @@ public class Map : MonoBehaviour, ISaveLoad {
         {MOUNTAIN_2, 14},
         {RUNE_GATE, 2},
     };  
-    private Dictionary<int, int> t3_bag_count = new Dictionary<int, int>() { // 212
+    private readonly Dictionary<int, int> t3_bag_count = new Dictionary<int, int>() { // 212
         {PLAINS_2, 38},
         {FOREST_2, 38},
         {RUINS_2, 24},
@@ -103,6 +113,10 @@ public class Map : MonoBehaviour, ISaveLoad {
     public bool scouting { get; set; } = false;
 
     public GraphicRaycaster graphic_raycaster;
+    public List<MapCell> oscillating_cells = new List<MapCell>();
+    private System.Random rand;
+    private int max_discovered_tile_distance = 0;
+    public UnityEngine.Experimental.Rendering.Universal.Light2D light2d;
 
     void Start() {
         c = GameObject.Find("Controller").GetComponent<Controller>();
@@ -154,32 +168,41 @@ public class Map : MonoBehaviour, ISaveLoad {
     }
     
     void Update() {
-        if (cs.current_cam == CamSwitcher.MAP) {
-            if (Input.GetMouseButtonDown(0)) {
-                PointerEventData m_PointerEventData = new PointerEventData(EventSystem.current);
-                m_PointerEventData.position = Input.mousePosition;
-                List<RaycastResult> objects = new List<RaycastResult>();
 
-                graphic_raycaster.Raycast(m_PointerEventData, objects);
-                Debug.Log(objects.Count);
-                // Close the open cell window if clicking anywhere other than on the window.
-                // (The tilemap does not register as a game object)
-                bool hit_cell_window = false;
-                foreach (RaycastResult o in objects) {
-                    if (o.gameObject.tag == "Cell Window") {
-                        hit_cell_window = true;
-                        continue;
-                    }
-                }
-                Debug.Log(hit_cell_window);
-                if (!hit_cell_window) {
-                    if (open_cell_UI_script)
-                        open_cell_UI_script.close();
-                    if (objects.Count <= 0)
-                        handle_left_click();
+        if (cs.current_cam != CamSwitcher.MAP)
+            return;
+
+        // Process left mouse click
+        if (Input.GetMouseButtonDown(0)) {
+            PointerEventData m_PointerEventData = new PointerEventData(EventSystem.current);
+            m_PointerEventData.position = Input.mousePosition;
+            List<RaycastResult> objects = new List<RaycastResult>();
+
+            graphic_raycaster.Raycast(m_PointerEventData, objects);
+            // Close the open cell window if clicking anywhere other than on the window.
+            // (The tilemap does not register as a game object)
+            bool hit_cell_window = false;
+            foreach (RaycastResult o in objects) {
+                if (o.gameObject.tag == "Cell Window") {
+                    hit_cell_window = true;
+                    continue;
                 }
             }
+            if (!hit_cell_window) {
+                close_cell_UI();
+                if (objects.Count <= 0)
+                    handle_left_click();
+            }
         }
+
+        // Oscillate tile colors
+        foreach (MapCell mc in oscillating_cells) {
+            mc.oscillate_color();
+        }
+    }
+    public void close_cell_UI() {
+        if (open_cell_UI_script)
+            open_cell_UI_script.close();
     }
 
     private void new_game() {
@@ -197,20 +220,19 @@ public class Map : MonoBehaviour, ISaveLoad {
         bags[2].Clear();
         bags[3].Clear();
         map.Clear();
-        if (open_cell_UI_script)
-            open_cell_UI_script.close();
+        close_cell_UI();
         open_cell_UI_script = null;
     }
 
     private void handle_left_click() {
-        if (tp.moving) {
-            Vector3 pos = c.cam_switcher.mapCam.ScreenToWorldPoint(Input.mousePosition);
+        //if (tp.moving) {
+        Vector3 pos = c.cam_switcher.mapCam.ScreenToWorldPoint(Input.mousePosition);
 
-            if (get_tile(pos.x, pos.y) == null)
-                return;
+        if (get_tile(pos.x, pos.y) == null)
+            return;
 
-            generate_cell_UI(get_cell(pos));
-        }
+        generate_cell_UI(get_cell(pos));
+        //}
     }
 
     private void generate_cell_UI(MapCell cell) {
@@ -220,27 +242,32 @@ public class Map : MonoBehaviour, ISaveLoad {
         open_cell_UI_script = cell_UI_script;
     }
 
-    public void move_player(Vector3 pos, bool advance_stage) {
+    public void move_player(Vector3 pos, bool advance_stage, Discipline disc=null) {
         MapCell cell = get_cell(pos);
-        c.get_disc().pos = pos;
-        c.map_ui.update_cell_text(cell.name);
+        float randx = Random.Range(-0.2f, 0.2f); // simulate human placement, prevent perfect overlap
+        float randy = Random.Range(-0.2f, 0.2f);
 
-        if (!cell.discovered) {
-            tm.SetTile(new Vector3Int((int)pos.x, (int)pos.y, 0), cell.tile);
-        }
-        
-        if ((cell.biome_ID == MapCell.CAVE_ID || cell.biome_ID == MapCell.RUINS_ID) 
-                && !cell.travelcard_complete) {
-            c.map_ui.set_active_ask_to_enterP(true);
-            return;        
-        }
+        if (!disc)
+            disc = c.get_disc();
+        disc.pos = new Vector3(cell.pos.x + 0.5f + randx, cell.pos.y + 0.5f + randy, 0);
+        disc.has_moved_in_turn = true;
+        c.map_ui.update_cell_text(cell.name);
+        enter_cell(cell);
+
         if (advance_stage)
             tp.advance_stage();
     }
 
+    public void enter_cell(MapCell cell) {
+        if (!cell.discovered) {
+            tm.SetTile(new Vector3Int((int)cell.pos.x, (int)cell.pos.y, 0), cell.tile);
+        }
+    }
+
     public bool can_move(Vector3 destination) {
         Vector3 current_pos = new Vector3(get_current_cell().pos.x, get_current_cell().pos.y, 0);
-        return check_adjacent(destination, current_pos);
+        return check_adjacent(destination, current_pos) && get_cell(destination).battle == null
+            && !c.get_disc().has_moved_in_turn;
     }
 
     public void scout(Vector3 pos) {
@@ -251,7 +278,7 @@ public class Map : MonoBehaviour, ISaveLoad {
 
     public bool can_scout(Vector3 pos) {
         return get_tile(pos.x, pos.y) != null && check_adjacent(pos, c.get_disc().pos) && 
-            c.get_active_bat().get_unit(PlayerUnit.SCOUT) != null &&
+            c.get_disc().bat.get_unit(PlayerUnit.SCOUT) != null &&
             get_current_cell() != get_cell(pos) && get_cell(pos) != get_city_cell();
     }
 
@@ -294,9 +321,8 @@ public class Map : MonoBehaviour, ISaveLoad {
         Tile tile = grab_tile(tier);
         map.Add(pos, MapCell.create_cell(this,
             tier, tile_to_tileID[tile], tile, pos));
-        tm.SetTileFlags(new Vector3Int(y, x, 0), TileFlags.None);
-        tile.color = Color.white;
         place_tile(shadow, pos.x, pos.y);
+        tile.color = Color.white;
     }
 
     public Tile get_tile(float x, float y) {
@@ -311,6 +337,7 @@ public class Map : MonoBehaviour, ISaveLoad {
 
     public void place_tile(Tile tile, int x, int y) {
         tm.SetTile(new Vector3Int(x, y, 0), tile);
+        tm.SetTileFlags(new Vector3Int(y, x, 0), TileFlags.None); // Allow color change
     }
 
     public bool is_at_city(Discipline disc) {
@@ -351,6 +378,18 @@ public class Map : MonoBehaviour, ISaveLoad {
                 place_tile(shadow, pos.x, pos.y);
             map.Add(pos, cell);
         }
+    }
+
+    public void add_oscillating_cell(MapCell cell) {
+        oscillating_cells.Add(cell);
+    }
+
+    public bool remove_oscillating_cell(MapCell cell) {
+        if (oscillating_cells.Contains(cell)) {
+            oscillating_cells.Remove(cell);
+            return true;
+        }
+        return false;
     }
 
     public MapCell get_cell(Vector3 pos) {
@@ -437,6 +476,16 @@ public class Map : MonoBehaviour, ISaveLoad {
         }
     }
 
+    public void adjust_light_size(MapCell cell) {
+        int dist = Statics.calc_map_distance(cell.pos, new Pos(10, 10));
+        Debug.Log("distance from city: " + dist);
+        if (dist > max_discovered_tile_distance) {
+            max_discovered_tile_distance = dist;
+            light2d.pointLightInnerRadius = dist;
+            light2d.pointLightOuterRadius = dist + 3;
+        }
+
+    }
     public void toggle_waiting_for_second_gate() {
         waiting_for_second_gate = !waiting_for_second_gate;
     }

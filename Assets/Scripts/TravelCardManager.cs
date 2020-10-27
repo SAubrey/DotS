@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 
 public class TravelCardManager : MonoBehaviour {
     public GameObject tc_panel;
@@ -38,12 +39,8 @@ public class TravelCardManager : MonoBehaviour {
 
     public void set_rollB(bool state) {
         rollB.interactable = state;
-        Text t = rollB.GetComponentInChildren<Text>();
-        if (state) {
-            t.text = "Roll";
-        } else {
-            t.text = "";
-        }
+        TextMeshProUGUI t = rollB.GetComponentInChildren<TextMeshProUGUI>();
+        t.text = state ? "Roll" : "";
     }
     
     private void set_continueB(bool state) {

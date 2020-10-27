@@ -3,15 +3,21 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class Discipline : Storeable, ISaveLoad {
+    public const int ASTRA = 0, ENDURA = 1, MARTIAL = 2;
     public GameObject piece;
     public Battalion bat;
     private TravelCard travelcard;
     public bool restart_battle_from_drawn_card = false;
     public int base_unity = 10;
+    public int mine_qty;
+    public bool has_mined_in_turn = false;
+    public bool has_moved_in_turn = false;
+    
+
 
     protected override void Start() {
         base.Start();
-        bat = new Battalion(c, ID);
+        bat = new Battalion(c, this);
 
         _light = 4;
         _unity = base_unity;
@@ -23,6 +29,7 @@ public class Discipline : Storeable, ISaveLoad {
         _erelics = capacity;
         */
         pos = new Vector3(10.5f, 10.5f);
+        mine_qty = ID == ENDURA ? 4 : 3;
     }
 
     public override void new_game() {
@@ -33,6 +40,8 @@ public class Discipline : Storeable, ISaveLoad {
     public override void register_turn() {
         base.register_turn();
         check_insanity();
+        has_mined_in_turn = false;
+        has_moved_in_turn = false;
     }
 
     private void check_insanity() {
@@ -76,11 +85,31 @@ public class Discipline : Storeable, ISaveLoad {
     public void set_travelcard(TravelCard tc) {
         travelcard = tc;
         MapCell mc = c.map.get_cell(pos);
-        mc.set_travelcard(tc);
+        mc.travelcard = tc;
     }
 
     public TravelCard get_travelcard() {
         return travelcard;
+    }
+
+    public void mine(MapCell cell) {
+        int sc_mined = 0;
+        if (cell.biome_ID == MapCell.TITRUM_ID || cell.biome_ID == MapCell.MOUNTAIN_ID) {
+            if (cell.minerals >= mine_qty) {
+                sc_mined = change_var(Storeable.MINERALS, mine_qty, true);
+            } else {
+                sc_mined = change_var(Storeable.MINERALS, cell.minerals, true);
+            }
+        } else if (cell.biome_ID == MapCell.STAR_ID) {
+            if (cell.star_crystals >= mine_qty) {
+                sc_mined = change_var(Storeable.STAR_CRYSTALS, mine_qty, true);
+            } else {
+                sc_mined = change_var(Storeable.STAR_CRYSTALS, cell.star_crystals, true);
+            }
+        }
+        has_mined_in_turn = true;
+        cell.star_crystals -= sc_mined;
+        c.map.open_cell_UI_script.update_star_crystal_text();
     }
 
     public void reset() {
@@ -129,7 +158,7 @@ public class Discipline : Storeable, ISaveLoad {
         // Create injured units.
         foreach (int type in PlayerUnit.unit_types) {
             for (int i = 0; i < data.sbat.injured_types[type]; i++) {
-                PlayerUnit pu = PlayerUnit.create_punit(type);
+                PlayerUnit pu = PlayerUnit.create_punit(type, ID);
                 if (pu == null)
                     continue;
                 pu.injured = true;

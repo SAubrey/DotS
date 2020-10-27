@@ -13,7 +13,7 @@ public class Storeable : MonoBehaviour, ISaveLoad {
     public const string ERELICS = "Endura relics";
     public const string EQUIMARES = "equimares";
 
-    public static string[] FIELDS = { LIGHT, UNITY, EXPERIENCE, STAR_CRYSTALS,
+    public static readonly string[] FIELDS = { LIGHT, UNITY, EXPERIENCE, STAR_CRYSTALS,
                             MINERALS, ARELICS, MRELICS, ERELICS, EQUIMARES };
     public Controller c;
     protected MapUI map_ui;
@@ -52,11 +52,11 @@ public class Storeable : MonoBehaviour, ISaveLoad {
         if (light <= 0) {
             if (star_crystals > 0) {
                 d.Add(STAR_CRYSTALS, -1);
-                d.Add(LIGHT, light_refresh_amount);
+                d[LIGHT] = light_refresh_amount;
             } else {
                 if (unity >= 2)
                     d.Add(UNITY, -2);
-                else if (unity == 1)
+                else if (unity == 1) // Can't have negative Unity.
                     d.Add(UNITY, -1);
             }
         }
@@ -83,12 +83,7 @@ public class Storeable : MonoBehaviour, ISaveLoad {
         ri.transform.position = origin_of_rise_obj.transform.position;
 
         RisingInfo ri_script = ri.GetComponent<RisingInfo>();
-        if (name == "Astra")
-            ri_script.init(type, value, Controller.ASTRA_COLOR);
-        else if (name == "Martial")
-            ri_script.init(type, value, Controller.MARTIAL_COLOR);
-        else if (name == "Endura")
-            ri_script.init(type, value, Controller.ENDURA_COLOR);
+        ri_script.init(type, value, Statics.disc_colors[ID]);
         ri_script.show();
     }
 
@@ -111,7 +106,7 @@ public class Storeable : MonoBehaviour, ISaveLoad {
             mrelics + erelics + equimares;
     }
 
-    public void change_var(string var, int val, bool show=false) {
+    public int change_var(string var, int val, bool show=false) {
         val = get_valid_change_amount(var, val);
 
         if (var == LIGHT)
@@ -136,6 +131,7 @@ public class Storeable : MonoBehaviour, ISaveLoad {
         update_text_fields(var, get_var(var));
         if (show)
             create_rising_info(var, val);
+        return val;
     }
 
     public void set_var_without_check(string var, int val) {

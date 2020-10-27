@@ -4,11 +4,12 @@ using UnityEngine;
 
 
 public class City : Storeable {
+    public const int CITY = 3;
 
     protected override void Start() {
         base.Start();
         _light = 8;
-        ID = Controller.CITY;
+        ID = CITY;
     }
 
     public override void new_game() {

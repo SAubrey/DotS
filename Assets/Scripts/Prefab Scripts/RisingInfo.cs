@@ -1,23 +1,21 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-using UnityEngine.UI;
+﻿using UnityEngine;
+using TMPro;
 
 public class RisingInfo : MonoBehaviour {
     protected float timeout = AttackQueuer.WAIT_TIME;
     protected float time_alive = 0;
-    public Text fg_T;
-    public Text bg_T;
+    //public Text T;
+    public TextMeshProUGUI T;
     protected float translation_distance = 0.01f;
 
     public void init(string resource, int value, Color color) {
         string readout = "";
         if (value > 0) {
-            readout += "+ ";
+            readout = "+ ";
         }
         readout += value.ToString() + " " + resource;
         set_text(readout);
-        fg_T.color = color;
+        T.color = color;
     }
 
     protected virtual void Update() {
@@ -33,18 +31,22 @@ public class RisingInfo : MonoBehaviour {
     }
 
     protected void fade() {
-        fg_T.color = new Color (fg_T.color[0], fg_T.color[1], fg_T.color[2], 1 - (time_alive / timeout));
-        bg_T.color = new Color(.1f, .1f, .1f, 1 - (time_alive / timeout));
+        /* Dilation experiment
+        if (time_alive < AttackQueuer.WAIT_TIME / 2)
+            dilation = time_alive / (AttackQueuer.WAIT_TIME / 2);
+        else 
+            dilation = (AttackQueuer.WAIT_TIME - time_alive) / (AttackQueuer.WAIT_TIME / 2);
+        T.material.SetFloat(ShaderUtilities.ID_FaceDilate, dilation);
+        Debug.Log(T.material.GetFloat(ShaderUtilities.ID_FaceDilate)); */
+        T.color = new Color (T.color[0], T.color[1], T.color[2], 1 - (time_alive / timeout));
     }
 
     public void show() {
-        fg_T.enabled = true;
-        bg_T.enabled = true;
+        T.enabled = true;
     }
 
     protected void set_text(string text) {
-        fg_T.text = text;
-        bg_T.text = text;
+        T.text = text;
     }
 
     protected void die() {

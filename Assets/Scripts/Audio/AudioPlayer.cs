@@ -39,6 +39,4 @@ public abstract class AudioPlayer : MonoBehaviour {
     public float get_random_pitch() {
         return Random.Range(.95f, 1.05f);
     }
-
-
 }

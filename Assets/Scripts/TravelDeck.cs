@@ -91,7 +91,7 @@ public class TravelDeck : MonoBehaviour, ISaveLoad {
         {MapCell.STAR_ID, new List<int>() },
         {MapCell.TITRUM_ID, new List<int>() },
         {MapCell.LUSH_LAND_ID, new List<int>() },
-        {MapCell.MIRE_ID, new List<int>() },
+        //{MapCell.MIRE_ID, new List<int>() },
         {MapCell.MOUNTAIN_ID, new List<int>() },
         {MapCell.SETTLEMENT_ID, new List<int>() },
         {MapCell.RUNE_GATE_ID, new List<int>() },
@@ -156,8 +156,8 @@ public class TravelDeck : MonoBehaviour, ISaveLoad {
         allowed_cards[MapCell.TITRUM_ID].AddRange(new int[] {
             TravelCard.COMBAT, TravelCard.CHANCE, 
             TravelCard.EVENT, TravelCard.LOCATION} );
-        allowed_cards[MapCell.MIRE_ID].AddRange(new int[] {
-             TravelCard.BLESSING, TravelCard.EVENT } );
+        //allowed_cards[MapCell.MIRE_ID].AddRange(new int[] {
+             //TravelCard.BLESSING, TravelCard.EVENT } );
         allowed_cards[MapCell.RUNE_GATE_ID].Add(TravelCard.LOCATION);
         allowed_cards[MapCell.CAVE_ID].Add(TravelCard.CAVE);
         allowed_cards[MapCell.RUINS_ID].Add(TravelCard.RUINS);

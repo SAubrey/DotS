@@ -1,7 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-using UnityEngine.UI;
+﻿using UnityEngine;
 
 // Object exists for duration of the visual hitsplat.
 public class HitSplat : RisingInfo { 
@@ -18,10 +15,10 @@ public class HitSplat : RisingInfo {
 
     private void set_color(int state) {
         if (state == Unit.ALIVE)
-            fg_T.color = BLUE;
+            T.color = BLUE;
         else if (state == Unit.DEAD)
-            fg_T.color = RED;
+            T.color = RED;
         else if (state == Unit.INJURED)
-            fg_T.color = ORANGE;
+            T.color = ORANGE;
     }
 }

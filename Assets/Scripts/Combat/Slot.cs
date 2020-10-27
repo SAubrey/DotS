@@ -1,44 +1,37 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
+using TMPro;
 
 
 public class Slot : EventTrigger {
-    private Unit unit;
     public Image img, unit_img;
+    private Unit unit;
     public Controller c;
     private Formation f;
     private Camera cam;
     private BatLoader bl;
 
     // --VISUAL-- 
-    public Text namefg_T, namebg_T;
-    public static Color selected_color = new Color(1, 1, 1, .5f);
-    public static Color unselected_color = new Color(1, 1, 1, .1f);
-    public static Color dead, injured;
-    private static Color TRANSPARENT = new Color(0, 0, 0, 0);
-    private static Color healthbar_fill_color = new Color(.8f, .1f, .1f, .3f);
-    private static Color staminabar_fill_color = new Color(.1f, .8f, .1f, .3f);
-    public static Color statbar_bg_color = new Color(.4f, .4f, .4f, .3f);
-    public Slider healthbar;
-    public Slider staminabar;
+    public TextMeshProUGUI name_T;
+    public Color dead, injured;
+    
+    public static readonly Color selected_color = new Color(1, 1, 1, .8f);
+    public static readonly Color unselected_color = new Color(1, 1, 1, .1f);
+    private static readonly Color healthbar_fill_color = new Color(.8f, .1f, .1f, .3f);
+    private static readonly Color staminabar_fill_color = new Color(.1f, .8f, .1f, .3f);
+    private static readonly Color statbar_bg_color = new Color(.4f, .4f, .4f, .3f);
+    public Slider healthbar, staminabar;
     public Canvas info_canv;
     public Image healthbar_bg, healthbar_fill;
     public Image staminabar_bg, staminabar_fill;
     public GameObject staminabar_obj, healthbar_obj;
     public UnityEngine.Experimental.Rendering.Universal.Light2D light2d;
     public Sprite range_icon, melee_icon;
-    private int healthbar_inc_width = 15;
 
-    public Color punit_sprite_color, enemy_sprite_color;
-
-    public Text attfgT, attbgT;
+    public TextMeshProUGUI attT, defT, hpT, stamT;
     public Image attfgI, attbgI;
-    public Text deffgT, defbgT;
     public Image deffgI, defbgI;
-    public Text hpfgT, hpbgT;
-    public Text stamfgT, stambgT;
-    public Text num_actionsfgT, num_actionsbgT;
     public Color attfgI_c, deffgI_c;
 
     [HideInInspector]
@@ -51,12 +44,11 @@ public class Slot : EventTrigger {
     void Awake() {
         c = GameObject.Find("Controller").GetComponent<Controller>();
         cam = GameObject.Find("BattleCamera").GetComponent<Camera>();
-        //bl = c.bat_loader;
         light2d.enabled = false;
 
         col = group.col;
         row = group.row;
-        button = GetComponent<Button>();
+        //button = GetComponent<Button>();
 
         face_text_to_cam();
         f = c.formation;
@@ -70,10 +62,6 @@ public class Slot : EventTrigger {
         healthbar_bg.color = statbar_bg_color;
     }
 
-    public override void OnPointerDown(PointerEventData eventData) {
-        Debug.Log("slot clicked");
-    }
-
     public void click() {
         if (disabled)
             return;
@@ -84,9 +72,9 @@ public class Slot : EventTrigger {
         if (u == null)
             return false;
         set_unit(u);
-        init_UI();
+        init_UI(c.battle_phaser.active_bat.disc.ID);
         set_nameT(unit.get_name());
-        update_UI_from_dir(group.get_dir());
+        update_UI(group.get_dir());
         set_active_UI(true);
         if (u.is_playerunit)
             toggle_light(true);
@@ -101,10 +89,11 @@ public class Slot : EventTrigger {
             unit = null;
         }
 
-        update_UI_from_dir(group.get_dir());
+        update_UI(group.get_dir());
         set_active_UI(false);
         set_nameT("");
-        show_selection(false);
+        //show_selection(false);
+        set_color();
         toggle_light(false);
         if (validate)
             group.validate_unit_order();
@@ -142,11 +131,12 @@ public class Slot : EventTrigger {
 
 
     // ----- GRAPHICAL -----
-    private bool showing_preview_damage = false;
+    public bool showing_preview_damage = false;
 
     public bool is_showing_damage() {
         return showing_preview_damage;
     }
+    
     public override void OnPointerEnter(PointerEventData eventData) {
         if (c.selector.selecting_target && has_enemy && 
                 (group.get_highest_enemy_slot() == this || 
@@ -172,7 +162,7 @@ public class Slot : EventTrigger {
         }
     }
 
-    public void init_UI() {
+    public void init_UI(int disc_ID) {
         // Change attack icon based on attack type.
         if (get_unit().is_range) {
             attfgI.sprite = range_icon;
@@ -184,9 +174,9 @@ public class Slot : EventTrigger {
         attfgI.color = Color.white;
         deffgI.color = Color.white;
 
-        // Show enemy as always defending if def > 0
-        if (get_unit().is_enemy) {
-            show_defending(get_unit().get_defense() > 0);
+        if (get_unit().is_playerunit) {
+            // Assign slot button image color to show discipline.
+            set_color();
         }
         update_UI();
     }
@@ -204,23 +194,18 @@ public class Slot : EventTrigger {
     }
 
     public void update_healthbar(float hp, float preview_damage=0) {
-        //float hp = get_unit().health; // This will already include the boost but not the bonus.
-
         healthbar.maxValue = get_unit().get_boosted_max_health();
         healthbar.value = hp;
-        //size_healthbar(healthbar.maxValue);
         //update_healthbar_color();
         
-        hpfgT.text = build_health_string(hp, preview_damage);
-        hpbgT.text = hpfgT.text;
+        hpT.text = build_health_string(hp, preview_damage);
     }
 
     public void update_staminabar(int stam) {
         staminabar.maxValue = get_unit().max_num_actions;
         staminabar.value = stam;
         
-        stamfgT.text = build_stamina_string(stam);
-        stambgT.text = stamfgT.text;
+        stamT.text = build_stamina_string(stam);
     }
 
     private void update_healthbar_color() {
@@ -233,12 +218,6 @@ public class Slot : EventTrigger {
         }
     }
 
-    private void size_healthbar(float max_hp) {
-        // Adjust width based on max hp.
-        RectTransform t = healthbar.transform as RectTransform;
-        t.sizeDelta = new Vector2(healthbar_inc_width * max_hp, t.sizeDelta.y);
-    }
-
     public string build_health_string(float hp, float preview_damage=0) {
         //float hp = get_unit().health; // This will already include the boost but not the bonus.
         float hp_boost = get_unit().get_stat_boost(Unit.HEALTH_BOOST)
@@ -246,10 +225,10 @@ public class Slot : EventTrigger {
 
         string str = hp.ToString();
         if (preview_damage > 0)
-            str += "-" + preview_damage.ToString();
+            str += "(-" + preview_damage.ToString() + ")";
         //str += "/" + get_unit().max_health.ToString();
         if (hp_boost > 0) 
-            str += "(" + hp_boost.ToString() + ")";
+            str += "(+" + hp_boost.ToString() + ")";
             //str += "+" + hp_boost.ToString();
         return str;
     }
@@ -260,14 +239,14 @@ public class Slot : EventTrigger {
     }
 
     public void update_attack() {
-        attfgT.text = build_att_string();
-        attbgT.text = attfgT.text;
+        attT.text = build_att_string();
         Unit u = get_unit();
         if (u.has_grouping) {
             int num_grouped = u.has_attribute(PlayerUnit.GROUPING_1) ? 2 : 3;
             show_group_attacking(u.is_attribute_active && u.attack_set, num_grouped);
         }
         show_attacking(u.attack_set);
+        toggle_attack(u.get_attack_dmg() > 0);
     }
 
     public string build_att_string() {
@@ -281,14 +260,30 @@ public class Slot : EventTrigger {
     }
 
     public void update_defense() {
-        deffgT.text = build_def_string();
-        defbgT.text = deffgT.text;
+        defT.text = build_def_string();
         Unit u = get_unit();
         if (u.has_grouping) {
             int num_grouped = u.has_attribute(PlayerUnit.GROUPING_1) ? 2 : 3;       
             show_group_defending(u.is_attribute_active && u.defending, num_grouped);
         }
-        show_defending(u.defending);
+        toggle_defense(u.get_defense() > 0);
+        if (u.is_enemy)
+            show_defending(u.get_defense() > 0);
+        else   
+            show_defending(u.defending);
+
+    }
+
+    private void show_defending(bool showing) {
+        deffgI.color = showing ? deffgI_c : Color.white;
+    }
+
+    private void toggle_defense(bool showing) {
+        defbgI.gameObject.SetActive(showing);
+    }
+
+    private void toggle_attack(bool showing) {
+        attbgI.gameObject.SetActive(showing);
     }
 
     public string build_def_string() {
@@ -304,47 +299,47 @@ public class Slot : EventTrigger {
     public void set_active_UI(bool state) {
         staminabar_obj.SetActive(state);
         healthbar_obj.SetActive(state);
-        /*
-        staminabar_bg.color = healthbar_bg_color;
-        if (state) {
-            healthbar_bg.color = healthbar_bg_color;
-            healthbar_fill.color = healthbar_fill_color;
-            // stamina
-           // staminabar_bg.color = healthbar_bg_color;
-            staminabar_fill.color = stamina_fill_color;
-        } else {
-            healthbar_bg.color = TRANSPARENT;
-            healthbar_fill.color = TRANSPARENT;
-
-            //staminabar_bg.color = healthbar_bg_color;
-            staminabar_fill.color = stamina_fill_color;
-        }
-        //healthbar.enabled = state;
-        //healthbar_bg.enabled = state;
-        //hpfgT.enabled = state;
-        //hpbgT.enabled = state;
-
-        //staminabar.enabled = state;
-        */
-/*
-        attfgT.enabled = state;
-        attbgT.enabled = state;
-        attfgI.enabled = state;
-        attbgI.enabled = state;
-
-        deffgT.enabled = state;
-        defbgT.enabled = state;
-        deffgI.enabled = state;
-        defbgI.enabled = state;
-*/
-        //num_actionsbgT.enabled = state;
-        //num_actionsfgT.enabled = state;
     }
 
+    // Selection color is determined by opacity.
     public void show_selection(bool showing) {
         if (img != null) {
-            img.color = showing ? selected_color : unselected_color;
+            Color color = img.color;
+            //color.a = showing ? selected_color.a : unselected_color.a;
+            if (has_punit) {
+                color.a = showing ? selected_color.a + 0.2f : unselected_color.a + 0.7f;
+            } else
+                color.a = showing ? selected_color.a : unselected_color.a;
+            img.color = color;
         }
+    }
+
+    public void set_color() {
+        if (img == null)
+            return;
+        Color color; 
+        
+        if (!has_unit) {
+            color = Color.white;
+        }
+        // Show which discipline owns the unit.
+        else if (get_unit().is_playerunit) {
+            color = Statics.disc_colors[get_punit().owner_ID];
+        } else {
+            color = Color.white;
+        }
+        /*
+        Debug.Log("setting transparency?");
+        // Show if selected.
+        if (c.selector.selected_slot == this) {
+            color.a = selected_color.a;
+            Debug.Log(color.a);
+        } else {
+            color.a = unselected_color.a;
+            Debug.Log(color.a);
+        }*/
+        img.color = color;
+        show_selection(c.selector.selected_slot == this);
     }
 
     public void show_dead() {
@@ -357,45 +352,39 @@ public class Slot : EventTrigger {
             img.color = injured;
     }
 
-    public void show_attacking(bool attacking) {
+    private void show_attacking(bool attacking) {
         attfgI.color = attacking ? attfgI_c : Color.white;
     }
 
-    public void show_defending(bool defending) {
-        deffgI.color = defending ? deffgI_c : Color.white;
-    }
-
-    public void show_group_defending(bool defending, int num) {
+    private void show_group_defending(bool defending, int num) {
         Slot s;
         for (int i = 0; i < num; i++) {
             s = group.slots[i];
-            s.deffgI.color = defending ? s.deffgI_c : Color.white;
+            s.deffgI.color = defending ? deffgI_c : Color.white;
         }
     }
 
-    public void show_group_attacking(bool attacking, int num) {
+    private void show_group_attacking(bool attacking, int num) {
         Slot s;
         for (int i = 0; i < num; i++) {
             s = group.slots[i];
-            s.attfgI.color = attacking ? s.attfgI_c : Color.white;
+            s.attfgI.color = attacking ? attfgI_c : Color.white;
         }
     }
 
     // Update slot button image and slot unit image.
-    public void update_UI_from_dir(int dir) { 
-        if (unit == null)
-            Debug.Log("Unit is null");
+    public void update_UI(int dir) { 
         unit_img.color = Color.white;
         if (bl == null) {
             Debug.Log("Reassigning BL");
             bl = GameObject.Find("BatLoader").GetComponent<BatLoader>();
             Debug.Log("Bl: " + bl);
         }
-        Debug.Log(bl);
-        Debug.Log(bl.get_unit_img(unit, dir));
         unit_img.sprite = bl.get_unit_img(unit, dir);
         if (unit_img.sprite == null)
-            unit_img.color = TRANSPARENT;
+            unit_img.color = Color.clear;
+
+        
         rotate_unit_img_to_direction(dir); 
         face_text_to_cam();
     }
@@ -458,8 +447,7 @@ public class Slot : EventTrigger {
     }
 
     private void set_nameT(string txt) {
-        namefg_T.text = txt;
-        namebg_T.text = txt;
+        name_T.text = txt;
     }
 
     public Group get_group() {

@@ -46,6 +46,9 @@ public class TravelCard {
     public virtual void action(TravelCardManager tcm) { }
     public virtual void use_roll_result(int result, Controller c) { }
 
+    // Only accessed if ruins.
+    public int enemy_biome_ID = MapCell.TITRUM_ID; 
+
     public TravelCard(int id, int type, Sprite sprite) {
         ID = id;
         this.type = type;
@@ -223,6 +226,7 @@ public class Blessing1_1 : Blessing {
 
 public class RuinsCard : TravelCard {
     public RuinsCard(int ID, Sprite sprite) : base(ID, RUINS, sprite) {
+        enemy_biome_ID = MapCell.TITRUM_ID;
     }
 }
 
@@ -230,17 +234,18 @@ public class Ruins1_1 : RuinsCard {
     public Ruins1_1(Sprite sprite) : base(TravelDeck.RUINS1_1, sprite) {
         set_rule(AFFECT_RESOURCES, true);
         consequence[Storeable.ARELICS] = 3;
-        // +1 seeker unit 
     }
 
     public override void action(TravelCardManager tcm) {
-        tcm.c.get_active_bat().add_units(PlayerUnit.SEEKER, 1);
+        // +1 seeker unit 
+        tcm.c.get_disc().bat.add_units(PlayerUnit.SEEKER, 1);
     }
 }
 
 public class Ruins2_1 : RuinsCard {
     public Ruins2_1(Sprite sprite) : base(TravelDeck.RUINS2_1, sprite) {
         set_rule(ENTER_COMBAT, true);
+        enemy_count = 7;
         // +1 EQUIPMENT
     }
 }
@@ -249,6 +254,7 @@ public class Ruins3_1 : RuinsCard {
     public Ruins3_1(Sprite sprite) : base(TravelDeck.RUINS3_1, sprite) {
         set_rule(ENTER_COMBAT, true);
         set_rule(AFFECT_RESOURCES, true);
+        enemy_biome_ID = MapCell.MELD_ID;
         enemy_count = 5;
         consequence[Storeable.ERELICS] = 2;
         consequence[Storeable.MRELICS] = 2;

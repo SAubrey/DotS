@@ -2,10 +2,11 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 
 
 public class Die : MonoBehaviour {
-    public Text read_outT;
+    public TextMeshProUGUI read_outT;
     private Random rand;
     private bool animating = false;
     private int anim_sides = 0;
@@ -19,19 +20,20 @@ public class Die : MonoBehaviour {
 
     // Rolls at a constant period for a random number of sides.
     void Update() {
-        if (animating) {
-            side_change_time += Time.deltaTime;
+        if (!animating)
+            return;
 
-            if (side_change_time > current_max_side_change_time) {
-                if (current_num_side_changes < num_side_changes) {
-                    display_side(get_rand_side(current_side, anim_sides));
-                } else {
-                    finish_roll();
-                }
+        side_change_time += Time.deltaTime;
 
-                current_max_side_change_time *= 1.07f; // Deaccelerate.
-                side_change_time = 0;
+        if (side_change_time > current_max_side_change_time) {
+            if (current_num_side_changes < num_side_changes) {
+                display_side(get_rand_side(current_side, anim_sides));
+            } else {
+                finish_roll();
             }
+
+            current_max_side_change_time *= 1.07f; // Deaccelerate.
+            side_change_time = 0;
         }
     }
 
@@ -58,6 +60,7 @@ public class Die : MonoBehaviour {
 
     private void animate_roll(int sides) {
         anim_sides = sides;
+        Debug.Log("Animated sides: " + anim_sides);
         animating = true;
     }
 

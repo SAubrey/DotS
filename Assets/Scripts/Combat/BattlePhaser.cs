@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 
 // Controls the game logic of the battle phases
 public class BattlePhaser : MonoBehaviour {
@@ -21,15 +22,40 @@ public class BattlePhaser : MonoBehaviour {
     private EnemyBrain enemy_brain;
 
     public Button adv_stageB;
-    public Text stageT; 
-    public Text phaseT; 
+    public TextMeshProUGUI stageT, phaseT; 
 
+    private List<Image> disc_icons = new List<Image>();
+    public Image disc_icon1, disc_icon2, disc_icon3;
+    // <discipline ID, disc Sprite>
+    private Dictionary<int, Sprite> disc_sprites = new Dictionary<int, Sprite>();
+    public Sprite astra_icon, martial_icon, endura_icon;
+    public Sprite empty_sprite;
+    public Color inactive_color;
+    public Image biome_icon;
+    // Lookup by biome, tier
+    private Dictionary<int, Sprite> biome_sprites  = new Dictionary<int, Sprite>();
+    public Sprite plains1, forest1, ruins1, cliff1, cave1, titrum1;
+    public Sprite plains2, forest2, ruins2, cliff2, cave2, titrum2, mountain2;
     public bool placement_stage = true;
     public bool init_placement_stage = true;
     public bool range_stage = false;
     public bool movement_stage = false;
     public bool combat_stage = false;
     public bool targeting { get { return combat_stage || range_stage; } }
+    private Battle _battle;
+    private Battle battle {
+        get { return _battle; }
+        set {
+            _battle = value;
+        }
+    }
+    public Battalion active_bat { 
+        get { 
+            if (battle == null)
+                return null;
+            return c.get_bat_from_ID(battle.active_bat_ID); 
+        }
+    }
 
     void Start() {
         c = GameObject.Find("Controller").GetComponent<Controller>();
@@ -37,6 +63,26 @@ public class BattlePhaser : MonoBehaviour {
         selector = c.selector;
         aq = c.attack_queuer;
         enemy_brain = c.enemy_brain;
+        disc_icons.Add(disc_icon1);
+        disc_icons.Add(disc_icon2);
+        disc_icons.Add(disc_icon3);
+        disc_sprites.Add(Discipline.ASTRA, astra_icon);
+        disc_sprites.Add(Discipline.MARTIAL, martial_icon);
+        disc_sprites.Add(Discipline.ENDURA, endura_icon);
+
+        biome_sprites.Add(Map.PLAINS_1, plains1);
+        biome_sprites.Add(Map.PLAINS_2, plains2);
+        biome_sprites.Add(Map.FOREST_1, forest1);
+        biome_sprites.Add(Map.RUINS_1, ruins1);
+        biome_sprites.Add(Map.RUINS_2, ruins2);
+        biome_sprites.Add(Map.CLIFF_1, cliff1);
+        biome_sprites.Add(Map.CLIFF_2, cliff2);
+        biome_sprites.Add(Map.CAVE_1, cave1);
+        biome_sprites.Add(Map.CAVE_2, cave2);
+        biome_sprites.Add(Map.TITRUM_1, titrum1);
+        biome_sprites.Add(Map.TITRUM_2, titrum2);
+        biome_sprites.Add(Map.MOUNTAIN_2, mountain2);
+        
     }
 
     // Called at the end of 3 phases.
@@ -50,6 +96,7 @@ public class BattlePhaser : MonoBehaviour {
         movement_stage = false;
         combat_stage = false;
         if (reset_battlefield) {
+            battle = null;
             c.formation.reset_groups_dir();
             c.formation.clear_battlefield();
         }
@@ -57,17 +104,111 @@ public class BattlePhaser : MonoBehaviour {
         update_phase_text();
     }
 
-    public void advance_stage() {
+    public void begin_new_battle(TravelCard tc, MapCell cell) {
+        battle = c.map.get_current_cell().battle;
+        if (battle == null) { // Must be solo battle if null.
+            battle = new Battle(c.map, cell, c.get_disc(), false);
+            cell.battle = battle;
+            battle.begin();
+        } 
+
+        if (cell.has_enemies) {
+            c.enemy_loader.load_existing_enemies(cell.get_enemies());
+        } else {
+            c.enemy_loader.place_new_enemies(cell, tc.enemy_count);
+        }
+        setup_participant_UI();
+        c.cam_switcher.set_active(CamSwitcher.BATTLE, true);
+    }
+
+    // First determine if a battle is grouped or not, then either resume or reload.
+    /*
+    Resumed battles are battles that did not finish in a single turn.
+    */
+    public void resume_battle(MapCell cell) {
+        battle = cell.battle;
+        if (battle == null)
+            return;
+
+        c.formation.load_board(battle);
+        setup_participant_UI();
+        c.cam_switcher.set_active(CamSwitcher.BATTLE, true);
+    }
+
+    // At battle initialization.
+    private void setup_participant_UI() {
+        battle = c.map.get_current_cell().battle;
+        if (battle == null) {
+            // only activate one image
+            disc_icon1.sprite = disc_sprites[c.active_disc_ID];
+            Debug.Log("this should never happen");
+        }
+        else {
+            // Order discipline images by group join time.
+            for (int i = 0; i < 3; i++) {
+                if (battle.participants.Count - 1 >= i) {
+                    disc_icons[i].sprite = disc_sprites[battle.participants[i].ID];
+                } else {
+                    disc_icons[i].sprite = empty_sprite;
+                }
+            }
+        }
+        biome_icon.sprite = biome_sprites[c.map.tile_to_tileID[battle.cell.tile]];
+        c.bat_loader.load_bat(active_bat);
+        update_participant_UI();
+    }
+
+    private void update_participant_UI() {
+        c.bat_loader.load_bat(active_bat);
+        update_advance_stageB(battle.active_bat_ID);
+        
+        if (!battle.is_group) {
+            update_phase_text();
+
+            // Update icons
+            disc_icon1.color = Color.white;
+            disc_icon2.color = Color.clear;
+            disc_icon3.color = Color.clear;
+        } else {
+            // Update text
+            if (battle.leaders_turn)
+                update_phase_text();
+
+            // Update icons
+            /* If in battle and active, color the icon white, 
+            if in battle and not active, color half transparent,
+            if not in battle color transparent. */
+            for (int i = 0; i < 3; i++) {
+                if (battle.participants.Count - 1 >= i) {
+                    // Active
+                    if (battle.active_bat_ID == battle.participants[i].ID)
+                        disc_icons[i].color = Color.white;
+                    else // Inactive
+                        disc_icons[i].color = inactive_color;
+                } else {
+                    disc_icons[i].color = Color.clear;
+                }
+            }
+        }
+    }
+
+    public void advance() {
+        battle.advance_turn();
+        if (battle.leaders_turn)
+            advance_stage();
+        update_participant_UI();
+    }
+
+    private void advance_stage() {
         selector.deselect();
         stage = _stage + 1;
-        update_phase_text();
     }
 
     /*
     Outwardly, the stage number loops 0 -> num_stages once for each of a turn's 3 battle phases.
     Inwardly, it increments without wrapping.
     */
-    int num_stages = 8;
+    private int num_stages = 8;
     // Begin one stage less so that stage increment initializes placement.
     private int _stage = PLACEMENT - 1; 
     private int stage {
@@ -76,14 +217,9 @@ public class BattlePhaser : MonoBehaviour {
             _stage = value;
             int phase_stage = stage;
 
-            if (phase_stage == PLACEMENT) {
-                placement();
-            } else if (phase_stage == INTUITIVE) {
-                intuitive();
-            }
-            else if (phase_stage == RANGE) { 
-                range();
-            }
+            if (phase_stage == PLACEMENT) placement();
+            else if (phase_stage == INTUITIVE) intuitive();
+            else if (phase_stage == RANGE)range();
             else if (phase_stage == MOVEMENT1) {
                 range_stage = false;
                 movement();
@@ -94,9 +230,11 @@ public class BattlePhaser : MonoBehaviour {
             } else if (phase_stage == COMBAT2) combat();
             else if (phase_stage == ASSESSMENT) assessment();
 
-            c.get_active_bat().reset_all_stage_actions();
+            if (battle != null)
+                battle.clear_stage_actions();
         }
-    }
+    } 
+
     private int _phase = 1;
     // After 3 phases, battle yields until the next turn.
     private int phase {
@@ -104,6 +242,7 @@ public class BattlePhaser : MonoBehaviour {
         set {
             _phase = value; 
             phaseT.text = "Phase " + phase;
+
             if (_phase > 3) {
                 post_phases();
             }
@@ -128,7 +267,9 @@ public class BattlePhaser : MonoBehaviour {
     }
 
     private void range() {
-        range_stage = true;
+        if (!battle.cell.travelcard.follow_rule(TravelCard.AMBUSH))
+            range_stage = true;
+            
         can_skip = true;
         // Ranged units attack (enemy and player after player chooses who to attack)
         // (unless someone has first strike!)
@@ -138,7 +279,7 @@ public class BattlePhaser : MonoBehaviour {
     }
 
     private void movement() {
-        battle(); // range attacks
+        enter_battle(); // range attacks
 
         movement_stage = true;
     }
@@ -152,48 +293,43 @@ public class BattlePhaser : MonoBehaviour {
     }
 
     private void assessment() {
-        battle();
+        enter_battle();
         combat_stage = false;
     }
     // ---END FORMAL STAGES---
 
-    private void battle() {
+    private void enter_battle() {
         can_skip = false;
         StartCoroutine(aq.battle());
     }
 
     // Only called by AttackQueuer after battle animations have finished.
     public void post_battle() {
+        battle.post_battle();
         if (stage == ASSESSMENT) advance_phase();
         can_skip = true;
+
         check_finished();
     }
 
     private void advance_phase() {
         c.formation.rotate_actioned_player_groups();
-        c.get_active_bat().post_phase(); // reset movement/attacks
-        c.map.get_current_cell().post_phase();
+        battle.post_phase(); // reset movement/attacks
         phase++;
     }
 
     private void post_phases() {
         if (battle_finished) {
-            Debug.Log("battle finished");
-
             if (player_won) {
                 Debug.Log("Player won the battle.");
-                c.get_disc().complete_travelcard();
+                battle.leader.complete_travelcard();
             } else if (enemy_won) {
                 Debug.Log("Enemy won the battle.");
-                
             }
+            battle.end();
             c.cam_switcher.flip_map_battle();
         } else {
-            if (mini_retreating) { // Fall back and regroup.
-                Debug.Log("Mini retreating.");
-                c.get_active_bat().mini_retreating = true;
-            } else // Save the board exactly as is to resume next turn.
-                c.formation.save_board(c.active_disc_ID);
+            c.formation.save_board(battle);
         }
         reset();
         tp.advance_stage();
@@ -201,15 +337,11 @@ public class BattlePhaser : MonoBehaviour {
 
     // Called by Unity button. 
     public void retreat() {
+        Debug.Log(player_units_on_field);
         if (!player_units_on_field || player_won)
             return;
-
-        // Penalize retreat.
-        c.get_disc().change_var(Storeable.UNITY, -1, true);
-        c.get_disc().set_travelcard(null);
-        // Move unit back to previous space
-        c.get_active_bat().in_battle = false;
-        c.map.move_player(c.get_disc().prev_pos, false);
+        
+        battle.retreat();
         reset();
         tp.advance_stage();
     }
@@ -220,11 +352,12 @@ public class BattlePhaser : MonoBehaviour {
     }
 
     private bool units_in_reserve {
-        get { return c.get_active_bat().count_placeable() > 0; }
+        get { return battle.count_all_units_in_reserve() > 0; }
     }
 
     private bool player_units_on_field { 
-        get { return c.get_active_bat().get_all_placed_units().Count > 0; }
+        //get { return c.get_active_bat().get_all_placed_units().Count > 0; }
+        get { return battle.count_all_placed_units() > 0; }
     } 
 
     private bool player_won { 
@@ -232,11 +365,7 @@ public class BattlePhaser : MonoBehaviour {
     } 
 
     private bool enemy_won {
-        get { return !player_units_on_field && !units_in_reserve; }
-    }
-
-    private bool mini_retreating {
-        get { return !player_units_on_field && units_in_reserve; }
+        get { return !player_units_on_field; } //&& !units_in_reserve; }
     }
 
     private bool battle_finished { get { return player_won || enemy_won; } }
@@ -254,41 +383,51 @@ public class BattlePhaser : MonoBehaviour {
         if (!init_placement_stage)
             return;
 
-        // EDIT FOR TESTING------------------------------------------------------------------------------------
+        // EDIT FOR TESTING------------------------------------------------------------------------------------?
         can_skip = true;
         //can_skip = units_in_reserve ? false : true; // use 
     }
 
     private void update_phase_text() {
-        Text txt = adv_stageB.GetComponentInChildren<Text>();
-        string basestr = "Advance to ";
         if (stage == PLACEMENT) {
-            txt.text = basestr + "range stage";
             stageT.text = "Placement";
-        }
-        else if (stage == RANGE){
-            txt.text = basestr + "1st movement stage";
+        } else if (stage == RANGE) {
             stageT.text = "Range";
-        }
-        else if (stage == MOVEMENT1){
-            txt.text = basestr + "1st combat stage";
+        } else if (stage == MOVEMENT1) {
             stageT.text = "Movement 1";
-        }
-        else if (stage == COMBAT1){
-            txt.text = basestr + "2nd movement stage";
+        } else if (stage == COMBAT1) {
             stageT.text = "Combat 1";
-        }
-        else if (stage == MOVEMENT2){
-            txt.text = basestr + "2nd combat stage";
+        } else if (stage == MOVEMENT2) {
             stageT.text = "Movement 2";
-        }
-        else if (stage == COMBAT2){
-            txt.text = basestr + "assessment stage";
+        } else if (stage == COMBAT2) {
             stageT.text = "Combat 2";
-        }
-        else if (stage == ASSESSMENT){
-            txt.text = basestr + "placement stage";
+        } else if (stage == ASSESSMENT) {
             stageT.text = "Assessment";
+        }
+    }
+
+    private void update_advance_stageB(int bat_ID) {
+        TextMeshProUGUI txt = adv_stageB.GetComponentInChildren<TextMeshProUGUI>();
+
+        if (battle.last_battalions_turn) { // Always the last bat's turn in solo battles.
+            string basestr = "Advance to ";
+            if (stage == PLACEMENT) {
+                txt.text = basestr + "range stage";
+            } else if (stage == RANGE) {
+                txt.text = basestr + "1st movement stage";
+            } else if (stage == MOVEMENT1) {
+                txt.text = basestr + "1st combat stage";
+            } else if (stage == COMBAT1) {
+                txt.text = basestr + "2nd movement stage";
+            } else if (stage == MOVEMENT2) {
+                txt.text = basestr + "2nd combat stage";
+            } else if (stage == COMBAT2) {
+                txt.text = basestr + "assessment stage";
+            } else if (stage == ASSESSMENT) {
+                txt.text = basestr + "placement stage";
+            }
+        } else {
+            txt.text = "End " + c.get_disc(bat_ID).name;
         }
     }
 }

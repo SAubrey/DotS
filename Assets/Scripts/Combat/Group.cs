@@ -42,6 +42,7 @@ public class Group : MonoBehaviour {
         direction = default_direction;
         c = GameObject.Find("Controller").GetComponent<Controller>();
         set_color(type);
+        reorder_slots_visually(direction);
     }
 
     // Moves units up within their group upon vacancies from unit death/movement.
@@ -114,7 +115,7 @@ public class Group : MonoBehaviour {
         this.direction = direction;
         transform.localEulerAngles = new Vector3(0, 0, direction);
         foreach (Slot s in slots) {
-            s.update_UI_from_dir(get_dir());
+            s.update_UI(get_dir());
         }
         reorder_slots_visually(direction);
     }

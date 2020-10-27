@@ -1,7 +1,5 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-using UnityEngine.UI;
+﻿using System.Collections.Generic;
+using TMPro;
 
 public static class UpgradeWriter {
     public static string UNIT_UPGRADE = "Unlocks access to more unit types and other research tree upgrades.";
@@ -46,8 +44,8 @@ public static class UpgradeWriter {
         {CityUIManager.BARRACKS2, UNIT_UPGRADE},  
         };
 
-    public static void write_attribute_text(Text text, int upgrade_ID) {
-        text.text += get_description(upgrade_ID) + "\n";
+    public static void write_attribute_text(TextMeshProUGUI text, int upgrade_ID) {
+        text.text += get_description(upgrade_ID) + " \n";
     }
 
     public static string get_description(int upgrade_ID) {

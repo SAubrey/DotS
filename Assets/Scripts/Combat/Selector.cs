@@ -24,7 +24,7 @@ public class Selector : MonoBehaviour {
         }
     }
     public bool selecting_move = false;
-    public Slot selected_slot;
+    public Slot selected_slot { get; private set; }
 
     void Start() {
         c = GameObject.Find("Controller").GetComponent<Controller>();
@@ -38,7 +38,7 @@ public class Selector : MonoBehaviour {
     void Update() {
         if (Input.GetKeyDown(KeyCode.Space)) {
             if (bp.adv_stageB.interactable)
-                bp.advance_stage();
+                bp.advance();
         }
         if (selected_slot == null)
             return;
@@ -76,15 +76,18 @@ public class Selector : MonoBehaviour {
     private void place_punit(Slot slot) {
         // The highest order slot must be filled first.
         Slot highest_slot = slot.get_group().get_highest_empty_slot();
-        if (highest_slot.fill(c.get_active_bat().get_placeable_unit(
-                bat_loader.get_selected_unit_ID()))) {
+        Unit u = c.battle_phaser.active_bat.get_placeable_unit(
+                    bat_loader.get_selected_unit_ID());
+        if (highest_slot.fill(u)) {
+
+            // Verify if all units are placed and can continue
             if (bp.init_placement_stage)
                 bp.check_all_units_placed();
 
             if (bat_loader.selecting_for_heal)
                 bat_loader.complete_heal();
             // Update inventory text
-            bat_loader.load_text(c.get_active_bat(), 
+            bat_loader.load_unit_text(c.battle_phaser.active_bat, 
                     bat_loader.get_selected_unit_ID()); 
             deselect();
         }
@@ -105,6 +108,10 @@ public class Selector : MonoBehaviour {
             if (highest_enemy_slot != null) {
                 bool successful_att = 
                     selected_slot.get_unit().attempt_set_up_attack(highest_enemy_slot);
+                if (successful_att) {
+                    selected_slot.showing_preview_damage = false;
+                    deselect();
+                }
             }
         } else if (selecting_move) { // ---Move---
             selecting_move = false;
@@ -140,8 +147,10 @@ public class Selector : MonoBehaviour {
     }
 
     private void select(Slot slot) {
+        Debug.Log("selectingr");
         selected_slot = slot;
         selected_slot.show_selection(true);
+        //selected_slot.set_color();
         unit_panel_man.show(slot);
         c.bat_loader.clear_placement_selection();
     }
@@ -149,6 +158,8 @@ public class Selector : MonoBehaviour {
     public void deselect() {
         if (selected_slot == null)
             return;
+        //selected_slot.show_selection(false);
+        //selected_slot.set_color();
         selected_slot.show_selection(false);
         unit_panel_man.close();
         selected_slot = null;
@@ -179,7 +190,7 @@ public class Selector : MonoBehaviour {
         int removed_unit_ID = s.get_unit().get_ID();
         deselect();
         s.empty();
-        bat_loader.load_text(c.get_active_bat(), removed_unit_ID);
+        bat_loader.load_unit_text(c.battle_phaser.active_bat, removed_unit_ID);
         bp.check_all_units_placed(); // Can we move past placement?
     }
 }

@@ -36,6 +36,10 @@ public class Enemy : Unit {
     public const int TERRA_QUAL = 27;
     public const int DUALE = 28;
 
+    public const int MELD_WARRIOR = 29;
+    public const int MELD_SPEARMAN = 30;
+
+
     public int xp;
     public bool xp_taken = false;
 
@@ -98,6 +102,7 @@ public class Enemy : Unit {
         if (!can_move(dest))
             return false;
         move(dest);
+        get_slot().get_group().rotate_towards_target(target.get_group());
         return true;
     }
 
@@ -346,5 +351,19 @@ public class Duale : Enemy {
         init("Duale", 2, 6, 5, RANGE, AGGRESSIVE, FLANKING);
         max_num_actions = 3;
         num_actions = 3;
+    }
+}
+
+public class Meld_Warrior : Enemy {
+    public Meld_Warrior() {
+        ID = MELD_WARRIOR;
+        init("Meld Warrior", 1, 1, 1, MELEE, CHARGE, GROUPING_1);
+    }
+}
+
+public class Meld_Spearman : Enemy {
+    public Meld_Spearman() {
+        ID = MELD_SPEARMAN;
+        init("Meld Spearman", 1, 1, 2, MELEE, CHARGE);
     }
 }

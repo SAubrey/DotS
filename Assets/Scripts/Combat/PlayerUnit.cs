@@ -20,21 +20,15 @@ public class PlayerUnit : Unit {
     public const int SHIELD_MAIDEN = DRUMMER + 1;
     public const int PIKEMAN = SHIELD_MAIDEN + 1;
 
-    public static List<int> unit_types = new List<int> { WARRIOR, SPEARMAN, ARCHER, 
+    public static readonly List<int> unit_types = new List<int> { WARRIOR, SPEARMAN, ARCHER, 
         MINER, INSPIRATOR, SEEKER, GUARDIAN, ARBALEST, SKIRMISHER, PALADIN,
         MENDER, CARTER, DRAGOON, SCOUT, DRUMMER, SHIELD_MAIDEN, PIKEMAN };
 
     public const int EMPTY = 100; // Graphical lookup usage.
     public bool injured = false;
+    public int owner_ID { get; private set; }
 
-    protected void init(string name, int att, int def, int res, 
-            int style, int atr1=0, int atr2=0, int atr3=0) {
-        base.init(name, att, res, style, atr1, atr2, atr3);
-        type = PLAYER;
-        defense = def;
-    }
-
-    public static PlayerUnit create_punit(int ID) {
+    public static PlayerUnit create_punit(int ID, int owner_ID) {
         PlayerUnit pu = null;
         if (ID == WARRIOR) pu = new Warrior(); 
         else if (ID == SPEARMAN) pu = new Spearman();
@@ -53,7 +47,15 @@ public class PlayerUnit : Unit {
         else if (ID == DRAGOON) pu = new Dragoon();
         else if (ID == SCOUT) pu = new Scout();
         else if (ID == SHIELD_MAIDEN) pu = new ShieldMaiden();
+        pu.owner_ID = owner_ID;
         return pu;
+    }
+    
+    protected void init(string name, int att, int def, int res, 
+            int style, int atr1=0, int atr2=0, int atr3=0) {
+        base.init(name, att, res, style, atr1, atr2, atr3);
+        type = PLAYER;
+        defense = def;
     }
 
     /* A player unit is injured if the damage taken is equal or greater
@@ -70,14 +72,14 @@ public class PlayerUnit : Unit {
 
         if (state == INJURED) {
             injured = true;
-            slot.show_injured();
-            slot.c.get_active_bat().add_injured_unit(this);
-            slot.c.bat_loader.load_text(slot.c.get_active_bat(), ID);
+            //slot.show_injured();
+            slot.c.get_bat_from_ID(owner_ID).add_injured_unit(this);
+            slot.c.bat_loader.load_unit_text(slot.c.get_bat_from_ID(owner_ID), ID);
         } else if (state == DEAD) {
             dead = true;
-            slot.show_dead(); 
-            slot.c.bat_loader.load_text(slot.c.get_active_bat(), ID);
-            slot.c.get_active_bat().add_dead_unit(this);
+            //slot.show_dead(); 
+            slot.c.bat_loader.load_unit_text(slot.c.get_bat_from_ID(owner_ID), ID);
+            slot.c.get_bat_from_ID(owner_ID).add_dead_unit(this);
         }
         if (defending) {
             num_actions--;

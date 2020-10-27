@@ -38,9 +38,7 @@ public class CamSwitcher : MonoBehaviour {
     }
 
     void Update() {
-        if (Input.GetKeyDown(KeyCode.C)) {
-            //cycle();
-        } else if (Input.GetKeyDown(KeyCode.Escape)) {
+        if (Input.GetKeyDown(KeyCode.Escape)) {
             toggle_paused();
         }
     }
@@ -48,7 +46,6 @@ public class CamSwitcher : MonoBehaviour {
     void cycle() {
         if (current_cam == MAP) {
             set_active(BATTLE, true);
-            bat_loader.load_text();
         } else if (current_cam == BATTLE) {
             set_active(MAP, true);
         }
@@ -106,7 +103,6 @@ public class CamSwitcher : MonoBehaviour {
             mapCam.enabled = active;
             mapUI_canvas.SetActive(active);
             if (active) {
-                bat_loader.load_text();
                 // Set the camera in the middle of the map.
                 mapCam.transform.SetPositionAndRotation(new Vector3(10, 10, -14), Quaternion.identity);
                 set_active(BATTLE, false);
@@ -122,7 +118,6 @@ public class CamSwitcher : MonoBehaviour {
                 background_loader.load(c.map.get_current_cell().biome_ID);
                 set_active(MAP, false);
                 set_active(MENU, false);
-                bat_loader.load_text();
             } else {
                 c.unit_panel_man.close();
             }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 
 public static class AttributeWriter {
 
@@ -39,7 +40,7 @@ public static class AttributeWriter {
             {Unit.COMBINED_EFFORT, "Combined Effort - "},
         };
 
-    public static void write_attribute_text(Text text, Unit u) {
+    public static void write_attribute_text(TextMeshProUGUI text, Unit u) {
         text.text = get_description(u.attribute1) + "\n" +
                     get_description(u.attribute2) + "\n" +
                     get_description(u.attribute3);

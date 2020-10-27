@@ -36,7 +36,7 @@ public class MapData : GameData {
 
         foreach (MapCell mc in map.map.Values) {
             SMapCell mcs = 
-                new SMapCell(mc.tile_ID,
+                new SMapCell(mc.tile_type_ID,
                         mc.pos.x, mc.pos.y, 
                         mc.tier, mc.discovered,
                         mc.minerals, mc.star_crystals);

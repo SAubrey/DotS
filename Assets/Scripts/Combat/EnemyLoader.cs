@@ -32,12 +32,6 @@ public class EnemyLoader : MonoBehaviour {
     public System.Random rand;
     public Dictionary<int, List<List<List<int>>>> biomes = 
         new Dictionary<int, List<List<List<int>>>>();
-    /*
-    public Dictionary<int, Sprite> images = new Dictionary<int, Sprite>();
-    public Sprite galtsa, grem, endu, korote, molner, etuena, clypte, goliath, kverm,
-        latu, eke_tu, oetem, eke_fu, eke_shi_ami, eke_lord, ketemcol, mahukin, drongo, maheket,
-        calute, etalket, muatem, drak, zerrku, gokin, tajaqar, tajaero, terra_qual, duale;
-     */
     
 
     // Assign possible enemy spawns (by ID) per biome, per enemy tier, per spawn rate.
@@ -48,43 +42,13 @@ public class EnemyLoader : MonoBehaviour {
     public List<List<List<int>>> cliff_tiers = new List<List<List<int>>>();
     public List<List<List<int>>> mountain_tiers = new List<List<List<int>>>();
     public List<List<List<int>>> cave_tiers = new List<List<List<int>>>();
+    public List<List<List<int>>> meld_tiers = new List<List<List<int>>>();
    
 
     void Start() {
         c = GameObject.Find("Controller").GetComponent<Controller>();
         f = GameObject.Find("Formation").GetComponent<Formation>();
         rand = new System.Random();
-        /*
-        images.Add(Enemy.GALTSA, galtsa);
-        images.Add(Enemy.GREM, grem);
-        images.Add(Enemy.ENDU, endu);
-        images.Add(Enemy.KOROTE, korote);
-        images.Add(Enemy.MOLNER, molner);
-        images.Add(Enemy.ETUENA, etuena);
-        images.Add(Enemy.CLYPTE, clypte);
-        images.Add(Enemy.GOLIATH, goliath);
-        images.Add(Enemy.KVERM, kverm);
-        images.Add(Enemy.LATU, latu);
-        images.Add(Enemy.EKE_TU, eke_tu);
-        images.Add(Enemy.OETEM, oetem);
-        images.Add(Enemy.EKE_FU, eke_fu);
-        images.Add(Enemy.EKE_SHI_AMI, eke_shi_ami);
-        images.Add(Enemy.EKE_LORD, eke_lord);
-        images.Add(Enemy.KETEMCOL, ketemcol);
-        images.Add(Enemy.MAHUKIN, mahukin);
-        images.Add(Enemy.DRONGO, drongo);
-        images.Add(Enemy.MAHEKET, maheket);
-        images.Add(Enemy.CALUTE, calute);
-        images.Add(Enemy.ETALKET, etalket);
-        images.Add(Enemy.MUATEM, muatem);
-        images.Add(Enemy.DRAK, drak);
-        images.Add(Enemy.ZERRKU, zerrku);
-        images.Add(Enemy.GOKIN, gokin);
-        images.Add(Enemy.TAJAQAR, tajaqar);
-        images.Add(Enemy.TAJAERO, tajaero);
-        images.Add(Enemy.TERRA_QUAL, terra_qual);
-        images.Add(Enemy.DUALE, duale);
-        */
 
         make_biome(plains_tiers);
         make_biome(forest_tiers);
@@ -92,7 +56,7 @@ public class EnemyLoader : MonoBehaviour {
         make_biome(cliff_tiers);
         make_biome(mountain_tiers);
         make_biome(cave_tiers);
-        //make_biome(mire_tiers);
+        make_biome(meld_tiers);
 
         biomes.Add(MapCell.PLAINS_ID, plains_tiers);
         biomes.Add(MapCell.FOREST_ID, forest_tiers);
@@ -100,6 +64,7 @@ public class EnemyLoader : MonoBehaviour {
         biomes.Add(MapCell.CLIFF_ID, cliff_tiers);
         biomes.Add(MapCell.MOUNTAIN_ID, mountain_tiers);
         biomes.Add(MapCell.CAVE_ID, cave_tiers);
+        biomes.Add(MapCell.MELD_ID, meld_tiers);
 
         populate_biomes();
     }
@@ -128,7 +93,12 @@ public class EnemyLoader : MonoBehaviour {
     public void place_new_enemies(MapCell cell, int quantity) {
         for (int i = 0; i < quantity; i++) {
             int rarity = roll_rarity(); 
-            int enemyID = pick_enemy(cell.biome_ID, cell.tier, rarity);
+            int enemyID = -1;
+            if (cell.biome_ID == MapCell.RUINS_ID) {
+                enemyID = pick_enemy(cell.travelcard.enemy_biome_ID, cell.tier, rarity);
+            } else {
+                enemyID = pick_enemy(cell.biome_ID, cell.tier, rarity);
+            }
             Enemy e = Enemy.create_enemy(enemyID);
             cell.add_enemy(e);
             slot_enemy(e);
@@ -267,6 +237,13 @@ public class EnemyLoader : MonoBehaviour {
         biomes[MapCell.CAVE_ID][T3][Enemy.COMMON].Add(Enemy.TAJAERO);
         biomes[MapCell.CAVE_ID][T3][Enemy.RARE].Add(Enemy.TERRA_QUAL);
         biomes[MapCell.CAVE_ID][T3][Enemy.UNCOMMON].Add(Enemy.DUALE);
+
+        biomes[MapCell.MELD_ID][T1][Enemy.COMMON].Add(Enemy.MELD_WARRIOR);
+        biomes[MapCell.MELD_ID][T1][Enemy.COMMON].Add(Enemy.MELD_SPEARMAN);
+        biomes[MapCell.MELD_ID][T2][Enemy.COMMON].Add(Enemy.MELD_WARRIOR);
+        biomes[MapCell.MELD_ID][T2][Enemy.COMMON].Add(Enemy.MELD_SPEARMAN);
+        biomes[MapCell.MELD_ID][T3][Enemy.COMMON].Add(Enemy.MELD_WARRIOR);
+        biomes[MapCell.MELD_ID][T3][Enemy.COMMON].Add(Enemy.MELD_SPEARMAN);
     }
 }
 

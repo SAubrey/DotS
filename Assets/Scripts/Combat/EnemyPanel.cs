@@ -1,9 +1,7 @@
-using UnityEngine;
-using UnityEngine.UI;
+using TMPro;
 
 public class EnemyPanel : UnitPanel {
-    public Text HpT;
-    public Text XpT;
+    public TextMeshProUGUI HpT, XpT;
     
     public override void update_panel(Slot slot) {
         if (slot.get_punit() != null)

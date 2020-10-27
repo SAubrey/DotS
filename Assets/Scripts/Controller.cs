@@ -3,20 +3,10 @@ using UnityEngine;
 using UnityEngine.UI;
 
 public class Controller : MonoBehaviour, ISaveLoad {
-    public const int ASTRA = 0;
-    public const int ENDURA = 1;
-    public const int MARTIAL = 2;
-    public const int CITY = 4;
-
     public const string MAP = "Map";
     public const string CONTROLLER = "Controller";
     public const string TRAVEL_DECK = "TravelDeck";
 
-    // UI CONSTANTS
-    public static Color GREY = new Color(.78125f, .78125f, .78125f, 1);
-    public static Color ASTRA_COLOR = new Color(.7f, .7f, 1, 1);
-    public static Color ENDURA_COLOR = new Color(1, 1f, .7f, 1);
-    public static Color MARTIAL_COLOR = new Color(1, .7f, .7f, 1);
 
     // Inspector gameobjects
     public Formation formation;
@@ -42,7 +32,6 @@ public class Controller : MonoBehaviour, ISaveLoad {
     public GameObject save_warningP, new_game_warningP, load_warningP;
     public Discipline astra, martial, endura;
     public City city;
-    public int num_discs = 3;
     private bool game_has_begun = false;
     private int _turn_number = 1;
     private int turn_number {
@@ -53,27 +42,28 @@ public class Controller : MonoBehaviour, ISaveLoad {
                 map_ui.turn_number_t.text = turn_number.ToString();
         }
     }
+    public int get_turn_num() { return turn_number; }
 
     private int _active_disc_ID;
     public int active_disc_ID {
         get { return _active_disc_ID; }
         set {
-            _active_disc_ID = value;
-            map_ui.load_stats(get_disc());
-            map_ui.load_stats(city);
+            _active_disc_ID = value % 3;
+            map_ui.load_discipline_UI(get_disc());
+            map_ui.load_discipline_UI(city);
         }
     } // disciplines are like sub factions.
 
     public IDictionary<int, Discipline> discs = new Dictionary<int, Discipline>();
 
     void Awake() {
-        astra.ID = ASTRA;
-        martial.ID = MARTIAL;
-        endura.ID = ENDURA;
-        city.ID = CITY;
-        discs.Add(ASTRA, astra);
-        discs.Add(MARTIAL, martial);
-        discs.Add(ENDURA, endura);
+        astra.ID = Discipline.ASTRA;
+        martial.ID = Discipline.MARTIAL;
+        endura.ID = Discipline.ENDURA;
+        city.ID = City.CITY;
+        discs.Add(Discipline.ASTRA, astra);
+        discs.Add(Discipline.MARTIAL, martial);
+        discs.Add(Discipline.ENDURA, endura);
 
         // Public classes that all other classes will grab from initially.
         formation = GameObject.Find("Formation").GetComponent<Formation>();
@@ -98,7 +88,7 @@ public class Controller : MonoBehaviour, ISaveLoad {
     }
 
     void Start() {
-        active_disc_ID = ASTRA;
+        active_disc_ID = Discipline.ASTRA;
         save_warningP.SetActive(false);
         new_game_warningP.SetActive(false);
         load_warningP.SetActive(false);
@@ -182,8 +172,6 @@ public class Controller : MonoBehaviour, ISaveLoad {
             disc.register_turn();
         }
         city.register_turn();
-        map_ui.load_stats(get_disc());
-        //map_ui.load_stats(city);
     }  
 
     public void check_button_states() {
@@ -230,12 +218,16 @@ public class Controller : MonoBehaviour, ISaveLoad {
         save_warningP.SetActive(active);
     }
 
-    public Discipline get_disc() {
-        return discs[active_disc_ID];
+    public Discipline get_disc(int ID=-1) {
+        return ID > -1 ? discs[ID] : discs[active_disc_ID];
     }
 
-    public Battalion get_active_bat() {
-        return get_disc().bat;
+    public Battalion get_active_battalion() {
+        return battle_phaser.active_bat;
+    }
+
+    public Battalion get_bat_from_ID(int ID) {
+        return discs[ID].bat;
     }
 
     // BUTTON HANDLES
@@ -266,4 +258,6 @@ public struct Pos {
         this.x = x;
         this.y = y;
     }
+
+    public Vector3 to_vec3 { get { return new Vector3(x, y, 0); } }
 }

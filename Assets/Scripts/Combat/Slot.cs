@@ -7,10 +7,7 @@ using TMPro;
 public class Slot : EventTrigger {
     public Image img, unit_img;
     private Unit unit;
-    public Controller c;
-    private Formation f;
     private Camera cam;
-    private BatLoader bl;
 
     // --VISUAL-- 
     public TextMeshProUGUI name_T;
@@ -42,20 +39,16 @@ public class Slot : EventTrigger {
     private bool _disabled = false;
     
     void Awake() {
-        c = GameObject.Find("Controller").GetComponent<Controller>();
         cam = GameObject.Find("BattleCamera").GetComponent<Camera>();
         light2d.enabled = false;
 
         col = group.col;
         row = group.row;
-        //button = GetComponent<Button>();
 
         face_text_to_cam();
-        f = c.formation;
     }
 
     void Start() {
-        bl = c.bat_loader;
         healthbar_fill.color = healthbar_fill_color;
         staminabar_fill.color = staminabar_fill_color;
         staminabar_bg.color = statbar_bg_color;
@@ -65,14 +58,14 @@ public class Slot : EventTrigger {
     public void click() {
         if (disabled)
             return;
-        c.selector.handle_slot(this);
+        Selector.I.handle_slot(this);
     }
 
     public bool fill(Unit u) {
         if (u == null)
             return false;
         set_unit(u);
-        init_UI(c.battle_phaser.active_bat.disc.ID);
+        init_UI(BattlePhaser.I.active_bat.disc.ID);
         set_nameT(unit.get_name());
         update_UI(group.get_dir());
         set_active_UI(true);
@@ -138,28 +131,35 @@ public class Slot : EventTrigger {
     }
     
     public override void OnPointerEnter(PointerEventData eventData) {
-        if (c.selector.selecting_target && has_enemy && 
+        if (!has_enemy)
+            return;
+        if (Selector.I.selecting_target && 
                 (group.get_highest_enemy_slot() == this || 
-                c.selector.selected_slot.unit.combat_style == Unit.RANGE)) {
+                Selector.I.selected_slot.unit.combat_style == Unit.RANGE)) {
             showing_preview_damage = true;
-            show_preview_damage(true, c.selector.selected_slot.get_unit().get_attack_dmg());
+            get_unit().add_preview_damage(Selector.I.selected_slot.get_unit().get_attack_dmg());
+            //show_preview_damage(Selector.I.selected_slot.get_unit().get_attack_dmg());
         }
     }
 
     public override void OnPointerExit(PointerEventData eventData) {
-        if (showing_preview_damage) {
-            showing_preview_damage = false;
-            show_preview_damage(false);
+        if (!has_enemy)
+            return;
+        // Only remove preview damage if selector is actively targeting,
+        // 
+        if (Selector.I.selecting_target) {
+            Slot s = Selector.I.selected_slot;
+            get_unit().subtract_preview_damage(s.get_unit().get_attack_dmg());
+            //show_preview_damage(Selector.I.last_selected_slot.get_unit().get_attack_dmg());
         }
+       // if (showing_preview_damage) {
+         //   showing_preview_damage = false;
+           // show_preview_damage(Selector.I.last_selected_slot.get_unit().get_attack_dmg());
+        //}
     }
 
-    public void show_preview_damage(bool showing, int dmg=0) {
-        if (showing) {
-            update_healthbar(unit.calc_hp_remaining(dmg), dmg);
-        } else {
-            if (!c.selector.selected_slot.unit.attack_set)
-                update_healthbar(get_unit().health);
-        }
+    public void show_preview_damage(int dmg=0) {
+        update_healthbar(unit.calc_hp_remaining(dmg), dmg);
     }
 
     public void init_UI(int disc_ID) {
@@ -188,8 +188,8 @@ public class Slot : EventTrigger {
         update_staminabar(get_unit().num_actions);
         update_attack();
         update_defense();
-        if (c.unit_panel_man.player_panel.slot == this) {
-            c.unit_panel_man.update_text(this); 
+        if (UnitPanelManager.I.player_panel.slot == this) {
+            UnitPanelManager.I.update_text(this); 
         }
     }
 
@@ -331,7 +331,7 @@ public class Slot : EventTrigger {
         /*
         Debug.Log("setting transparency?");
         // Show if selected.
-        if (c.selector.selected_slot == this) {
+        if (Selector.I.selected_slot == this) {
             color.a = selected_color.a;
             Debug.Log(color.a);
         } else {
@@ -339,7 +339,7 @@ public class Slot : EventTrigger {
             Debug.Log(color.a);
         }*/
         img.color = color;
-        show_selection(c.selector.selected_slot == this);
+        show_selection(Selector.I.selected_slot == this);
     }
 
     public void show_dead() {
@@ -375,12 +375,12 @@ public class Slot : EventTrigger {
     // Update slot button image and slot unit image.
     public void update_UI(int dir) { 
         unit_img.color = Color.white;
-        if (bl == null) {
+        /*if (bl == null) {
             Debug.Log("Reassigning BL");
             bl = GameObject.Find("BatLoader").GetComponent<BatLoader>();
             Debug.Log("Bl: " + bl);
-        }
-        unit_img.sprite = bl.get_unit_img(unit, dir);
+        }*/
+        unit_img.sprite = BatLoader.I.get_unit_img(unit, dir);
         if (unit_img.sprite == null)
             unit_img.color = Color.clear;
 

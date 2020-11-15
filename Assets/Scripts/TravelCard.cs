@@ -238,7 +238,7 @@ public class Ruins1_1 : RuinsCard {
 
     public override void action(TravelCardManager tcm) {
         // +1 seeker unit 
-        tcm.c.get_disc().bat.add_units(PlayerUnit.SEEKER, 1);
+        Controller.I.get_disc().bat.add_units(PlayerUnit.SEEKER, 1);
     }
 }
 
@@ -324,7 +324,8 @@ public class Event3_1 : Event {
     public Event3_1(Sprite sprite) : base(TravelDeck.EVENT3_1, sprite) {
     }
     public override void action(TravelCardManager tcm) {
-        tcm.c.map.move_player(tcm.c.get_disc().prev_pos, true);
+        //tcm.c.map.move_player(tcm.c.get_disc().prev_pos);
+        Controller.I.get_disc().move(Controller.I.get_disc().previous_cell);
     }
 }
 public class Event4_1 : Event {

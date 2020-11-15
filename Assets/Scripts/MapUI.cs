@@ -5,6 +5,7 @@ using UnityEngine.UI;
 using TMPro;
 
 public class MapUI : MonoBehaviour {
+    public static MapUI I { get; private set; }
     public TextMeshProUGUI turn_number_t;
 
     // ---City UI---
@@ -34,15 +35,18 @@ public class MapUI : MonoBehaviour {
         paladin_count, mender_count, carter_count, dragoon_count,
         scout_count, drummer_count, shield_maiden_count, pikeman_count;
 
-    Controller c;
     public IDictionary<string, TextMeshProUGUI> disc_inv = new Dictionary<string, TextMeshProUGUI>();
     public TextMeshProUGUI discT, map_cellT, battle_cellT;
     public Button next_stageB;
-    public GameObject ask_to_enterP;
+    public GameObject ask_to_enterP, game_overP;
 
     void Awake() {
-        c = GameObject.Find("Controller").GetComponent<Controller>();
-        set_next_stageB_text(c.active_disc_ID);
+        if (I == null) {
+            I = this;
+            DontDestroyOnLoad(gameObject);
+        } else {
+            Destroy(gameObject);
+        }
         
         // Populate city dictionary
         city_inv.Add(Storeable.LIGHT, c_light);
@@ -83,39 +87,66 @@ public class MapUI : MonoBehaviour {
         unit_countsT.Add(PlayerUnit.PIKEMAN, pikeman_count);
     }
 
+    void Start() {
+        set_next_stageB_text(TurnPhaser.I.active_disc_ID);
+    }
+
     void Update() {
-        if (c.cam_switcher.current_cam != CamSwitcher.MAP)
+        if (CamSwitcher.I.current_cam != CamSwitcher.MAP)
             return;
         if (Input.GetKeyDown(KeyCode.Space) && next_stageB.IsActive()) {
-            c.turn_phaser.end_disciplines_turn();
+            TurnPhaser.I.end_disciplines_turn();
         } else if (Input.GetKeyDown(KeyCode.X)) {
-            c.map.close_cell_UI();
+            Map.I.close_cell_UI();
         }
     }
 
-    public void load_discipline_UI(Storeable s) {
-        // Trigger resource property UI updates by non-adjusting values.
+    public void register_turn() {
+        load_battalion_count(Controller.I.get_disc().bat);
+        CityUI.I.load_unit_counts();
+        highlight_discipline(discT, TurnPhaser.I.active_disc_ID);
+        set_next_stageB_text(TurnPhaser.I.active_disc_ID);
+
+        update_storeable_resource_UI(Controller.I.city);
+        update_storeable_resource_UI(Controller.I.get_disc());
+    }
+
+    public void update_storeable_resource_UI(Storeable s) {
+        // Trigger resource property UI updates by setting values to themselves.
         foreach (string resource in Storeable.FIELDS) {
             s.update_text_fields(resource, s.get_var(resource));
         }
-        c.city_ui.load_unit_counts();
-        highlight_discipline(discT, c.active_disc_ID);
-        set_next_stageB_text(c.active_disc_ID);
     }
 
-    
+    public void load_battalion_count(Battalion b) {
+        foreach (int type_ID in b.units.Keys) {
+            unit_countsT[type_ID].text = build_unit_text(b, type_ID);
+        }
+    }
+
+    public string build_unit_text(Battalion b, int ID) {
+        if (!unit_countsT.ContainsKey(ID))
+            return "";
+
+        string num = b.count_placeable(ID).ToString();
+        int total_num = b.units[ID].Count;
+        int num_injured = b.count_injured(ID);
+        return unit_countsT[ID].text = (total_num - num_injured) + 
+            "         " + num_injured;
+    }
+
     public static void update_capacity_text(TextMeshProUGUI text, int sum_resources, int capacity) {
         if (text == null)
             return;
         text.text = sum_resources + " / " + capacity;
     }
 
-    public void update_stat_text(int calling_class, string field, int val, int sum, int capacity) {
+    public void update_stat_text(int disc_ID, string field, int val, int sum, int capacity) {
         TextMeshProUGUI t = null;
-        if (calling_class == City.CITY) {
+        if (disc_ID == City.CITY) {
             city_inv.TryGetValue(field, out t);
             MapUI.update_capacity_text(city_capacityT, sum, capacity);
-        } else if (calling_class == c.active_disc_ID) {
+        } else if (disc_ID == TurnPhaser.I.active_disc_ID) {
             disc_inv.TryGetValue(field, out t);
             MapUI.update_capacity_text(bat_capacityT, sum, capacity);
         }
@@ -135,8 +166,8 @@ public class MapUI : MonoBehaviour {
     }
 
     public void toggle_city_panel() {
-        if (c.map.is_at_city(c.get_disc())) {
-            c.city_ui.toggle_city_panel();
+        if (Map.I.is_at_city(Controller.I.get_disc())) {
+            CityUI.I.toggle_city_panel();
         } else {
             city_panel_active = !city_panel_active;
             cityP.SetActive(city_panel_active);
@@ -172,8 +203,8 @@ public class MapUI : MonoBehaviour {
         ask_to_enterP.SetActive(state);
     }
 
-    public void set_active_game_lossP(bool state) {
-        ask_to_enterP.SetActive(state);
+    public void set_active_game_overP(bool state) {
+        game_overP.SetActive(state);
     }
 
     public void toggle_units_panel() {

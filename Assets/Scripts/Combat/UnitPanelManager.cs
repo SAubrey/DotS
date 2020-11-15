@@ -1,8 +1,17 @@
 ﻿using UnityEngine;
 
 public class UnitPanelManager : MonoBehaviour {
+    public static UnitPanelManager I { get; private set; }
     public EnemyPanel enemy_panel;
     public PlayerPanel player_panel;
+    void Awake() {
+        if (I == null) {
+            I = this;
+            DontDestroyOnLoad(gameObject);
+        } else {
+            Destroy(gameObject);
+        }
+    }
 
     void Start() {
         enemy_panel.close();

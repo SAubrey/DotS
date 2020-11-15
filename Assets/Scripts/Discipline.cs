@@ -6,35 +6,31 @@ public class Discipline : Storeable, ISaveLoad {
     public const int ASTRA = 0, ENDURA = 1, MARTIAL = 2;
     public GameObject piece;
     public Battalion bat;
-    private TravelCard travelcard;
     public bool restart_battle_from_drawn_card = false;
-    public int base_unity = 10;
-    public int mine_qty;
+    private int mine_qty_multiplier = 3;
+    public int mine_qty {
+        get => mine_qty_multiplier *= bat.count_placeable(PlayerUnit.MINER);
+    }
     public bool has_mined_in_turn = false;
     public bool has_moved_in_turn = false;
+    public bool has_scouted_in_turn = false;
+    public bool has_acted_in_turn { get => has_moved_in_turn || has_scouted_in_turn; }
     
-
 
     protected override void Start() {
         base.Start();
         bat = new Battalion(c, this);
 
         _light = 4;
-        _unity = base_unity;
-        /*
-        _star_crystals = capacity;
-        _minerals = capacity;
-        _arelics = capacity;
-        _mrelics = capacity;
-        _erelics = capacity;
-        */
+        _unity = 10;
+  
         pos = new Vector3(10.5f, 10.5f);
-        mine_qty = ID == ENDURA ? 4 : 3;
+        mine_qty_multiplier = ID == ENDURA ? 4 : 3;
     }
 
     public override void new_game() {
         base.new_game();
-        pos = new Vector3(10.5f, 10.5f);
+        cell = Map.I.city_cell;
     }
 
     public override void register_turn() {
@@ -42,6 +38,35 @@ public class Discipline : Storeable, ISaveLoad {
         check_insanity();
         has_mined_in_turn = false;
         has_moved_in_turn = false;
+        has_scouted_in_turn = false;
+    }
+
+    public void move(MapCell cell) {
+        // Offset position on cell to simulate human placement and prevent perfect overlap.
+        this.cell = cell;
+        float randx = Random.Range(-0.2f, 0.2f); 
+        float randy = Random.Range(-0.2f, 0.2f);
+        pos = new Vector3(cell.pos.x + 0.5f + randx, cell.pos.y + 0.5f + randy, 0);
+        has_moved_in_turn = true;
+        MapUI.I.update_cell_text(cell.name);
+        cell.enter();
+    }
+
+    /*
+    Upon death, move the player piece to the city,
+    reset troop composition to default, 
+    lose all resources,
+    drop equipment and experience on the cell of death to be retrieved.
+    */
+    public void die_and_respawn() {
+        pos = Statics.CITY_POS;
+        bat.add_default_troops();
+        bat.kill_injured_units();
+        remove_resources_lost_on_death();
+        Map.I.get_cell(pos).drop_XP(experience);
+        //c.map.get_cell(pos).drop_equipment());
+        // show dropped xp
+
     }
 
     private void check_insanity() {
@@ -70,26 +95,8 @@ public class Discipline : Storeable, ISaveLoad {
         return new Pos((int)pos.x, (int)pos.y);
     }
 
-    public void complete_travelcard() {
-        if (travelcard == null)
-            return;
-        MapCell mc = c.map.get_cell(pos);
-        if (bat.in_battle) {
-            bat.in_battle = false;
-            StartCoroutine(adjust_resources_visibly(travelcard.consequence));
-        }
-        mc.complete_travelcard();
-        travelcard = null;
-    }
-
-    public void set_travelcard(TravelCard tc) {
-        travelcard = tc;
-        MapCell mc = c.map.get_cell(pos);
-        mc.travelcard = tc;
-    }
-
     public TravelCard get_travelcard() {
-        return travelcard;
+        return cell.travelcard;
     }
 
     public void mine(MapCell cell) {
@@ -109,7 +116,7 @@ public class Discipline : Storeable, ISaveLoad {
         }
         has_mined_in_turn = true;
         cell.star_crystals -= sc_mined;
-        c.map.open_cell_UI_script.update_star_crystal_text();
+        Map.I.open_cell_UI_script.update_star_crystal_text();
     }
 
     public void reset() {
@@ -118,17 +125,26 @@ public class Discipline : Storeable, ISaveLoad {
             bat.units[type].Clear();
         }
     }
-    
+    private MapCell _cell;
+    public MapCell cell {
+        get => _cell;
+        set {
+            if (value == null)
+                return;
+            previous_cell = cell;
+            _cell = value;
+            pos = cell.pos.to_vec3;
+        }
+    }
+    public MapCell previous_cell { get; private set; }
     private Vector3 _pos;
     public Vector3 pos {
         get { return _pos; }
         set {
-            prev_pos = _pos;
             _pos = value;
             piece.transform.position = new Vector3(value.x, value.y, 0);
         }
     }
-    public Vector3 prev_pos;
 
     public override GameData save() {
         return new DisciplineData(this, name);
@@ -146,8 +162,8 @@ public class Discipline : Storeable, ISaveLoad {
         _mrelics = data.sresources.mrelics;
 
         pos = new Vector3(data.col, data.row);
-        travelcard = c.travel_deck.get_card(data.redrawn_travel_card_ID);
-        restart_battle_from_drawn_card = travelcard != null;
+        cell.travelcard = TravelDeck.I.get_card(data.redrawn_travel_card_ID);
+        restart_battle_from_drawn_card = cell.travelcard != null;
 
         // Create healthy units.
         Debug.Log("count:" + PlayerUnit.unit_types.Count);

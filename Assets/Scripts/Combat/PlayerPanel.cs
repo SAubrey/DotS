@@ -3,16 +3,9 @@ using UnityEngine.UI;
 using TMPro;
 
 public class PlayerPanel : UnitPanel {
-    Controller c;
-    AttackQueuer aq;
     public Button returnB, moveB, attackB, defB, attributeB;
     public Button upB, downB, leftB, rightB;
     public TextMeshProUGUI DefT, ResT;
-
-    void Start() {
-        c = GameObject.Find("Controller").GetComponent<Controller>();
-        aq = c.attack_queuer;
-    }
 
     void Update() {
         if (!Input.anyKeyDown)
@@ -27,16 +20,15 @@ public class PlayerPanel : UnitPanel {
                 defend();
         } else if (Input.GetKeyDown(KeyCode.R)) {
             if (returnB.interactable)
-                c.selector.return_unit();
+                Selector.I.return_unit();
         } else if (Input.GetKeyDown(KeyCode.S)) {
             if (moveB.interactable)
                 move();
-        }
-        
+        } 
     }
 
     /* 
-    Limit what a player can do with a unit based on game logic.
+    Limit button accessibility based on game logic.
     */
     public override void update_panel(Slot slot) {
         if (slot.get_enemy() != null)
@@ -55,7 +47,7 @@ public class PlayerPanel : UnitPanel {
         bool combat_staging = (bp.range_stage && punit.is_range) || 
                                 (bp.combat_stage);
         bool can_be_controlled_by_active_battalion = 
-            c.get_active_battalion().disc.ID == punit.owner_ID;
+            BattlePhaser.I.active_bat.disc.ID == punit.owner_ID;
 
         if (bp.movement_stage || bp.placement_stage)
             enable_rotateB();
@@ -125,7 +117,7 @@ public class PlayerPanel : UnitPanel {
             _attB_pressed = value;
             set_press_attackB(value);
             if (punit.attack_set)
-                    aq.get_player_queue().remove_attack(punit.attack_id, c.line_drawer);
+                    AttackQueuer.I.get_player_queue().remove_attack(punit.attack_id, LineDrawer.I);
 
             if (_attB_pressed) {
                 defB_pressed = false;

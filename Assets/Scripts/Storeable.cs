@@ -16,8 +16,6 @@ public class Storeable : MonoBehaviour, ISaveLoad {
     public static readonly string[] FIELDS = { LIGHT, UNITY, EXPERIENCE, STAR_CRYSTALS,
                             MINERALS, ARELICS, MRELICS, ERELICS, EQUIMARES };
     public Controller c;
-    protected MapUI map_ui;
-    public CityUIManager city_ui;
     public GameObject rising_info_prefab;
     public GameObject origin_of_rise_obj;
     public GameObject map_UI_canvas;
@@ -29,8 +27,6 @@ public class Storeable : MonoBehaviour, ISaveLoad {
 
     protected virtual void Start() {
         c = GameObject.Find("Controller").GetComponent<Controller>();
-        map_ui = c.map_ui;
-        city_ui = c.city_ui;
         map_UI_canvas = GameObject.Find("MapUICanvas");
     }
 
@@ -46,7 +42,7 @@ public class Storeable : MonoBehaviour, ISaveLoad {
         light_decay_cascade();
     }
 
-    public void light_decay_cascade() {
+    public virtual void light_decay_cascade() {
         Dictionary<string, int> d = new Dictionary<string, int>();
         d.Add(LIGHT, -1);
         if (light <= 0) {
@@ -60,15 +56,19 @@ public class Storeable : MonoBehaviour, ISaveLoad {
                     d.Add(UNITY, -1);
             }
         }
-        StartCoroutine(adjust_resources_visibly(d));
+        adjust_resources_visibly(d);
     }
 
     public virtual void update_text_fields(string type, int value) {
-        map_ui.update_stat_text(ID, type, value, get_sum_storeable_resources(), capacity);
-        city_ui.update_stat_text(ID, type, value, get_sum_storeable_resources(), capacity);
+        MapUI.I.update_stat_text(ID, type, value, get_sum_storeable_resources(), capacity);
+        CityUI.I.update_stat_text(ID, type, value, get_sum_storeable_resources(), capacity);
     }
 
-    public IEnumerator adjust_resources_visibly(Dictionary<string, int> adjustments) {
+    public void adjust_resources_visibly(Dictionary<string, int> adjustments) {
+        StartCoroutine(_adjust_resources_visibly(adjustments));
+    }
+
+    private IEnumerator _adjust_resources_visibly(Dictionary<string, int> adjustments) {
         foreach (KeyValuePair<string, int> r in adjustments) {
             int valid_change_amount = get_valid_change_amount(r.Key, r.Value);
             if (valid_change_amount != 0) {
@@ -76,6 +76,20 @@ public class Storeable : MonoBehaviour, ISaveLoad {
                 yield return new WaitForSecondsRealtime(0.5f);
             }
         }
+    }
+
+    public void remove_resources_lost_on_death() {
+        Dictionary<string, int> adjs = new Dictionary<string, int>();
+        adjs.Add(STAR_CRYSTALS, star_crystals);
+        adjs.Add(MINERALS, minerals);
+        adjs.Add(ARELICS, arelics);
+        adjs.Add(MRELICS, mrelics);
+        adjs.Add(ERELICS, erelics);
+        adjs.Add(EQUIMARES, equimares);
+
+        set_var_without_check(LIGHT, 4);
+        set_var_without_check(UNITY, 10);
+        adjust_resources_visibly(adjs);
     }
 
     public void create_rising_info(string type, int value) {

@@ -6,15 +6,9 @@ using UnityEngine.Tilemaps;
 using UnityEngine.EventSystems;
 
 public class Map : MonoBehaviour, ISaveLoad {
-    /*private static Map _instance = null;
+    public static Map I { get; private set; }
 
-    public static Map instance { 
-        get {
-            if (_instance == null)
-                _instance = new Map();
-            return _instance;
-        }
-    }*/
+    // Tile IDs
     public const int PLAINS_1 = 0;
     public const int FOREST_1 = 1;
     public const int RUINS_1 = 2;
@@ -56,8 +50,8 @@ public class Map : MonoBehaviour, ISaveLoad {
     public Tile rune_gate;
 
     public Tile city;
+    public CityCell city_cell;
     public Tile shadow;
-    public Controller c;
     public GameObject cell_UI_prefab;
     public MapCellUI open_cell_UI_script;
 
@@ -117,12 +111,17 @@ public class Map : MonoBehaviour, ISaveLoad {
     private System.Random rand;
     private int max_discovered_tile_distance = 0;
     public UnityEngine.Experimental.Rendering.Universal.Light2D light2d;
+    void Awake() {
+        if (I == null) {
+            I = this;
+            DontDestroyOnLoad(gameObject);
+        } else {
+            Destroy(gameObject);
+        }
+    }
 
     void Start() {
-        c = GameObject.Find("Controller").GetComponent<Controller>();
         tm = GameObject.Find("MapTilemap").GetComponent<Tilemap>();
-        cs = c.cam_switcher;
-        tp = c.turn_phaser;
         rand = new System.Random();
 
         bags.Add(1, new List<int>() );
@@ -154,21 +153,16 @@ public class Map : MonoBehaviour, ISaveLoad {
         tiles.Add(MOUNTAIN_2, mountain_2);
         tiles.Add(LUSH_LAND_2, lush_land_2);
 
+        create_city();
+
         // Populate inverse dictionary.
         foreach (KeyValuePair<int, Tile> pair in tiles) {
             if (!tile_to_tileID.ContainsKey(pair.Value))
                 tile_to_tileID.Add(pair.Value, pair.Key);
         }
     }
-
-    public void init(bool from_save) {
-        if (!from_save) {
-            new_game();
-        }
-    }
     
     void Update() {
-
         if (cs.current_cam != CamSwitcher.MAP)
             return;
 
@@ -200,9 +194,11 @@ public class Map : MonoBehaviour, ISaveLoad {
             mc.oscillate_color();
         }
     }
-    public void close_cell_UI() {
-        if (open_cell_UI_script)
-            open_cell_UI_script.close();
+
+    public void init(bool from_save) {
+        if (!from_save) {
+            new_game();
+        }
     }
 
     private void new_game() {
@@ -210,9 +206,26 @@ public class Map : MonoBehaviour, ISaveLoad {
         scouting = false;
         waiting_for_second_gate = false;
         populate_decks();
+        // Recreate city only if game has loaded the first time.
+        if (Controller.I.game_has_begun) {
+            create_city();
+        } else {
+            map.Add(city_cell.pos, city_cell);
+        }
         generate_t1(tm);
         generate_t2(tm);
         generate_t3(tm);
+    }
+
+    private void create_city() {
+        city_cell = (CityCell)MapCell.create_cell(1, CITY, city, new Pos(10, 10), MapCell.CITY);
+        city_cell.discover();
+        map.Add(city_cell.pos, city_cell);
+    }
+
+    public void close_cell_UI() {
+        if (open_cell_UI_script)
+            open_cell_UI_script.close();
     }
 
     private void clear_data() {
@@ -225,67 +238,53 @@ public class Map : MonoBehaviour, ISaveLoad {
     }
 
     private void handle_left_click() {
-        //if (tp.moving) {
-        Vector3 pos = c.cam_switcher.mapCam.ScreenToWorldPoint(Input.mousePosition);
-
+        Vector3 pos = CamSwitcher.I.mapCam.ScreenToWorldPoint(Input.mousePosition);
         if (get_tile(pos.x, pos.y) == null)
             return;
-
         generate_cell_UI(get_cell(pos));
-        //}
     }
 
     private void generate_cell_UI(MapCell cell) {
         GameObject cell_UI = Instantiate(cell_UI_prefab, GameObject.Find("MapUICanvas").transform);
         MapCellUI cell_UI_script = cell_UI.GetComponentInChildren<MapCellUI>();
-        cell_UI_script.init(this, cell);
+        cell_UI_script.init(cell);
         open_cell_UI_script = cell_UI_script;
     }
 
-    public void move_player(Vector3 pos, bool advance_stage, Discipline disc=null) {
-        MapCell cell = get_cell(pos);
-        float randx = Random.Range(-0.2f, 0.2f); // simulate human placement, prevent perfect overlap
-        float randy = Random.Range(-0.2f, 0.2f);
-
-        if (!disc)
-            disc = c.get_disc();
-        disc.pos = new Vector3(cell.pos.x + 0.5f + randx, cell.pos.y + 0.5f + randy, 0);
-        disc.has_moved_in_turn = true;
-        c.map_ui.update_cell_text(cell.name);
-        enter_cell(cell);
-
-        if (advance_stage)
-            tp.advance_stage();
-    }
-
-    public void enter_cell(MapCell cell) {
-        if (!cell.discovered) {
-            tm.SetTile(new Vector3Int((int)cell.pos.x, (int)cell.pos.y, 0), cell.tile);
-        }
-    }
-
     public bool can_move(Vector3 destination) {
-        Vector3 current_pos = new Vector3(get_current_cell().pos.x, get_current_cell().pos.y, 0);
-        return check_adjacent(destination, current_pos) && get_cell(destination).battle == null
-            && !c.get_disc().has_moved_in_turn;
+        Vector3 current_pos = get_current_cell().pos.to_vec3;
+        
+        return check_adjacent(destination, current_pos) && !get_cell(destination).has_battle
+            && !Controller.I.get_disc().has_acted_in_turn;
     }
 
     public void scout(Vector3 pos) {
         MapCell cell = map[new Pos((int)pos.x, (int)pos.y)];
-        tm.SetTile(new Vector3Int((int)pos.x, (int)pos.y, 0), cell.tile);
-        tp.advance_stage();
+        cell.discover();
+        Controller.I.get_disc().has_scouted_in_turn = true;
+        
+        // Draw card in advance to reveal enemy count if applicable.
+        cell.travelcard = TravelDeck.I.draw_card(cell.tier, cell.biome_ID);
+        if (!cell.has_travelcard)
+            return;
+        if (cell.travelcard.enemy_count > 0) {
+            EnemyLoader.I.generate_new_enemies(cell, cell.travelcard.enemy_count);
+            cell.has_seen_combat = true; // Will bypass enemy generation when cell is entered.
+        }
     }
 
     public bool can_scout(Vector3 pos) {
-        return get_tile(pos.x, pos.y) != null && check_adjacent(pos, c.get_disc().pos) && 
-            c.get_disc().bat.get_unit(PlayerUnit.SCOUT) != null &&
-            get_current_cell() != get_cell(pos) && get_cell(pos) != get_city_cell();
+        return get_tile(pos.x, pos.y) != null && check_adjacent(pos, Controller.I.get_disc().pos) && 
+            Controller.I.get_disc().bat.get_unit(PlayerUnit.SCOUT) != null &&
+            get_current_cell() != get_cell(pos) && get_cell(pos) != city_cell &&
+            !get_cell(pos).discovered &&
+            !Controller.I.get_disc().has_acted_in_turn;
     }
 
     public bool can_teleport(Vector3 pos) {
         MapCell cell = get_cell(pos);
         return cell.restored_rune_gate && get_current_cell().restored_rune_gate &&
-            get_current_cell() != cell && cell != get_city_cell();
+            get_current_cell() != cell && cell != city_cell;
     }
 
     public static bool check_adjacent(Vector3 pos1, Vector3 pos2) {
@@ -296,14 +295,14 @@ public class Map : MonoBehaviour, ISaveLoad {
 
     // Randomly pick tiles from grab bags. 
     private Tile grab_tile(int tier) {
-        if (bags[tier].Count > 0) {
-            int index = rand.Next(bags[tier].Count);
-            int tile_ID = bags[tier][index];
+        if (bags[tier].Count <= 0)
+            return null;
 
-            bags[tier].RemoveAt(index);
-            return tiles[tile_ID];
-        }
-        return null;
+        int index = rand.Next(bags[tier].Count);
+        int tile_ID = bags[tier][index];
+
+        bags[tier].RemoveAt(index);
+        return tiles[tile_ID];
     }
 
     private void populate_decks() {
@@ -319,7 +318,7 @@ public class Map : MonoBehaviour, ISaveLoad {
     public void create_cell(int tier, int x, int y) {
         Pos pos = new Pos(x, y);
         Tile tile = grab_tile(tier);
-        map.Add(pos, MapCell.create_cell(this,
+        map.Add(pos, MapCell.create_cell(
             tier, tile_to_tileID[tile], tile, pos));
         place_tile(shadow, pos.x, pos.y);
         tile.color = Color.white;
@@ -332,7 +331,8 @@ public class Map : MonoBehaviour, ISaveLoad {
     }
 
     public MapCell get_current_cell(Discipline disc=null) {
-        return disc == null ? get_cell(c.get_disc().pos) : get_cell(disc.pos);
+        //return disc == null ? get_cell(Controller.I.get_disc().pos) : get_cell(disc.pos);
+        return disc == null ? Controller.I.get_disc().cell : disc.cell;
     }
 
     public void place_tile(Tile tile, int x, int y) {
@@ -341,11 +341,7 @@ public class Map : MonoBehaviour, ISaveLoad {
     }
 
     public bool is_at_city(Discipline disc) {
-        return ((int)disc.pos.x == 10 && (int)disc.pos.y == 10);
-    }
-
-    public MapCell get_city_cell() {
-        return map[new Pos(10, 10)];
+        return disc.cell == city_cell;
     }
 
     public GameData save() {
@@ -366,16 +362,16 @@ public class Map : MonoBehaviour, ISaveLoad {
         // Recreate map.
         foreach (SMapCell mcs in data.cells) {
             Pos pos = new Pos(mcs.x, mcs.y);
-            MapCell cell = MapCell.create_cell(this,
+            MapCell cell = MapCell.create_cell(
                 mcs.tier, mcs.tile_type, tiles[mcs.tile_type], pos);
             cell.minerals = mcs.minerals;
             cell.star_crystals = mcs.star_crystals;
-            cell.discovered = mcs.discovered;
 
-            if (cell.discovered)
-                place_tile(tiles[mcs.tile_type], mcs.x, mcs.y);
-            else
+            if (mcs.discovered) {
+                cell.discover();
+            } else {
                 place_tile(shadow, pos.x, pos.y);
+            }
             map.Add(pos, cell);
         }
     }
@@ -393,15 +389,15 @@ public class Map : MonoBehaviour, ISaveLoad {
     }
 
     public MapCell get_cell(Vector3 pos) {
-        return map[new Pos((int)pos.x, (int)pos.y)];
-    }
-
-    public List<Enemy> get_enemies(Vector3 pos) {
-        return get_cell(pos).get_enemies();
+        Pos p = new Pos((int)pos.x, (int)pos.y);
+        if (!map.ContainsKey(p)) {
+           return null;
+        }
+        return map[p];
     }
 
     public List<Enemy> get_enemies_here() {
-        return get_cell(c.get_disc().pos).get_enemies();
+        return Controller.I.get_disc().cell.get_enemies();
     }
     
     public void build_rune_gate(Pos pos) {
@@ -412,17 +408,12 @@ public class Map : MonoBehaviour, ISaveLoad {
         for (int x = 8; x < 13; x++) {
             for (int y = 8; y < 13; y++) {
                 if (x == 10 && y == 10) {
-                    Pos pos = new Pos(x, y);
-                    MapCell mc = MapCell.create_cell(this, 1, CITY, city, pos);
-                    mc.name = "City";
-                    map.Add(pos, mc);
                     place_tile(city, x, y);
                 } else {
                     create_cell(1, x, y);
                 }
             } 
         }
-        map[new Pos(10, 10)].discover(); // discover the city.
     }
 
     void generate_t2(Tilemap tm) {

@@ -4,9 +4,19 @@ using UnityEngine;
 using UnityEngine.UI;
 
 public class BackgroundLoader : MonoBehaviour {
+    public static BackgroundLoader I { get; private set; }
     public Image field_panel_img;
     public Dictionary<int, Sprite> background_imgs = new Dictionary<int, Sprite>();
     public Sprite plains, forest, titrum;
+
+    void Awake() {
+        if (I == null) {
+            I = this;
+            DontDestroyOnLoad(gameObject);
+        } else {
+            Destroy(gameObject);
+        }
+    }
     void Start() {
         field_panel_img = GameObject.Find("FieldPanel").GetComponent<Image>();
         background_imgs.Add(MapCell.PLAINS_ID, plains);

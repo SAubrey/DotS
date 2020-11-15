@@ -39,7 +39,7 @@ public class Battle {
         this.map = map;
         this.cell = cell;
         this.leader = leader;
-        init_turn = map.c.get_turn_num();
+        init_turn = TurnPhaser.I.turn;
         add_participant(leader);
         active_bat_ID = leader.ID;
         leader.bat.pending_group_battle_cell = cell;
@@ -58,7 +58,7 @@ public class Battle {
     }
 
     /*
-    A group battle begins from UI. A solo battle begins from a travel card.
+    A group battle begins from MapCellUI. A solo battle begins from travel card UI.
     */
     public void begin() {
         active = true;
@@ -71,7 +71,7 @@ public class Battle {
         // Move player triggers turn phase advancement, triggering 
         if (is_group) {
             move_players();
-            map.c.battle_phaser.begin_new_battle(cell.travelcard, cell);
+            BattlePhaser.I.begin_new_battle(cell);
         }
         // Do not move single battalion in a solo battle since their battle
         // is generated as the result of movement.
@@ -83,24 +83,28 @@ public class Battle {
     }
     
     private void move_players() {
-        if (participants.Count == 2) {
-            map.move_player(cell.pos.to_vec3, false, participants[0]);
-            map.move_player(cell.pos.to_vec3, true, participants[1]);
-        } else if (participants.Count == 3) {
-            map.move_player(cell.pos.to_vec3, false, participants[0]);
-            map.move_player(cell.pos.to_vec3, false, participants[1]);
-            map.move_player(cell.pos.to_vec3, true, participants[2]);
+        foreach (Discipline d in participants) {
+            //map.move_player(cell.pos.to_vec3, d);
+            d.move(cell);
         }
     }
 
     public void retreat() {
         Debug.Log("attempting retreat. Participants: " + participants.Count);
+        cell.post_phase();
+        //cell.map.c.line_drawer.clear();
+        AttackQueuer.I.get_enemy_queue().reset();
+        AttackQueuer.I.get_player_queue().reset();
+        
         foreach (Discipline d in participants) {
-            d.c.map.move_player(d.prev_pos, false, d);
+            //d.c.map.move_player(d.prev_pos, d);
+            d.move(d.previous_cell);
             // Penalize
             d.change_var(Storeable.UNITY, -1, true);
-            d.set_travelcard(null);
+            d.bat.post_phase();
         }
+        CamSwitcher.I.flip_map_battle();
+        cell.set_tile_color();
         end();
     }
 
@@ -131,6 +135,16 @@ public class Battle {
         cell.post_battle();
     }
 
+    public List<Battalion> get_dead_battalions() {
+        List<Battalion> dead = new List<Battalion>();
+        foreach (Discipline d in participants) {
+            if (d.bat.count_healthy() <= 0) {
+                dead.Add(d.bat);
+            }
+        }
+        return dead;
+    }
+
     public int count_all_placed_units() {
         int sum = 0;
         foreach(Discipline d in participants) {
@@ -149,11 +163,11 @@ public class Battle {
     public bool is_group { get => participants.Count > 1; }
 
     public bool can_begin_group {
-        get { return map.c.get_turn_num() > init_turn && participants.Count > 1; } 
+        get { return TurnPhaser.I.turn > init_turn && participants.Count > 1; } 
     }
 
     public bool leader_is_active_on_map {
-        get { return map.c.get_disc() == leader; }
+        get { return Controller.I.get_disc() == leader; }
     }
 
     public bool leaders_turn {

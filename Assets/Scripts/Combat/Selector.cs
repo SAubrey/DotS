@@ -5,11 +5,7 @@ using UnityEngine.UI;
 
 // For selecting unit slots on the field for unit placement or selection.
 public class Selector : MonoBehaviour {
-    private Controller c;
-    private CamSwitcher cs;
-    private BatLoader bat_loader;
-    private BattlePhaser bp;
-    private UnitPanelManager unit_panel_man;
+    public static Selector I { get; private set; }
     private PlayerPanel player_panel;
     private bool _selecting_target;
     public bool selecting_target {
@@ -17,37 +13,47 @@ public class Selector : MonoBehaviour {
         set {
             _selecting_target = value;
             if (_selecting_target) {
-                c.line_drawer.preview_line.draw(selected_slot.transform.position);
+                LineDrawer.I.preview_line.draw(selected_slot.transform.position);
             } else {
-                c.line_drawer.preview_line.erase();
+                LineDrawer.I.preview_line.erase();
             }
         }
     }
     public bool selecting_move = false;
-    public Slot selected_slot { get; private set; }
+    private Slot _selected_slot;
+    public Slot selected_slot { 
+        get { return _selected_slot; } 
+        private set {
+            last_selected_slot = _selected_slot;
+            _selected_slot = value;
+        } 
+    }
+    public Slot last_selected_slot;
+    void Awake() {
+        if (I == null) {
+            I = this;
+            DontDestroyOnLoad(gameObject);
+        } else {
+            Destroy(gameObject);
+        }
+    }
 
     void Start() {
-        c = GameObject.Find("Controller").GetComponent<Controller>();
-        cs = c.cam_switcher;
-        bat_loader = c.bat_loader;
-        bp = c.battle_phaser;
-        unit_panel_man = c.unit_panel_man;
-        player_panel = unit_panel_man.player_panel;
+        player_panel = UnitPanelManager.I.player_panel;
     }
 
     void Update() {
         if (Input.GetKeyDown(KeyCode.Space)) {
-            if (bp.adv_stageB.interactable)
-                bp.advance();
+            if (BattlePhaser.I.adv_stageB.interactable)
+                BattlePhaser.I.advance();
         }
         if (selected_slot == null)
             return;
             
         if (!Input.anyKeyDown)
             return;
-
         if (Input.GetKeyDown(KeyCode.X)) {
-            unit_panel_man.close();
+            UnitPanelManager.I.close();
         }
     }
 
@@ -55,7 +61,7 @@ public class Selector : MonoBehaviour {
     // A slot will either attempt to be filled if it is empty and a unit type is selected,
     // otherwise it will select if not selected, or deselect if selected.
     public void handle_slot(Slot slot) {
-        if (cs.current_cam != CamSwitcher.BATTLE)
+        if (CamSwitcher.I.current_cam != CamSwitcher.BATTLE)
             return;
         
         // Attempting to attack or move. Do not select a new slot upon failure.
@@ -76,19 +82,19 @@ public class Selector : MonoBehaviour {
     private void place_punit(Slot slot) {
         // The highest order slot must be filled first.
         Slot highest_slot = slot.get_group().get_highest_empty_slot();
-        Unit u = c.battle_phaser.active_bat.get_placeable_unit(
-                    bat_loader.get_selected_unit_ID());
+        Unit u = BattlePhaser.I.active_bat.get_placeable_unit(
+                    BatLoader.I.get_selected_unit_ID());
         if (highest_slot.fill(u)) {
 
             // Verify if all units are placed and can continue
-            if (bp.init_placement_stage)
-                bp.check_all_units_placed();
+            if (BattlePhaser.I.init_placement_stage)
+                BattlePhaser.I.check_all_units_placed();
 
-            if (bat_loader.selecting_for_heal)
-                bat_loader.complete_heal();
+            if (BatLoader.I.selecting_for_heal)
+                BatLoader.I.complete_heal();
             // Update inventory text
-            bat_loader.load_unit_text(c.battle_phaser.active_bat, 
-                    bat_loader.get_selected_unit_ID()); 
+            BatLoader.I.load_unit_text(BattlePhaser.I.active_bat, 
+                    BatLoader.I.get_selected_unit_ID()); 
             deselect();
         }
     }
@@ -96,7 +102,7 @@ public class Selector : MonoBehaviour {
     private void attempt_action(Slot slot) {
         if (selecting_target) { // ---Attack---
             selecting_target = false;
-            c.unit_panel_man.player_panel.attB_pressed = false;
+            UnitPanelManager.I.player_panel.attB_pressed = false;
 
             // Range units can attack units not in the front slot.
             Slot highest_enemy_slot;
@@ -115,7 +121,7 @@ public class Selector : MonoBehaviour {
             }
         } else if (selecting_move) { // ---Move---
             selecting_move = false;
-            c.unit_panel_man.player_panel.moveB_pressed = false;
+            UnitPanelManager.I.player_panel.moveB_pressed = false;
 
             // Units are either moved up automatically or can be swapped. 
             if (slot.is_empty) {
@@ -147,12 +153,11 @@ public class Selector : MonoBehaviour {
     }
 
     private void select(Slot slot) {
-        Debug.Log("selectingr");
         selected_slot = slot;
         selected_slot.show_selection(true);
         //selected_slot.set_color();
-        unit_panel_man.show(slot);
-        c.bat_loader.clear_placement_selection();
+        UnitPanelManager.I.show(slot);
+        BatLoader.I.clear_placement_selection();
     }
 
     public void deselect() {
@@ -161,7 +166,7 @@ public class Selector : MonoBehaviour {
         //selected_slot.show_selection(false);
         //selected_slot.set_color();
         selected_slot.show_selection(false);
-        unit_panel_man.close();
+        UnitPanelManager.I.close();
         selected_slot = null;
         selecting_target = false;
         selecting_move = false;
@@ -169,13 +174,13 @@ public class Selector : MonoBehaviour {
 
     private bool verify_placement(Slot dest) {
         bool valid_init_place = 
-            c.battle_phaser.init_placement_stage && 
+            BattlePhaser.I.init_placement_stage && 
              dest.is_type(Group.PLAYER);
         bool valid_post_init_place = 
             (dest.is_type(Group.PERIPHERY)) &&
-            !c.battle_phaser.init_placement_stage;
+            !BattlePhaser.I.init_placement_stage;
 
-        if ((c.bat_loader.selecting_for_heal || bp.placement_stage) && 
+        if ((BatLoader.I.selecting_for_heal || BattlePhaser.I.placement_stage) && 
             dest.is_empty &&
             (valid_init_place || valid_post_init_place))
             return true;
@@ -190,7 +195,7 @@ public class Selector : MonoBehaviour {
         int removed_unit_ID = s.get_unit().get_ID();
         deselect();
         s.empty();
-        bat_loader.load_unit_text(c.battle_phaser.active_bat, removed_unit_ID);
-        bp.check_all_units_placed(); // Can we move past placement?
+        BatLoader.I.load_unit_text(BattlePhaser.I.active_bat, removed_unit_ID);
+        BattlePhaser.I.check_all_units_placed(); // Can we move past placement?
     }
 }

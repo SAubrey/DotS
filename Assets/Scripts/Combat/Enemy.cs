@@ -130,20 +130,16 @@ public class Enemy : Unit {
         // adjust for defensive attributes?
         if (!piercing)
             dmg -= defense;
-
         return dmg > 0 ? dmg : 0;
     }
 
     public override float calc_hp_remaining(int dmg) {
         float damaged_hp = health - dmg;
-        return damaged_hp;
+        return damaged_hp > 0 ? damaged_hp : 0;
     }
 
     public override int get_post_dmg_state(int dmg) {
-        if (health - dmg <= 0)
-            return DEAD;
-        else 
-            return INJURED;
+        return health - dmg <= 0 ? DEAD : INJURED;
     }
 
     public void clear_target() {

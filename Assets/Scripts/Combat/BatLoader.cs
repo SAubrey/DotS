@@ -9,8 +9,7 @@ Battalion loader.
 Pertains to the player unit placement selection bar and placed player/enemy unit images for slots.
 */
 public class BatLoader : MonoBehaviour {
-    private Controller c;
-    private BattlePhaser bat_phaser;
+    public static BatLoader I { get; private set; }
     //public Sprite white_fade_img, dark_fade_img;
     public Sprite empty; // UIMask image for a slot button image.
     // Unit quantity text fields in the unit selection scrollbar.
@@ -85,6 +84,13 @@ public class BatLoader : MonoBehaviour {
     }
 
     void Awake() {
+        if (I == null) {
+            I = this;
+            DontDestroyOnLoad(gameObject);
+        } else {
+            Destroy(gameObject);
+        }
+
         texts.Add(PlayerUnit.WARRIOR, warrior_t);
         texts.Add(PlayerUnit.SPEARMAN, spearman_t);
         texts.Add(PlayerUnit.ARCHER, archer_t);
@@ -233,37 +239,31 @@ public class BatLoader : MonoBehaviour {
         enemy_images_front.Add(Enemy.MELD_SPEARMAN, meld_spearman_f);
     }
 
-    void Start() {
-        c = GameObject.Find("Controller").GetComponent<Controller>();
-        bat_phaser = c.battle_phaser;
-    }
-
     // This loads the player's battalion composition into the static
     // slots in the battle scene. 
     public void load_bat(Battalion b) {
-        foreach (int type in b.units.Keys) 
-            load_unit_text(b, type);
-        Debug.Log("loading bat: " + b.disc.name);
-        c.map_ui.highlight_discipline(discT, b.disc.ID);
+        foreach (int type_ID in b.units.Keys) {
+            load_unit_text(b, type_ID);
+            unit_buttons[type_ID].interactable = b.units[type_ID].Count > 0;
+        }
+        Debug.Log("loading bat in battlefield: " + b.disc.name);
+        MapUI.I.highlight_discipline(discT, b.disc.ID);
+    }
+
+    public void load_unit_text(Battalion b, int ID) {
+        texts[ID].text = build_unit_text(b, ID);
     }
 
     /*
     Load unit counts in unit placement sidebar.
     */
-    public void load_unit_text(Battalion b, int ID) {
-        MapUI map_ui = c.map_ui;
-        if (!texts.ContainsKey(ID) || !map_ui.unit_countsT.ContainsKey(ID))
-            return;
-
+    private string build_unit_text(Battalion b, int ID) {
+        if (!texts.ContainsKey(ID))
+            return "";
         string num = b.count_placeable(ID).ToString();
         int total_num = b.units[ID].Count;
         int num_injured = b.count_injured(ID);
-
-        texts[ID].text = num + " / " + total_num.ToString() + "    " + num_injured;
-
-        map_ui.unit_countsT[ID].text = (total_num - num_injured) + 
-            "         " + num_injured;
-        unit_buttons[ID].interactable = total_num > 0;
+        return num + " / " + total_num.ToString() + "    " + num_injured;
     }
 
     // Called by battalion selection buttons
@@ -274,8 +274,8 @@ public class BatLoader : MonoBehaviour {
         }
         
         if (selecting_for_heal) { // Heal attribute
-            if (bat_phaser.active_bat.heal_injured_unit(ID)) {
-                load_unit_text(bat_phaser.active_bat, ID);
+            if (BattlePhaser.I.active_bat.heal_injured_unit(ID)) {
+                load_unit_text(BattlePhaser.I.active_bat, ID);
                 selected_unit_type = ID;
                 unit_buttons[ID].image.color = Statics.DISABLED_C;
             } else {

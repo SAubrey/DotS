@@ -17,7 +17,9 @@ public class MapCell {
     public const string MOUNTAIN = "Mountain";
     public const string SETTLEMENT = "Settlement";
     public const string RUNE_GATE = "Rune Gate";
+    public const string CITY = "City";
 
+    public const int CITY_ID = -1;
     public const int PLAINS_ID = 0;
     public const int FOREST_ID = 1;
     public const int RUINS_ID = 2;
@@ -33,11 +35,13 @@ public class MapCell {
     public const int SETTLEMENT_ID = 10;
     public const int RUNE_GATE_ID = 11;
 
-    public static MapCell create_cell(Map map, int tier, int tile_type_ID, Tile tile, Pos pos) {
+    public static MapCell create_cell(int tier, int tile_type_ID, Tile tile, Pos pos, string name="") {
         MapCell mc = null;
-        string[] splits = tile.ToString().Split('_');
-
-        string name = splits[0];
+        // Don't extract name from tile if provided.
+        if (name == "") {
+            string[] splits = tile.ToString().Split('_');
+            name = splits[0];
+        }
         if (name == PLAINS) {
             mc = new Plains(tier, tile, pos);
         } else if (name == FOREST) {
@@ -62,11 +66,12 @@ public class MapCell {
             mc = new Settlement(tier, tile, pos);
         } else if (name == RUNE_GATE) {
             mc = new RuneGate(tier, tile, pos);
+        } else if (name == CITY) {
+            mc = new CityCell(tier, tile, pos);
         } else {
             mc = new MapCell(tier, tile, pos, 0);
         }
         mc.tile_type_ID = tile_type_ID;
-        mc.map = map;
         return mc;
     }
 
@@ -75,24 +80,26 @@ public class MapCell {
     public readonly int tier;
     public readonly Pos pos;
     public readonly int biome_ID;
-    public bool discovered = false;
+    public bool entered { get; private set; }
+    public bool discovered { get; private set; }
     public string name;
     public int minerals, star_crystals = 0;
+    private int dropped_XP = 0;
     public int tile_type_ID;
     public bool creates_travelcard = true;
     public bool has_rune_gate = false;
     public bool restored_rune_gate = false;
     public bool travelcard_complete = false;
     public Battle battle;
+    public bool has_seen_combat = false;
     private List<Enemy> enemies = new List<Enemy>();
-    public Map map;
+    // Travelcards cannot be set to null.  
     private TravelCard _travelcard;
     public TravelCard travelcard { 
         get => _travelcard;
         set {
             if (value == null)
                 return;
-            travelcard_complete = false;
             _travelcard = value;
         }
      }
@@ -134,53 +141,73 @@ public class MapCell {
         enemies.Remove(enemy);
     }
 
-    private void set_tile_color() {
+    public void set_tile_color() {
         if (enemies.Count > 0) {
-            Map map = GameObject.Find("Controller").GetComponent<Controller>().map;
             Vector3Int vec = new Vector3Int(pos.x, pos.y, 0);
-            map.tm.SetTileFlags(vec, TileFlags.None);
-            map.tm.SetColor(vec, enemy_color); // Dark red
+            Map.I.tm.SetTileFlags(vec, TileFlags.None);
+            Map.I.tm.SetColor(vec, enemy_color); // Dark red
         } else {
             tile.color = Color.white;
         }
     }
 
+    public void enter() {
+        if (!entered) {
+            entered = true;
+            TravelCardManager.I.draw_and_display_travel_card(this);
+            discover();
+            Debug.Log("draw and display");
+        } 
+        else if (should_activate_travelcard_without_showing) {
+            Debug.Log("handle card");
+            TravelCardManager.I.handle_travelcard(this);
+        }
+    }
+
+    public bool should_activate_travelcard_without_showing { get =>
+        creates_travelcard && !travelcard_complete && entered && !has_battle;
+    }
+
     public void discover() {
+        if (discovered)
+            return;
         discovered = true;
-        map.adjust_light_size(this);
+        Map.I.tm.SetTile(new Vector3Int((int)pos.x, (int)pos.y, 0), tile);
+        Map.I.adjust_light_size(this);
     }
 
     public void complete_travelcard() {
-        travelcard = null;
         travelcard_complete = true;
     }
 
     public void assign_group_leader() {
-        battle = new Battle(map, this, map.c.get_disc(), true);
+        battle = new Battle(Map.I, this, Controller.I.get_disc(), true);
         begin_color_oscillation();
     }
 
     public void clear_battle() {
-        foreach (Discipline d in battle.participants) {
-            d.bat.pending_group_battle_cell = null;
+        if (battle != null) {
+            foreach (Discipline d in battle.participants) {
+                d.bat.pending_group_battle_cell = null;
+            }
         }
         battle = null;
         end_color_oscillation();
     }
 
     public void begin_color_oscillation() {
-        map.add_oscillating_cell(this);
+        Map.I.add_oscillating_cell(this);
     }
 
     public void end_color_oscillation() {
-        if (map.remove_oscillating_cell(this))
-            map.tm.SetColor(new Vector3Int(pos.x, pos.y, 0), Color.white);
+        if (Map.I.remove_oscillating_cell(this))
+            Map.I.tm.SetColor(new Vector3Int(pos.x, pos.y, 0), Color.white);
     }
     
     public void oscillate_color() {
         float y = 0.75f + (Mathf.Sin(Time.time) / 4f);
-        Tile t = (Tile)map.tm.GetTile(new Vector3Int(pos.x, pos.y, 0));
-        map.tm.SetColor(new Vector3Int(pos.x, pos.y, 0), new Color(1, y, y, 1));
+        Tile t = (Tile)Map.I.tm.GetTile(new Vector3Int(pos.x, pos.y, 0));
+        Map.I.tm.SetColor(new Vector3Int(pos.x, pos.y, 0), new Color(1, y, y, 1));
     }
 
     // Can currently only group battle if the player has retreated/scouted the tile
@@ -235,9 +262,8 @@ public class MapCell {
             return travelcard.unlockable.resource_type;
     }
 
-    public bool has_travelcard {
-        get { return travelcard != null; }
-    }
+    public bool has_travelcard { get => travelcard != null; }
+    public bool has_battle { get => battle != null; }
 
     public Dictionary<string, int> get_travelcard_consequence() {
         return travelcard.consequence;
@@ -245,8 +271,27 @@ public class MapCell {
 
     public bool can_mine(Battalion b) {
         return b.has_miner && !b.disc.has_mined_in_turn && 
-            map.get_cell(b.disc.pos) == this &&
+            b.disc.cell == this &&
             (minerals > 0 || star_crystals > 0);
+    }
+
+    public void drop_XP(int xp) {
+        dropped_XP = xp;
+        //show
+    
+    }
+
+    public int pickup_XP(Discipline d) {
+        d.change_var(Storeable.EXPERIENCE, dropped_XP, true);
+        return dropped_XP;
+    }
+}
+
+public class CityCell : MapCell {
+    public CityCell(int tier, Tile tile, Pos pos) : base(tier, tile, pos, CITY_ID) {
+        name = "City";
+        creates_travelcard = false;
+        //pos = new
     }
 }
 
@@ -318,7 +363,6 @@ public class Settlement : MapCell {
     public Settlement(int tier, Tile tile, Pos pos) : base(tier, tile, pos, SETTLEMENT_ID) {
         name = SETTLEMENT;
         creates_travelcard = false;
-        travelcard_complete = true;
     }
 }
 public class RuneGate : MapCell {

@@ -8,6 +8,7 @@ using System;
 // This draws enemies and places them into combat slots. Enemy drawing
 // is percentage based with replacement.
 public class EnemyLoader : MonoBehaviour {
+    public static EnemyLoader I { get; private set; }
     public static int COMMON_THRESH = 0;
     public static int UNCOMMON_THRESH = 60;
     public static int RARE_THRESH = 90;
@@ -43,7 +44,14 @@ public class EnemyLoader : MonoBehaviour {
     public List<List<List<int>>> mountain_tiers = new List<List<List<int>>>();
     public List<List<List<int>>> cave_tiers = new List<List<List<int>>>();
     public List<List<List<int>>> meld_tiers = new List<List<List<int>>>();
-   
+    void Awake() {
+        if (I == null) {
+            I = this;
+            DontDestroyOnLoad(gameObject);
+        } else {
+            Destroy(gameObject);
+        }
+    }
 
     void Start() {
         c = GameObject.Find("Controller").GetComponent<Controller>();
@@ -90,7 +98,7 @@ public class EnemyLoader : MonoBehaviour {
         left_second_zone.reset();
     }
 
-    public void place_new_enemies(MapCell cell, int quantity) {
+    public void generate_new_enemies(MapCell cell, int quantity) {
         for (int i = 0; i < quantity; i++) {
             int rarity = roll_rarity(); 
             int enemyID = -1;
@@ -99,14 +107,12 @@ public class EnemyLoader : MonoBehaviour {
             } else {
                 enemyID = pick_enemy(cell.biome_ID, cell.tier, rarity);
             }
-            Enemy e = Enemy.create_enemy(enemyID);
-            cell.add_enemy(e);
-            slot_enemy(e);
+            cell.add_enemy(Enemy.create_enemy(enemyID));
         }
         reset();
     }
 
-    public void load_existing_enemies(List<Enemy> enemies) {
+    public void load_enemies(List<Enemy> enemies) {
         foreach (Enemy e in enemies) {
             slot_enemy(e);
         }

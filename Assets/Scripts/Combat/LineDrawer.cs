@@ -3,9 +3,18 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class LineDrawer : MonoBehaviour {
+    public static LineDrawer I { get; private set; }
     public GameObject LinePrefab;
     public PreviewLine preview_line;
     public Dictionary<int, Line> lines = new Dictionary<int, Line>();
+    void Awake() {
+        if (I == null) {
+            I = this;
+            DontDestroyOnLoad(gameObject);
+        } else {
+            Destroy(gameObject);
+        }
+    }
 
     void Start() {
         preview_line = GetComponentInChildren<PreviewLine>();
@@ -36,6 +45,10 @@ public class LineDrawer : MonoBehaviour {
     }
 
     public void clear() {
+        foreach (Line l in lines.Values) {
+            if (l != null && l.gameObject != null)
+                l.remove();
+        }
         lines.Clear();
         preview_line.erase();
     }

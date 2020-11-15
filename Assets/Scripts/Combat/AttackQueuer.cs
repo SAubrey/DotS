@@ -3,31 +3,38 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class AttackQueuer : MonoBehaviour {
+    public static AttackQueuer I { get; private set; }
     public const int PU_TO_E = 0;
     public const int E_TO_PU = 1;
     public const float WAIT_TIME = 3.0f;
-    private Controller c;
-    private LineDrawer line_drawer;
     public GameObject hit_splat_prefab;
     public GameObject FieldPanel;
 
-    private AttackQueue enemy_queue = new AttackQueue();
-    private AttackQueue player_queue = new AttackQueue();
+    private AttackQueue enemy_queue;
+    private AttackQueue player_queue;
     private int attack_id = 0; // Unique identifier for each attack & line.
     public ParticleSystem blood_ps; // prefab
     public GameObject plane;
+    void Awake() {
+        if (I == null) {
+            I = this;
+            DontDestroyOnLoad(gameObject);
+        } else {
+            Destroy(gameObject);
+        }
+    }
 
     void Start() {
-        c = GameObject.Find("Controller").GetComponent<Controller>();
-        line_drawer = c.line_drawer;
+        enemy_queue = new AttackQueue(LineDrawer.I);
+        player_queue = new AttackQueue(LineDrawer.I);
     }
 
     public void add_attack(Slot start, Slot end) {
         Unit attacker = start.get_unit();
         if (attacker.is_playerunit) 
-            get_player_queue().add_attack(start, end, attack_id, line_drawer);
+            get_player_queue().add_attack(start, end, attack_id, LineDrawer.I);
         else 
-            get_enemy_queue().add_attack(start, end, attack_id, line_drawer);
+            get_enemy_queue().add_attack(start, end, attack_id, LineDrawer.I);
         attack_id++;
         attacker.attack_set = true;
     }
@@ -71,29 +78,34 @@ public class AttackQueuer : MonoBehaviour {
     the grouping attribute.
     */
     private void group_attack(List<Attack> attacks) {
+        int sum_dmg = sum_attack_damage(attacks);
+        Unit end_u = attacks[0].get_end_unit();
+        int final_dmg = end_u.calc_dmg_taken(sum_dmg);
+        int state = end_u.take_damage(final_dmg);
+        foreach (Attack a in attacks) {
+            a.get_start_unit().attack();
+            a.post_attack(state);
+            LineDrawer.I.get_line(a.get_start_unit().attack_id).begin_fade();
+        }
+        create_hitsplat(final_dmg, state, attacks[0].get_end_slot());
+        SoundManager.I.impact_player.play_hit_from_damage(sum_dmg, state == Unit.DEAD); // Audio
+    }
+
+    private int sum_attack_damage(List<Attack> attacks) {
         int sum_dmg = 0;
         foreach (Attack a in attacks) {
-            sum_dmg += a.get_raw_dmg();
-            a.get_start_unit().attack();
+            sum_dmg += a.get_dmg();
         }
-
-        Unit end_u = attacks[0].get_end_unit();
-        int state = end_u.take_damage(end_u.calc_dmg_taken(sum_dmg));
-        foreach (Attack a in attacks) {
-            a.post_attack(state);
-            line_drawer.get_line(a.get_start_unit().attack_id).begin_fade();
-        }
-        create_hitsplat(sum_dmg, state, attacks[0].get_end_slot());
-        c.sound_manager.impact_player.play_hit_from_damage(sum_dmg, state == Unit.DEAD); // Audio
+        return sum_dmg;
     }
 
     private void attack(Attack att) {
-        int dmg = att.calc_dmg_taken();
+        int dmg = att.calc_final_dmg_taken();
         int state = att.get_end_unit().get_post_dmg_state(dmg);
-        c.sound_manager.impact_player.play_hit_from_damage(dmg, state == Unit.DEAD); // Audio
+        SoundManager.I.impact_player.play_hit_from_damage(dmg, state == Unit.DEAD); // Audio
         create_hitsplat(dmg, state, att.get_end_slot());
         int attack_id = att.get_start_unit().attack_id;
-        line_drawer.get_line(attack_id).begin_fade();
+        LineDrawer.I.get_line(attack_id).begin_fade();
 
         att.attack();
     }
@@ -101,8 +113,8 @@ public class AttackQueuer : MonoBehaviour {
     private void post_battle() {
         // Clear attacks and clean the battlefield
         reset();
-        c.line_drawer.clear();
-        c.battle_phaser.post_battle(); // after reset
+        LineDrawer.I.clear();
+        BattlePhaser.I.post_battle(); // after reset
     }
 
     private void create_hitsplat(int dmg, int state, Slot end_slot) {
@@ -135,7 +147,12 @@ public class AttackQueuer : MonoBehaviour {
 
 
 public class AttackQueue {
+    // For each attacked unit, maintain a list of the attacks against it.
     Dictionary<Unit, List<Attack>> groupings = new Dictionary<Unit, List<Attack>>();
+    private LineDrawer ld;
+    public AttackQueue(LineDrawer ld) {
+        this.ld = ld;
+    }
 
     public void add_attack(Slot start, Slot end, int id, LineDrawer ld) {
         //attack_list.Add(new Attack(start, end, id));
@@ -188,9 +205,7 @@ public class AttackQueue {
         Attack a = find_attack(attack_id);
         if (a != null) {
             a.get_start_unit().attack_set = false;
-            if (a.get_end_slot().is_showing_damage()) { // remove preview damage text.
-                a.get_end_slot().show_preview_damage(false);
-            }
+            a.get_end_unit().subtract_preview_damage(a.get_start_unit().get_attack_dmg());
 
             groupings[a.get_end_unit()].Remove(a);
             if (groupings[a.get_end_unit()].Count < 1) // Remove group attack if empty.
@@ -200,6 +215,7 @@ public class AttackQueue {
     }
 
     public void reset() {
+        ld.clear();
         groupings.Clear();
     }
 }
@@ -236,7 +252,7 @@ public class Attack {
         // determine damage from flanking, rear
         //int dmg = get_start_unit().attack() + calc_dir_dmg();
         get_start_unit().attack();
-        int dmg = calc_dmg_taken();
+        int dmg = calc_final_dmg_taken();
         int state = get_end_unit().take_damage(dmg);
         post_attack(state);
     }
@@ -251,14 +267,14 @@ public class Attack {
     public void post_player_attack(int state) {
         int xp = enemy.take_xp_from_death();
         if (state == Unit.DEAD && xp > 0) {
-            start.c.get_disc().change_var(Storeable.EXPERIENCE, xp, true);
+            Controller.I.get_disc().change_var(Storeable.EXPERIENCE, xp, true);
         }
     }
 
     public void post_enemy_attack(int state) {
         if (state == Unit.DEAD || state == Unit.INJURED) {
             enemy.clear_target();
-            start.c.enemy_brain.retarget();
+            EnemyBrain.I.retarget();
         }
 
         // If the attack triggers grouping, reduce the actions of grouped units.
@@ -270,13 +286,13 @@ public class Attack {
         }
     }
 
-    public int calc_dmg_taken() {
+    public int calc_final_dmg_taken() {
         return get_end_unit().calc_dmg_taken(
-            get_raw_dmg(), get_start_unit().has_attribute(Unit.PIERCING));
+            get_dmg(), get_start_unit().has_attribute(Unit.PIERCING));
     }
 
     // Accounts for grouping attack dmg.
-    public int get_raw_dmg() {
+    public int get_dmg() {
         return get_start_unit().get_attack_dmg() + calc_dir_dmg();
     }
 

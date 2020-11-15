@@ -3,16 +3,18 @@ using UnityEngine;
 
 
 public class EnemyBrain : MonoBehaviour {
-    private Controller c;
-    private Formation f;
+    public static EnemyBrain I { get; private set; }
 
     private List<Enemy> enemies {
-        get { return c.map.get_enemies_here(); }
+        get { return Map.I.get_enemies_here(); }
     }
-
-    void Start() {
-        c = GameObject.Find("Controller").GetComponent<Controller>();
-        f = c.formation;
+    void Awake() {
+        if (I == null) {
+            I = this;
+            DontDestroyOnLoad(gameObject);
+        } else {
+            Destroy(gameObject);
+        }
     }
 
     public void attack(Enemy enemy) {
@@ -27,8 +29,7 @@ public class EnemyBrain : MonoBehaviour {
 
         bool successful = enemy.attempt_set_up_attack(target);
         if (successful) {
-            target.show_preview_damage(true, 
-                (int)target.get_unit().calc_hp_remaining(enemy.get_attack_dmg()));
+            target.get_unit().add_preview_damage(enemy.get_attack_dmg());
         }
     }
 
@@ -77,7 +78,7 @@ public class EnemyBrain : MonoBehaviour {
     }
 
     private void find_nearest_target(Enemy enemy) {
-        List<Slot> punits = f.get_highest_full_slots(Unit.PLAYER);
+        List<Slot> punits = Formation.I.get_highest_full_slots(Unit.PLAYER);
 
         Slot nearest_punit_slot = null;
         int nearest_distance = 100;
@@ -122,7 +123,7 @@ public class EnemyBrain : MonoBehaviour {
     }
 
     private Slot get_slot(Slot start, int col=0, int row=0) {
-        Group dest = f.get_group(start.col + col, start.row + row);
+        Group dest = Formation.I.get_group(start.col + col, start.row + row);
         if (dest == null) return null;
         if (!dest.is_empty) return null;
         return dest.get_highest_empty_slot();

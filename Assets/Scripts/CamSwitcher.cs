@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class CamSwitcher : MonoBehaviour {
+    public static CamSwitcher I { get; private set; }
     public const int MENU = 1;
     public const int MAP = 2;
     public const int BATTLE = 3;
@@ -19,19 +20,21 @@ public class CamSwitcher : MonoBehaviour {
 
     public GameObject pause_panel, battle_pause_panel;
     
-    private Controller c;
-    private BackgroundLoader background_loader;
-    private BatLoader bat_loader;
 
     private bool paused = false;
     public int current_cam = MENU;
     public int previous_cam = MAP;
+    void Awake() {
+        if (I == null) {
+            I = this;
+            DontDestroyOnLoad(gameObject);
+        } else {
+            Destroy(gameObject);
+        }
+    }
     
     void Start() {
-        c = GameObject.Find("Controller").GetComponent<Controller>();
-        background_loader = c.background_loader;
         sound_manager = GameObject.Find("SoundManager").GetComponent<SoundManager>();
-        bat_loader = c.bat_loader;
         pause_panel.SetActive(false);
         battle_pause_panel.SetActive(false);
         set_active(MENU, true);
@@ -96,7 +99,7 @@ public class CamSwitcher : MonoBehaviour {
             if (active) {
                 set_active(MAP, false);
                 set_active(BATTLE, false);
-                c.check_button_states();
+                Controller.I.check_button_states();
             }
         } else if (screen == MAP) {
             map_canvas.SetActive(active);
@@ -115,11 +118,11 @@ public class CamSwitcher : MonoBehaviour {
             battleCam.enabled = active;
             battleUI_canvas.SetActive(active);
             if (active) {
-                background_loader.load(c.map.get_current_cell().biome_ID);
+                BackgroundLoader.I.load(Map.I.get_current_cell().biome_ID);
                 set_active(MAP, false);
                 set_active(MENU, false);
             } else {
-                c.unit_panel_man.close();
+                UnitPanelManager.I.close();
             }
         }
 

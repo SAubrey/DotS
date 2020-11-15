@@ -60,6 +60,19 @@ public class Unit {
     public const int RANGE = 2;
     protected int attack_dmg, defense;
     public int health, max_health;
+    private int _preview_damage = 0;
+    private int preview_damage {
+        get { return _preview_damage; }
+        set {
+            _preview_damage = value;
+            if (slot != null) {
+                int dmg = Mathf.Max(calc_dmg_taken(_preview_damage), 0);
+                slot.show_preview_damage(dmg);
+            }
+        }
+    }
+    public void add_preview_damage(int dmg) { preview_damage += dmg; }
+    public void subtract_preview_damage(int dmg) { preview_damage -= dmg; }
     public int combat_style;
     public int movement_range = 1;
     public int attack_range = 1;
@@ -196,7 +209,7 @@ public class Unit {
         if (!can_hit(target_slot))
             return false;
 
-        slot.c.attack_queuer.add_attack(slot, target_slot);
+        AttackQueuer.I.add_attack(slot, target_slot);
         slot.update_attack();
         return true;
     }
@@ -233,6 +246,7 @@ public class Unit {
         num_actions = max_num_actions;
         has_acted_in_stage = false;
         attack_set = false;
+        preview_damage = 0; // Should be 0 already. Just in case.
         
         set_attribute_active(false);
         //remove_boost();

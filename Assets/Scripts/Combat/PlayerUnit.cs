@@ -73,13 +73,13 @@ public class PlayerUnit : Unit {
         if (state == INJURED) {
             injured = true;
             //slot.show_injured();
-            slot.c.get_bat_from_ID(owner_ID).add_injured_unit(this);
-            slot.c.bat_loader.load_unit_text(slot.c.get_bat_from_ID(owner_ID), ID);
+            Controller.I.get_bat_from_ID(owner_ID).add_injured_unit(this);
+            BatLoader.I.load_unit_text(Controller.I.get_bat_from_ID(owner_ID), ID);
         } else if (state == DEAD) {
             dead = true;
             //slot.show_dead(); 
-            slot.c.bat_loader.load_unit_text(slot.c.get_bat_from_ID(owner_ID), ID);
-            slot.c.get_bat_from_ID(owner_ID).add_dead_unit(this);
+            BatLoader.I.load_unit_text(Controller.I.get_bat_from_ID(owner_ID), ID);
+            Controller.I.get_bat_from_ID(owner_ID).add_dead_unit(this);
         }
         if (defending) {
             num_actions--;
@@ -95,7 +95,7 @@ public class PlayerUnit : Unit {
             return swap_places(end);
         } else {
             if (attack_set)
-                slot.c.attack_queuer.get_player_queue().remove_attack(attack_id, slot.c.line_drawer);
+                AttackQueuer.I.get_player_queue().remove_attack(attack_id, LineDrawer.I);
             move(end);
         }
         return true;
@@ -140,7 +140,7 @@ public class PlayerUnit : Unit {
     // ---ATTRIBUTES---
 
     protected void apply_surrounding_effect(int boost_type, int amount, List<Pos> coords) {
-        Formation f = slot.c.formation;
+        Formation f = Formation.I;
         Group g;
         Pos low = coords[0];
         Pos high = coords[1];
@@ -272,8 +272,8 @@ public class Mender : PlayerUnit {
     public override bool set_attribute_active(bool state) {
         bool active = base.set_attribute_active(state);
         if (active) {
-            slot.c.bat_loader.selecting_for_heal = active;
-            slot.c.bat_loader.healing_unit = this;
+            BatLoader.I.selecting_for_heal = active;
+            BatLoader.I.healing_unit = this;
         }
         return active;
     }

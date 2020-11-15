@@ -381,7 +381,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Navigation:
-    m_Mode: 3
+    m_Mode: 0
     m_SelectOnUp: {fileID: 0}
     m_SelectOnDown: {fileID: 0}
     m_SelectOnLeft: {fileID: 0}
@@ -468,6 +468,7 @@ MonoBehaviour:
   num: 1
   group: {fileID: 0}
   button: {fileID: 8590276945283539934}
+  showing_preview_damage: 0
 --- !u!1 &5023929181653691386
 GameObject:
   m_ObjectHideFlags: 0

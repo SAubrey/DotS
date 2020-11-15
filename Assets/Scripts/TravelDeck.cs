@@ -5,6 +5,7 @@ using UnityEngine.UI;
 using System;
 
 public class TravelDeck : MonoBehaviour, ISaveLoad {
+    public static TravelDeck I { get; private set; }
 
     // <TYPE><NUM>_<TIER>
     public const int ATT1_1 = 1;
@@ -98,14 +99,20 @@ public class TravelDeck : MonoBehaviour, ISaveLoad {
     };
 
     public GameObject travel_card_panel;
-    public TravelCardManager tcm;
     public Image tc_img;
     private System.Random rand;
+    void Awake() {
+        if (I == null) {
+            I = this;
+            DontDestroyOnLoad(gameObject);
+        } else {
+            Destroy(gameObject);
+        }
+    }
 
     void Start() {
         rand = new System.Random();
         tc_img = travel_card_panel.GetComponent<Image>();
-        tcm = travel_card_panel.GetComponent<TravelCardManager>();
 
         card_counters.Add(1, t1_card_counts);
         card_counters.Add(2, t2_card_counts);

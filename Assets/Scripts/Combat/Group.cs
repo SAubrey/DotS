@@ -29,18 +29,15 @@ public class Group : MonoBehaviour {
     private int direction;
     public int col, row;
     public Slot[] slots = new Slot[MAX];
-    Controller c;
     private bool _disabled = false;
     Image img;
 
     void Awake() {
-        c = GameObject.Find("Controller").GetComponent<Controller>();
-        c.formation.add_group(this);
         img = GetComponent<Image>();
     }
     void Start() {
+        Formation.I.add_group(this);
         direction = default_direction;
-        c = GameObject.Find("Controller").GetComponent<Controller>();
         set_color(type);
         reorder_slots_visually(direction);
     }

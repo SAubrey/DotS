@@ -7,14 +7,18 @@ using UnityEngine.EventSystems;
 /* There is a single formation containing groups of 3 slots. Only the first slot performs game actions.
  */
 public class Formation : MonoBehaviour {
-    private Controller c;
-
+    public static Formation I { get; private set; }
     // Organized by column, row
     private Dictionary<int, Dictionary<int, Group>> groups = 
         new Dictionary<int, Dictionary<int, Group>>();
 
     void Awake() {
-        c = GameObject.Find("Controller").GetComponent<Controller>();
+        if (I == null) {
+            I = this;
+            DontDestroyOnLoad(gameObject);
+        } else {
+            Destroy(gameObject);
+        }
     }
 
     void Start() {
@@ -91,8 +95,8 @@ public class Formation : MonoBehaviour {
                 groups[col][row].empty();
             }
         }
-        c.selector.deselect();
-        c.bat_loader.clear_placement_selection();
+        Selector.I.deselect();
+        BatLoader.I.clear_placement_selection();
     }
 
     public void reset_groups_dir() {

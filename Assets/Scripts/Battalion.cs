@@ -19,17 +19,22 @@ public class Battalion {
         this.c = c;
         this.disc = disc;
 
+        // Initialize units dictionary.
         foreach (int unit_type in PlayerUnit.unit_types) 
             units.Add(unit_type, new List<PlayerUnit>());
 
+        add_default_troops();
+        // Units for testing
+        add_units(PlayerUnit.MENDER, 1);
+        add_units(PlayerUnit.SCOUT, 1);
+    }
+
+    public void add_default_troops() {
         add_units(PlayerUnit.ARCHER, 3);
         add_units(PlayerUnit.WARRIOR, 2);
         add_units(PlayerUnit.SPEARMAN, 2);
         add_units(PlayerUnit.INSPIRATOR, 1);
         add_units(PlayerUnit.MINER, 1);
-
-        // Units for testing
-        add_units(PlayerUnit.MENDER, 1);
     }
 
     public void add_units(int type, int count) {
@@ -171,6 +176,11 @@ public class Battalion {
 
     public void post_battle() {
         remove_expired_units();
+        if (count_healthy() <= 0) {
+            disc.die_and_respawn();
+            return;
+        }
+
         foreach (PlayerUnit pu in get_all_placed_units()) {
             pu.health = pu.get_boosted_max_health();
             if (pu.defending) {
@@ -216,9 +226,15 @@ public class Battalion {
         injured_units.Clear(); // Clear temp list.
     }
 
+    public void kill_injured_units() {
+        foreach (PlayerUnit iu in injured_units) {
+            units[iu.get_ID()].Remove(iu);
+        }
+    }
+
     
     private void validate_all_punits() {
-        List<Group> punit_groups = c.formation.get_all_nonempty_groups(Unit.PLAYER);
+        List<Group> punit_groups = Formation.I.get_all_nonempty_groups(Unit.PLAYER);
         foreach (Group g in punit_groups) {
             g.validate_unit_order();
         }

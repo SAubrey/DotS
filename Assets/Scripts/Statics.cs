@@ -13,6 +13,8 @@ public class Statics : MonoBehaviour{
     public static readonly Color MARTIAL_COLOR = new Color(1, .6f, .6f, 1);
     public static readonly Color[] disc_colors = {ASTRA_COLOR, ENDURA_COLOR, MARTIAL_COLOR, Color.white};
 
+    public static readonly Vector3 CITY_POS = new Vector3(10.5f, 10.5f, 0);
+
     public static int calc_distance(Slot start, Slot end) {
         int dx = Mathf.Abs(start.col - end.col);
         int dy = Mathf.Abs(start.row - end.row);

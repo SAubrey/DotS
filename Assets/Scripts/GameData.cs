@@ -13,9 +13,9 @@ interface ISaveLoad {
 }
 
 [System.Serializable]
-public class ControllerData : GameData {
-    public int turn_number;
-    public int active_disc;
+public class TurnPhaserData : GameData {
+    public int turn;
+    public int active_disc_ID;
 }
 
 [System.Serializable]
@@ -122,7 +122,7 @@ public class CityData : GameData {
         this.name = name;
         sresources = new SStoreableResources(city);
 
-        CityUIManager cui = city.c.city_ui;
+        CityUI cui = CityUI.I;
         purchases = new bool[cui.upgrades.Count];
         for (int i = 0; i < cui.upgrades.Count; i++) {
             purchases[i] = cui.upgrades[i].purchased;
@@ -132,7 +132,6 @@ public class CityData : GameData {
 
 [System.Serializable]
 public class TravelDeckData : GameData {
-
     public List<int> t1_deck = new List<int>();
     public List<int> t2_deck = new List<int>();
     public List<int> t3_deck = new List<int>();

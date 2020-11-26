@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Tilemaps;
-using UnityEngine.EventSystems;
 
 public class Map : MonoBehaviour, ISaveLoad {
     public static Map I { get; private set; }
@@ -31,10 +30,7 @@ public class Map : MonoBehaviour, ISaveLoad {
     public const int LUSH_LAND_2 = 18;
     public const int MOUNTAIN_2 = 19;
 
-    public TurnPhaser tp;
-    public CamSwitcher cs;
     public Tilemap tm;
-    
     public Tile plains_1, plains_2;
     public Tile forest_1, forest_2;
     public Tile ruins_1, ruins_2;
@@ -49,11 +45,8 @@ public class Map : MonoBehaviour, ISaveLoad {
     public Tile settlement;
     public Tile rune_gate;
 
-    public Tile city;
+    public Tile city, shadow;
     public CityCell city_cell;
-    public Tile shadow;
-    public GameObject cell_UI_prefab;
-    public MapCellUI open_cell_UI_script;
 
     public IDictionary<int, Tile> tiles = new Dictionary<int, Tile>();// {
         //{CITY, city},
@@ -106,7 +99,6 @@ public class Map : MonoBehaviour, ISaveLoad {
     public bool waiting_for_second_gate { get; set; } = false;
     public bool scouting { get; set; } = false;
 
-    public GraphicRaycaster graphic_raycaster;
     public List<MapCell> oscillating_cells = new List<MapCell>();
     private System.Random rand;
     private int max_discovered_tile_distance = 0;
@@ -114,7 +106,6 @@ public class Map : MonoBehaviour, ISaveLoad {
     void Awake() {
         if (I == null) {
             I = this;
-            DontDestroyOnLoad(gameObject);
         } else {
             Destroy(gameObject);
         }
@@ -161,39 +152,6 @@ public class Map : MonoBehaviour, ISaveLoad {
                 tile_to_tileID.Add(pair.Value, pair.Key);
         }
     }
-    
-    void Update() {
-        if (cs.current_cam != CamSwitcher.MAP)
-            return;
-
-        // Process left mouse click
-        if (Input.GetMouseButtonDown(0)) {
-            PointerEventData m_PointerEventData = new PointerEventData(EventSystem.current);
-            m_PointerEventData.position = Input.mousePosition;
-            List<RaycastResult> objects = new List<RaycastResult>();
-
-            graphic_raycaster.Raycast(m_PointerEventData, objects);
-            // Close the open cell window if clicking anywhere other than on the window.
-            // (The tilemap does not register as a game object)
-            bool hit_cell_window = false;
-            foreach (RaycastResult o in objects) {
-                if (o.gameObject.tag == "Cell Window") {
-                    hit_cell_window = true;
-                    continue;
-                }
-            }
-            if (!hit_cell_window) {
-                close_cell_UI();
-                if (objects.Count <= 0)
-                    handle_left_click();
-            }
-        }
-
-        // Oscillate tile colors
-        foreach (MapCell mc in oscillating_cells) {
-            mc.oscillate_color();
-        }
-    }
 
     public void init(bool from_save) {
         if (!from_save) {
@@ -223,39 +181,20 @@ public class Map : MonoBehaviour, ISaveLoad {
         map.Add(city_cell.pos, city_cell);
     }
 
-    public void close_cell_UI() {
-        if (open_cell_UI_script)
-            open_cell_UI_script.close();
-    }
-
     private void clear_data() {
         bags[1].Clear();
         bags[2].Clear();
         bags[3].Clear();
         map.Clear();
-        close_cell_UI();
-        open_cell_UI_script = null;
-    }
-
-    private void handle_left_click() {
-        Vector3 pos = CamSwitcher.I.mapCam.ScreenToWorldPoint(Input.mousePosition);
-        if (get_tile(pos.x, pos.y) == null)
-            return;
-        generate_cell_UI(get_cell(pos));
-    }
-
-    private void generate_cell_UI(MapCell cell) {
-        GameObject cell_UI = Instantiate(cell_UI_prefab, GameObject.Find("MapUICanvas").transform);
-        MapCellUI cell_UI_script = cell_UI.GetComponentInChildren<MapCellUI>();
-        cell_UI_script.init(cell);
-        open_cell_UI_script = cell_UI_script;
+        MapUI.I.close_cell_UI();
     }
 
     public bool can_move(Vector3 destination) {
         Vector3 current_pos = get_current_cell().pos.to_vec3;
-        
-        return check_adjacent(destination, current_pos) && !get_cell(destination).has_battle
-            && !Controller.I.get_disc().has_acted_in_turn;
+        return check_adjacent(destination, current_pos) && 
+            !Controller.I.get_disc().has_acted_in_turn &&
+            !get_cell(destination).has_battle &&
+            !get_cell(destination).has_group_pending;
     }
 
     public void scout(Vector3 pos) {

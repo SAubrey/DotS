@@ -110,8 +110,6 @@ public class CamSwitcher : MonoBehaviour {
                 mapCam.transform.SetPositionAndRotation(new Vector3(10, 10, -14), Quaternion.identity);
                 set_active(BATTLE, false);
                 set_active(MENU, false);
-            } else {
-                
             }
         } else if (screen == BATTLE) {
             battle_canvas.SetActive(active);

@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 using TMPro;
 
 public class MapUI : MonoBehaviour {
@@ -10,7 +11,6 @@ public class MapUI : MonoBehaviour {
 
     // ---City UI---
     public GameObject cityP;
-    private bool city_panel_active = true;
     public TextMeshProUGUI city_capacityT;
     public TextMeshProUGUI c_light, c_star_crystals, c_minerals, 
         c_arelics, c_mrelics, c_erelics, c_equimares;
@@ -38,12 +38,20 @@ public class MapUI : MonoBehaviour {
     public IDictionary<string, TextMeshProUGUI> disc_inv = new Dictionary<string, TextMeshProUGUI>();
     public TextMeshProUGUI discT, map_cellT, battle_cellT;
     public Button next_stageB;
-    public GameObject ask_to_enterP, game_overP;
+    public GameObject ask_to_enterP, game_overP, travel_cardP;
+    public Image travel_cardI;
+    public Button travelcard_continueB, travelcard_rollB;
+
+    public GameObject cell_UI_prefab, dropped_XP_prefab;
+    public MapCellUI open_cell_UI_script;
+    public GraphicRaycaster graphic_raycaster;
+    public Canvas canvas;
+    public GameObject map_canvas;
+
 
     void Awake() {
         if (I == null) {
             I = this;
-            DontDestroyOnLoad(gameObject);
         } else {
             Destroy(gameObject);
         }
@@ -89,15 +97,47 @@ public class MapUI : MonoBehaviour {
 
     void Start() {
         set_next_stageB_text(TurnPhaser.I.active_disc_ID);
+        travel_cardI = travel_cardP.GetComponent<Image>();
+        set_active_travelcard_continueB(true);
+        set_active_travelcard_rollB(false);
     }
 
     void Update() {
         if (CamSwitcher.I.current_cam != CamSwitcher.MAP)
             return;
-        if (Input.GetKeyDown(KeyCode.Space) && next_stageB.IsActive()) {
-            TurnPhaser.I.end_disciplines_turn();
-        } else if (Input.GetKeyDown(KeyCode.X)) {
-            Map.I.close_cell_UI();
+
+        // Oscillate tile colors
+        foreach (MapCell mc in Map.I.oscillating_cells) {
+            mc.oscillate_color();
+        }
+        
+        if (!Input.anyKeyDown)
+            return;
+
+        // Process left mouse click
+        if (Input.GetMouseButtonDown(0)) {
+            handle_left_click();
+            return;
+        }
+
+        // Decide whether to advance or close windows.
+        bool advance = Input.GetKeyDown(KeyCode.Space);
+        bool exit = Input.GetKeyDown(KeyCode.X);
+        bool UIopen = CityUI.I.cityP.activeSelf || cell_UI_is_open || 
+            game_overP.activeSelf || travel_cardP.activeSelf;
+        if (advance) {
+            if (next_stageB.IsActive() && !UIopen) {
+                TurnPhaser.I.end_disciplines_turn();
+            }
+
+        } else if (exit && UIopen) {
+            if (cell_UI_is_open)
+                close_cell_UI();
+            else if (CityUI.I.upgradesP.activeSelf) {
+                CityUI.I.toggle_upgrades_panel();
+            } else if (CityUI.I.cityP.activeSelf) {
+                CityUI.I.toggle_city_panel();
+            }
         }
     }
 
@@ -117,6 +157,48 @@ public class MapUI : MonoBehaviour {
             s.update_text_fields(resource, s.get_var(resource));
         }
     }
+    
+    private void handle_left_click() {
+        PointerEventData m_PointerEventData = new PointerEventData(EventSystem.current);
+        m_PointerEventData.position = Input.mousePosition;
+        List<RaycastResult> objects = new List<RaycastResult>();
+
+        graphic_raycaster.Raycast(m_PointerEventData, objects);
+        // Close the open cell window if clicking anywhere other than on the window.
+        // (The tilemap does not register as a game object)
+        bool hit_cell_window = false;
+        foreach (RaycastResult o in objects) {
+            if (o.gameObject.tag == "Cell Window") {
+                hit_cell_window = true;
+                continue;
+            }
+        }
+
+        Vector3 pos = CamSwitcher.I.mapCam.ScreenToWorldPoint(Input.mousePosition);
+        if (Map.I.get_tile(pos.x, pos.y) == null)
+            return;
+
+        if (!hit_cell_window) {
+            close_cell_UI();
+            if (objects.Count <= 0)
+                generate_cell_UI(Map.I.get_cell(pos));
+        }
+    }
+
+    private void generate_cell_UI(MapCell cell) {
+        GameObject cell_UI = Instantiate(cell_UI_prefab, canvas.transform);
+        open_cell_UI_script = cell_UI.GetComponentInChildren<MapCellUI>();
+        open_cell_UI_script.init(cell);
+    }
+    
+    public void close_cell_UI() {
+        if (!cell_UI_is_open) 
+            return;
+        open_cell_UI_script.close();
+        open_cell_UI_script = null;
+    }
+
+    public bool cell_UI_is_open { get => open_cell_UI_script != null; }
 
     public void load_battalion_count(Battalion b) {
         foreach (int type_ID in b.units.Keys) {
@@ -166,11 +248,11 @@ public class MapUI : MonoBehaviour {
     }
 
     public void toggle_city_panel() {
+        // If the battalion is at the city, toggle the main city panel.
         if (Map.I.is_at_city(Controller.I.get_disc())) {
             CityUI.I.toggle_city_panel();
         } else {
-            city_panel_active = !city_panel_active;
-            cityP.SetActive(city_panel_active);
+            cityP.SetActive(!cityP.activeSelf);
         }
     }
 
@@ -183,10 +265,6 @@ public class MapUI : MonoBehaviour {
         map_cellT.text = tile_name;
         battle_cellT.text = tile_name;
     }
-/*
-    public void set_active_next_stageB(bool state) {
-        next_stageB.interactable = state;
-    }*/
 
     public void set_next_stageB_text(int disc_ID) {
         string s = "End ";
@@ -199,6 +277,27 @@ public class MapUI : MonoBehaviour {
         next_stageB.GetComponentInChildren<TextMeshProUGUI>().text = s;
     }
 
+    public void display_travelcard(TravelCard tc) {
+        if (tc == null)
+            return;
+        set_active_travelcardP(true);
+        travel_cardI.sprite = tc.sprite;
+    }
+
+    public void set_active_travelcardP(bool state) {
+        travel_cardP.SetActive(state);
+    }
+    
+    public void set_active_travelcard_rollB(bool state) {
+        travelcard_rollB.interactable = state;
+        TextMeshProUGUI t = travelcard_rollB.GetComponentInChildren<TextMeshProUGUI>();
+        t.text = state ? "Roll" : "";
+    }
+    
+    public void set_active_travelcard_continueB(bool state) {
+        travelcard_continueB.interactable = state;
+    }
+
     public void set_active_ask_to_enterP(bool state) {
         ask_to_enterP.SetActive(state);
     }
@@ -207,6 +306,7 @@ public class MapUI : MonoBehaviour {
         game_overP.SetActive(state);
     }
 
+    // Button driven
     public void toggle_units_panel() {
         unitsP_active = !unitsP_active;
         unitsP.SetActive(unitsP_active);

@@ -98,8 +98,6 @@ public class TravelDeck : MonoBehaviour, ISaveLoad {
         {MapCell.RUNE_GATE_ID, new List<int>() },
     };
 
-    public GameObject travel_card_panel;
-    public Image tc_img;
     private System.Random rand;
     void Awake() {
         if (I == null) {
@@ -112,7 +110,6 @@ public class TravelDeck : MonoBehaviour, ISaveLoad {
 
     void Start() {
         rand = new System.Random();
-        tc_img = travel_card_panel.GetComponent<Image>();
 
         card_counters.Add(1, t1_card_counts);
         card_counters.Add(2, t2_card_counts);
@@ -175,20 +172,13 @@ public class TravelDeck : MonoBehaviour, ISaveLoad {
         if (!from_save) 
             new_game();
     }
-    
-    public void display_card(TravelCard tc) {
-        if (tc == null)
-            return;
-        set_active_card_panel(true);
-        tc_img.sprite = tc.sprite;
-    }
 
     public GameData save() {
         return new TravelDeckData(this, Controller.TRAVEL_DECK);
     }
 
     private void new_game() {
-        set_active_card_panel(false);
+        MapUI.I.set_active_travelcardP(false);
         clear_data();
         populate_decks();
     }
@@ -279,10 +269,6 @@ public class TravelDeck : MonoBehaviour, ISaveLoad {
             }
         }
         return cards[0];
-    }
-
-    public void set_active_card_panel(bool state) {
-        travel_card_panel.SetActive(state);
     }
     
     private void remove_card(int tier, int card_id) {

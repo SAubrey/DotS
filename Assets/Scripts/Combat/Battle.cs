@@ -5,6 +5,9 @@ using UnityEngine;
 /* 
 This class operates in solo and group battles,
 and will  dynamically adapt to additional participants.
+
+A battle exists immediately before a solo battle or while a group battle is pending,
+and for the duration of the battle until retreat/defeat/victory.
 */
 public class Battle {
     public bool active = false;
@@ -29,12 +32,9 @@ public class Battle {
             /* The active battalion ID is indexed with the remainder of the turn number
             divided by the number of participants. */
             active_bat_ID = participants[(_turn - 1) % participants.Count].ID;
-            Debug.Log("active bat ID: " + active_bat_ID);
         }
     }
 
-    // A battle exists immediately before a solo battle or while a group battle is pending,
-    // and for the duration of the battle until retreat/defeat/victory.
     public Battle(Map map, MapCell cell, Discipline leader, bool grouping) {
         this.map = map;
         this.cell = cell;
@@ -84,7 +84,6 @@ public class Battle {
     
     private void move_players() {
         foreach (Discipline d in participants) {
-            //map.move_player(cell.pos.to_vec3, d);
             d.move(cell);
         }
     }
@@ -97,27 +96,20 @@ public class Battle {
         AttackQueuer.I.get_player_queue().reset();
         
         foreach (Discipline d in participants) {
-            //d.c.map.move_player(d.prev_pos, d);
             d.move(d.previous_cell);
             // Penalize
             d.change_var(Storeable.UNITY, -1, true);
             d.bat.post_phase();
         }
-        CamSwitcher.I.flip_map_battle();
         cell.set_tile_color();
         end();
-    }
-
-    public void clear_stage_actions() {
-        foreach (Discipline d in participants) {
-            d.bat.reset_all_stage_actions();
-        }
     }
 
     public void end() {
         foreach (Discipline d in participants) {
             d.bat.in_battle = false;
         }
+        group_pending = false;
         cell.clear_battle();
     }
 
@@ -132,7 +124,18 @@ public class Battle {
         foreach (Discipline d in participants) {
             d.bat.post_battle();
         }
+        if (check_all_dead()) {
+            end();
+        }
         cell.post_battle();
+    }
+
+    private bool check_all_dead() {
+        foreach (Discipline d in participants) {
+            if (!d.dead)
+                return false;
+        }
+        return true;
     }
 
     public List<Battalion> get_dead_battalions() {
@@ -143,6 +146,12 @@ public class Battle {
             }
         }
         return dead;
+    }
+
+    public void clear_stage_actions() {
+        foreach (Discipline d in participants) {
+            d.bat.reset_all_stage_actions();
+        }
     }
 
     public int count_all_placed_units() {

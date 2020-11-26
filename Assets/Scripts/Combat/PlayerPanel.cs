@@ -117,7 +117,7 @@ public class PlayerPanel : UnitPanel {
             _attB_pressed = value;
             set_press_attackB(value);
             if (punit.attack_set)
-                    AttackQueuer.I.get_player_queue().remove_attack(punit.attack_id, LineDrawer.I);
+                AttackQueuer.I.get_player_queue().remove_attack(punit.attack_id);
 
             if (_attB_pressed) {
                 defB_pressed = false;
@@ -195,7 +195,7 @@ public class PlayerPanel : UnitPanel {
 
     public void update_text(PlayerUnit punit) {
         set_name(punit.get_name());
-        ResT.text = punit.get_slot().build_health_string(punit.health);
+        ResT.text = punit.get_slot().build_health_string(punit.health, 0);
         AttT.text = punit.get_slot().build_att_string();
         DefT.text = punit.get_slot().build_def_string();
     }

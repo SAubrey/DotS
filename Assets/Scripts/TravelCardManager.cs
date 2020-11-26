@@ -1,32 +1,20 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
-using TMPro;
 
 public class TravelCardManager : MonoBehaviour {
     public static TravelCardManager I { get; private set; }
-    public GameObject tc_panel;
     public Die die;
-    public Button continueB;
-    public Button rollB;
     private int num_sides;
     private TravelCard tc;
     MapCell cell;
     void Awake() {
         if (I == null) {
             I = this;
-            DontDestroyOnLoad(gameObject);
         } else {
             Destroy(gameObject);
         }
     }
-
-    void Start() {
-        set_continueB(true);
-        set_rollB(false);
-    }
-
 
     // Don't pull a travel card on a discovered cell.
     public void draw_and_display_travel_card(MapCell cell) {
@@ -35,7 +23,7 @@ public class TravelCardManager : MonoBehaviour {
 
         // Load forced travel card from a previous save.
         if (Controller.I.get_disc().restart_battle_from_drawn_card) {
-            TravelDeck.I.display_card(Controller.I.get_disc().get_travelcard());
+            MapUI.I.display_travelcard(Controller.I.get_disc().get_travelcard());
             Controller.I.get_disc().restart_battle_from_drawn_card = false;
             Debug.Log("resuming loaded battle");
             return;
@@ -51,7 +39,7 @@ public class TravelCardManager : MonoBehaviour {
 
         if (cell.travelcard != null && !cell.travelcard_complete) {
             cell.travelcard.action(TravelCardManager.I);
-            TravelDeck.I.display_card(cell.travelcard);
+            MapUI.I.display_travelcard(cell.travelcard);
         }
     }
 
@@ -81,13 +69,13 @@ public class TravelCardManager : MonoBehaviour {
         } 
     }
 
-    // Called by button only.
+    // Called by the roll button of the travel card. 
     public void roll() {
         die.roll(num_sides);
     }
 
     public void finish_roll(int result) {
-        set_continueB(true);
+        MapUI.I.set_active_travelcard_continueB(true);
         //set_rollB(false);
         tc.use_roll_result(result, Controller.I);
     }
@@ -95,17 +83,7 @@ public class TravelCardManager : MonoBehaviour {
     public void set_up_roll(TravelCard tc, int num_sides) {
         this.tc = tc;
         this.num_sides = num_sides;
-        set_continueB(false);
-        set_rollB(true);
-    }
-
-    public void set_rollB(bool state) {
-        rollB.interactable = state;
-        TextMeshProUGUI t = rollB.GetComponentInChildren<TextMeshProUGUI>();
-        t.text = state ? "Roll" : "";
-    }
-    
-    private void set_continueB(bool state) {
-        continueB.interactable = state;
+        MapUI.I.set_active_travelcard_continueB(false);
+        MapUI.I.set_active_travelcard_rollB(true);
     }
 }

@@ -2,18 +2,13 @@
 using UnityEngine;
 
 public class Unit {
-    public const int PLAYER = 0;
-    public const int ENEMY = 1;
+    public const int PLAYER = 0, ENEMY = 1;
 
     // Used to determine post-damage decision making. 
-    public const int ALIVE = 0;
-    public const int DEAD = 1;
-    public const int INJURED = 2;
+    public const int ALIVE = 0, DEAD = 1, INJURED = 2;
 
     // Boost IDs
-    public const int HEALTH_BOOST = 1;
-    public const int DEFENSE_BOOST = 2;
-    public const int ATTACK_BOOST = 3;
+    public const int HEALTH_BOOST = 1, DEFENSE_BOOST = 2, ATTACK_BOOST = 3;
 
 
     // Attributes (0 is null atr)
@@ -56,23 +51,16 @@ public class Unit {
     public bool passive_attribute = false;
 
     // Combat fields
-    public const int MELEE = 1;
-    public const int RANGE = 2;
-    protected int attack_dmg, defense;
-    public int health, max_health;
-    private int _preview_damage = 0;
-    private int preview_damage {
-        get { return _preview_damage; }
-        set {
-            _preview_damage = value;
-            if (slot != null) {
-                int dmg = Mathf.Max(calc_dmg_taken(_preview_damage), 0);
-                slot.show_preview_damage(dmg);
-            }
-        }
+    public const int MELEE = 1, RANGE = 2;
+    protected int attack_dmg;
+    // Defense and health flux in combat.
+    protected int defense;
+    public int max_defense { get; private set; }
+    public void refill_defense() {
+        defense = max_defense;
     }
-    public void add_preview_damage(int dmg) { preview_damage += dmg; }
-    public void subtract_preview_damage(int dmg) { preview_damage -= dmg; }
+    public int health, max_health;
+
     public int combat_style;
     public int movement_range = 1;
     public int attack_range = 1;
@@ -113,8 +101,10 @@ public class Unit {
             if (out_of_actions)
                 value = false;
             _defending = value;
-            if (slot != null)
+            if (slot != null) {
                 slot.update_defense();
+                slot.update_healthbar();
+            }
         }
     }
 
@@ -132,24 +122,27 @@ public class Unit {
 
     public virtual int take_damage(int dmg) { return 0; }
     public virtual int calc_dmg_taken(int dmg, bool piercing=false) { return 0; }
-    public virtual float calc_hp_remaining(int dmg) { return 0; }
+    public virtual int calc_hp_remaining(int dmg) { return Mathf.Max(health - dmg, 0); }
     public virtual int get_post_dmg_state(int dmg_after_def) { return 0; }
     public virtual int get_attack_dmg() { return attack_dmg; }
     public virtual int get_defense() { return defense; }
     public virtual bool set_attribute_active(bool state) {
         attribute_active = state && can_activate_attribute();
-        //Debug.Log("turning attr " + attribute_active);
-        if (is_placed)
-            slot.update_UI();
+        if (is_placed) {
+            slot.update_text_UI();
+        }
         return attribute_active;
     }
 
     public virtual void remove_boost() { }
 
-    protected void init(string name, int att, int hp, int style, 
+    public Unit(string name, int ID, int att, int def, int hp, int style, 
             int atr1=0, int atr2=0, int atr3=0) {
         this.name = name;
+        this.ID = ID;
         attack_dmg = att;
+        max_defense = def;
+        defense = max_defense;
         combat_style = style;
         attack_range = style == MELEE ? 1 : 8;
         num_actions = max_num_actions;
@@ -246,12 +239,11 @@ public class Unit {
         num_actions = max_num_actions;
         has_acted_in_stage = false;
         attack_set = false;
-        preview_damage = 0; // Should be 0 already. Just in case.
         
         set_attribute_active(false);
         //remove_boost();
         if (slot != null) { // Not all units are placed.
-            slot.update_UI();
+            slot.update_text_UI();
         }
     }
 
@@ -291,7 +283,7 @@ public class Unit {
     public int get_bonus_att_dmg() {
         int sum_dmg = 0;
         if (is_actively_grouping) {
-            sum_dmg += ((1 + attack_dmg) * (count_grouped_units()));
+            sum_dmg += ((1 + attack_dmg) * (count_grouped_units() - 1));
         }
         return sum_dmg;
     }
@@ -299,7 +291,7 @@ public class Unit {
     public int get_bonus_def() {
         int sum_def = 0;
         if (is_actively_grouping) {
-            sum_def += ((1 + defense) * (count_grouped_units()));
+            sum_def += ((1 + defense) * (count_grouped_units() - 1));
         }
         return sum_def;
     }
@@ -311,10 +303,11 @@ public class Unit {
     }
 
     // Returns number of same units in group with Grouping that have actions remaining.
-    protected int count_grouped_units() {
+    public int count_grouped_units() {
         int grouped_units = slot.get_group().get_num_of_same_active_units_in_group(ID);
-        if (has_attribute(Unit.GROUPING_1) && grouped_units > 1) {
-            grouped_units = 1;
+        // Limit grouped units to attribute capacity.
+        if (has_attribute(Unit.GROUPING_1) && grouped_units > 2) {
+            grouped_units = 2;
         }
         return grouped_units;
     }
@@ -325,12 +318,11 @@ public class Unit {
         active_boost_type = boost_type;
         active_boost_amount = amount;
 
-        if (boost_type == HEALTH_BOOST)
+        if (boost_type == HEALTH_BOOST) {
             health += amount;
-        else if (boost_type == ATTACK_BOOST) {
+        } else if (boost_type == ATTACK_BOOST) {
             attack_dmg += amount;
-        }
-        if (boost_type == DEFENSE_BOOST) {
+        } else if (boost_type == DEFENSE_BOOST) {
             defense += amount;
         }
     }
@@ -345,7 +337,7 @@ public class Unit {
                 active_boost_amount = 0;
             }
             if (slot != null)
-                slot.update_UI();
+                slot.update_text_UI();
         }
     }
 

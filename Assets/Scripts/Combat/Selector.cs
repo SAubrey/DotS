@@ -7,6 +7,7 @@ using UnityEngine.UI;
 public class Selector : MonoBehaviour {
     public static Selector I { get; private set; }
     private PlayerPanel player_panel;
+    public Slot hovered_slot; // Only assigned when selecting a target.
     private bool _selecting_target;
     public bool selecting_target {
         get { return _selecting_target; }
@@ -100,42 +101,48 @@ public class Selector : MonoBehaviour {
     }
 
     private void attempt_action(Slot slot) {
-        if (selecting_target) { // ---Attack---
-            selecting_target = false;
-            UnitPanelManager.I.player_panel.attB_pressed = false;
-
-            // Range units can attack units not in the front slot.
-            Slot highest_enemy_slot;
-            if (selected_slot.get_punit().is_range)
-                highest_enemy_slot = slot;
-            else
-                highest_enemy_slot = slot.get_group().get_highest_enemy_slot();
-
-            if (highest_enemy_slot != null) {
-                bool successful_att = 
-                    selected_slot.get_unit().attempt_set_up_attack(highest_enemy_slot);
-                if (successful_att) {
-                    selected_slot.showing_preview_damage = false;
-                    deselect();
-                }
+        if (selecting_target) {
+            if (attempt_attack(slot)) {
+                //int dmg = Attack.calc_final_dmg_taken(selected_slot.get_unit(), slot.get_unit());
+                slot.update_healthbar();
+                deselect();
             }
-        } else if (selecting_move) { // ---Move---
-            selecting_move = false;
-            UnitPanelManager.I.player_panel.moveB_pressed = false;
-
-            // Units are either moved up automatically or can be swapped. 
-            if (slot.is_empty) {
-                Slot highest_es = slot.get_group().get_highest_empty_slot();
-                slot = highest_es;
-                // Prevent pointless movement within same group.
-                if (selected_slot.get_group() == highest_es.get_group()) {
-                    return;
-                }
-            }
-            if (selected_slot.get_punit().attempt_move(slot)) {
+        } else if (selecting_move) {
+            if (attempt_move(slot)) {
                 deselect();
             }
         }
+    }
+
+    private bool attempt_attack(Slot target) {
+        selecting_target = false;
+        UnitPanelManager.I.player_panel.attB_pressed = false;
+
+        // Range units can attack units not in the front slot.
+        Slot highest_enemy_slot = selected_slot.get_punit().is_range ? 
+            target : target.get_group().get_highest_enemy_slot();
+
+        if (highest_enemy_slot == null)
+            return false;
+
+        return selected_slot.get_unit().attempt_set_up_attack(highest_enemy_slot);
+    }
+
+    private bool attempt_move(Slot target) {
+        selecting_move = false;
+        UnitPanelManager.I.player_panel.moveB_pressed = false;
+
+        // Units are either moved up automatically or can be swapped. 
+        if (!target.is_empty)
+            return false;
+
+        Slot highest_es = target.get_group().get_highest_empty_slot();
+        target = highest_es;
+        // Prevent pointless movement within same group.
+        if (selected_slot.get_group() == highest_es.get_group()) {
+            return false;
+        }
+        return selected_slot.get_punit().attempt_move(target);
     }
 
     // The passed slot is the most recently clicked slot.

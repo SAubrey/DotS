@@ -112,7 +112,7 @@ public class Group : MonoBehaviour {
         this.direction = direction;
         transform.localEulerAngles = new Vector3(0, 0, direction);
         foreach (Slot s in slots) {
-            s.update_UI(get_dir());
+            s.rotate_to_direction(get_dir());
         }
         reorder_slots_visually(direction);
     }
@@ -144,7 +144,16 @@ public class Group : MonoBehaviour {
             if (s.get_unit().get_ID() == unit_ID && !s.get_unit().out_of_actions)
                 num_grouped++;
         }
-        return num_grouped--; // exclude first slot
+        return num_grouped;
+    }
+ 
+    public List<Unit> get_grouped_units() {
+        List<Unit> units = new List<Unit>();
+        foreach (Slot s in get_full_slots()) {
+            if (s.get_unit().is_actively_grouping)
+                units.Add(s.get_unit());
+        }
+        return units;
     }
 
     public void set_type(int type) {
@@ -178,15 +187,18 @@ public class Group : MonoBehaviour {
         rotate(default_direction);
     }
 
-    public void add_slot(Slot slot) {
-        slots[slot.num] = slot;
-    }
-
     public void set(int i, Unit u) {
         slots[i].fill(u);
     }
     public Slot get(int i) {
         return slots[i];
+    }
+
+    public Slot get_highest_full_slot() {
+        for (int i = 0; i < MAX; i++) 
+            if (slots[i].has_unit)
+                return slots[i];  
+        return null;
     }
 
     public Slot get_highest_empty_slot() {
@@ -216,15 +228,6 @@ public class Group : MonoBehaviour {
             if (s.has_unit)
                 full_slots.Add(s);  
         return full_slots;
-    }
-
-    public List<Unit> get_grouped_units() {
-        List<Unit> units = new List<Unit>();
-        foreach (Slot s in get_full_slots()) {
-            if (s.get_unit().is_actively_grouping)
-                units.Add(s.get_unit());
-        }
-        return units;
     }
 
     public bool has_punit {

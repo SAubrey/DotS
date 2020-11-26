@@ -536,6 +536,7 @@ public class CityUI : MonoBehaviour {
     }
 
     public void update_info_text(int punit_ID) {
+        Debug.Log(PlayerUnit.create_punit(punit_ID, -1));
         AttributeWriter.write_attribute_text(infoT, PlayerUnit.create_punit(punit_ID, -1));
     }
 
@@ -543,6 +544,7 @@ public class CityUI : MonoBehaviour {
         visible = !visible;
         load_unit_counts();
         clear_selection();
+        toggle_upgrades_panel();
         cityP.SetActive(visible);
     }
 

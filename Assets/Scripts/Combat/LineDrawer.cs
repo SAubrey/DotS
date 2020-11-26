@@ -10,7 +10,6 @@ public class LineDrawer : MonoBehaviour {
     void Awake() {
         if (I == null) {
             I = this;
-            DontDestroyOnLoad(gameObject);
         } else {
             Destroy(gameObject);
         }
@@ -34,6 +33,8 @@ public class LineDrawer : MonoBehaviour {
     }
 
     public Line get_line(int id) {
+        if (!lines.ContainsKey(id))
+            return null;
         return lines[id];
     }
 

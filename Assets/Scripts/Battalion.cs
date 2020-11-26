@@ -25,8 +25,8 @@ public class Battalion {
 
         add_default_troops();
         // Units for testing
-        add_units(PlayerUnit.MENDER, 1);
-        add_units(PlayerUnit.SCOUT, 1);
+        //add_units(PlayerUnit.MENDER, 1);
+        //add_units(PlayerUnit.SCOUT, 1);
     }
 
     public void add_default_troops() {
@@ -146,7 +146,7 @@ public class Battalion {
         } else { // Count all units.
             for (int t = 0; t < units.Count; t++) {
                 foreach (PlayerUnit u in units[t]) {
-                    if (!u.is_placed && !u.injured)
+                    if (!u.injured)
                         i++;
                 }
             }
@@ -177,16 +177,17 @@ public class Battalion {
     public void post_battle() {
         remove_expired_units();
         if (count_healthy() <= 0) {
-            disc.die_and_respawn();
+            disc.die();
             return;
         }
 
         foreach (PlayerUnit pu in get_all_placed_units()) {
             pu.health = pu.get_boosted_max_health();
+            pu.refill_defense();
             if (pu.defending) {
                 pu.defending = false;
             }
-            pu.get_slot().update_UI();
+            pu.get_slot().update_text_UI();
         }
     }
 

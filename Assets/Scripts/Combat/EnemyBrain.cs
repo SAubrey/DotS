@@ -29,7 +29,7 @@ public class EnemyBrain : MonoBehaviour {
 
         bool successful = enemy.attempt_set_up_attack(target);
         if (successful) {
-            target.get_unit().add_preview_damage(enemy.get_attack_dmg());
+            target.update_healthbar();
         }
     }
 
@@ -111,8 +111,7 @@ public class EnemyBrain : MonoBehaviour {
 
         if (sx != null && sy != null) {
             // Both valid slots are productive, make arbitrary choice.
-            int flip = Random.Range(0, 1);
-            Debug.Log("flip: " + flip);
+            int flip = Random.Range(0, 2);
             return flip == 0 ? sx : sy;
         } else if (sx == null && sy != null) {
             return sy;

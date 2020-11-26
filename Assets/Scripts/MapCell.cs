@@ -85,6 +85,7 @@ public class MapCell {
     public string name;
     public int minerals, star_crystals = 0;
     private int dropped_XP = 0;
+    public GameObject dropped_XP_obj;
     public int tile_type_ID;
     public bool creates_travelcard = true;
     public bool has_rune_gate = false;
@@ -111,10 +112,24 @@ public class MapCell {
         this.biome_ID = biome_ID;
     }
 
+    public void enter() {
+        if (!entered) {
+            entered = true;
+            TravelCardManager.I.draw_and_display_travel_card(this);
+            discover();
+        } 
+        else if (should_activate_travelcard_without_showing) {
+            TravelCardManager.I.handle_travelcard(this);
+        }
+        if (dropped_XP > 0) {
+            pickup_XP(Controller.I.get_disc());
+        }
+    }
+
     public void post_battle() {
         clear_dead();
         foreach (Enemy e in enemies)
-            e.get_slot().update_UI();
+            e.get_slot().update_text_UI();
     }
 
     public void post_phase() {
@@ -151,19 +166,6 @@ public class MapCell {
         }
     }
 
-    public void enter() {
-        if (!entered) {
-            entered = true;
-            TravelCardManager.I.draw_and_display_travel_card(this);
-            discover();
-            Debug.Log("draw and display");
-        } 
-        else if (should_activate_travelcard_without_showing) {
-            Debug.Log("handle card");
-            TravelCardManager.I.handle_travelcard(this);
-        }
-    }
-
     public bool should_activate_travelcard_without_showing { get =>
         creates_travelcard && !travelcard_complete && entered && !has_battle;
     }
@@ -191,15 +193,16 @@ public class MapCell {
                 d.bat.pending_group_battle_cell = null;
             }
         }
+        post_phase();
         battle = null;
         end_color_oscillation();
     }
 
-    public void begin_color_oscillation() {
+    private void begin_color_oscillation() {
         Map.I.add_oscillating_cell(this);
     }
 
-    public void end_color_oscillation() {
+    private void end_color_oscillation() {
         if (Map.I.remove_oscillating_cell(this))
             Map.I.tm.SetColor(new Vector3Int(pos.x, pos.y, 0), Color.white);
     }
@@ -213,7 +216,7 @@ public class MapCell {
     // Can currently only group battle if the player has retreated/scouted the tile
     // and a group has not already been formed on this cell.
     public bool can_setup_group_battle() {
-        return has_enemies;
+        return has_enemies && Map.check_adjacent(Controller.I.get_disc().pos, pos.to_vec3);
     }
 
     public void add_enemy(Enemy e) {
@@ -264,6 +267,13 @@ public class MapCell {
 
     public bool has_travelcard { get => travelcard != null; }
     public bool has_battle { get => battle != null; }
+    public bool has_group_pending { 
+        get {
+            if (!has_battle)
+                return false;
+            return battle.group_pending;
+        }
+    }
 
     public Dictionary<string, int> get_travelcard_consequence() {
         return travelcard.consequence;
@@ -278,11 +288,18 @@ public class MapCell {
     public void drop_XP(int xp) {
         dropped_XP = xp;
         //show
-    
+        dropped_XP_obj = GameObject.Instantiate(MapUI.I.dropped_XP_prefab);
+        dropped_XP_obj.transform.SetParent(MapUI.I.map_canvas.transform);
+        // Move to center of cell from corner.
+        Vector3 p = dropped_XP_obj.transform.position;
+        dropped_XP_obj.transform.position = pos.to_vec3;
+        dropped_XP_obj.transform.position = new Vector3(p.x + 0.5f, p.y + 0.5f, 0);
     }
 
     public int pickup_XP(Discipline d) {
         d.change_var(Storeable.EXPERIENCE, dropped_XP, true);
+        dropped_XP = 0;
+        GameObject.Destroy(dropped_XP_obj);
         return dropped_XP;
     }
 }

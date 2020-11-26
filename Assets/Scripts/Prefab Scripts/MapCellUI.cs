@@ -19,7 +19,7 @@ public class MapCellUI : MonoBehaviour {
         Vector3 pos = new Vector3(cell.pos.x, cell.pos.y, 0);
         //transform.position =
             //map.c.cam_switcher.mapCam.WorldToScreenPoint(new Vector3(pos.x + 0.5f, pos.y - 2.5f, 0));
-            transform.position = new Vector3(pos.x + 0.5f, pos.y - 1.5f, 0); // camera mode, not overlay
+        transform.position = new Vector3(pos.x + 0.5f, pos.y - 1.5f, 0); // camera mode, not overlay
 
         enable_button(moveB, Map.I.can_move(pos));
         enable_button(scoutB, Map.I.can_scout(pos));
@@ -63,6 +63,11 @@ public class MapCellUI : MonoBehaviour {
     }
 
     public string build_group_battleB_T() {
+        bool adjacent = Map.check_adjacent(Controller.I.get_disc().pos, cell.pos.to_vec3);
+        if (!adjacent) {
+            return "Group Battle";
+        }
+
         if (!cell.has_battle) 
             return "Form Group Battle";
         if (cell.battle.leader_is_active_on_map) {
@@ -73,7 +78,7 @@ public class MapCellUI : MonoBehaviour {
             if (cell.battle.active) {
                 return "Reinforce";
             } else if (cell.battle.group_pending) {
-                // be able to leave in same turn
+                // Be able to leave in same turn
                 if (cell.battle.includes_disc(Controller.I.get_disc()))
                     return "Leave Group Battle";
                 else
@@ -92,11 +97,9 @@ public class MapCellUI : MonoBehaviour {
         if (!cell.has_battle) {
             // Form group
             cell.assign_group_leader();
-
         } else if (cell.battle.leader_is_active_on_map) {
             // If it's the leader's turn then there is a pending group battle.
             if (cell.battle.can_begin_group) {
-                // enter battle
                 cell.battle.begin();
             } else {
                 cell.battle.end();
@@ -124,7 +127,7 @@ public class MapCellUI : MonoBehaviour {
     }
 
     public void close() {
-        Map.I.open_cell_UI_script = null;
+        MapUI.I.open_cell_UI_script = null;
         Destroy(gameObject);
     }
 

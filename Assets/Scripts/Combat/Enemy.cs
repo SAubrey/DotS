@@ -1,44 +1,20 @@
 ﻿using UnityEngine;
 
 public class Enemy : Unit {
-    public const int COMMON = 0;
-    public const int UNCOMMON = 1;
-    public const int RARE = 2;
+    public const int COMMON = 0, UNCOMMON = 1, RARE = 2;
 
     // Enemy names
-    public const int GALTSA = 0;
-    public const int GREM = 1;
-    public const int ENDU = 2;
-    public const int KOROTE = 3;
-    public const int MOLNER = 4;
-    public const int ETUENA = 5;
-    public const int CLYPTE = 6;
-    public const int GOLIATH = 7;
-    public const int KVERM = 8;
-    public const int LATU = 9;
-    public const int EKE_TU = 10;
-    public const int OETEM = 11;
-    public const int EKE_FU = 12;
-    public const int EKE_SHI_AMI = 13;
-    public const int EKE_LORD = 14;
-    public const int KETEMCOL = 15;
-    public const int MAHUKIN = 16;
-    public const int DRONGO = 17;
-    public const int MAHEKET = 18;
-    public const int CALUTE = 19;
-    public const int ETALKET = 20;
-    public const int MUATEM = 21;
-    public const int DRAK = 22;
-    public const int ZERRKU = 23;
-    public const int GOKIN = 24;
-    public const int TAJAQAR = 25;
-    public const int TAJAERO = 26;
-    public const int TERRA_QUAL = 27;
-    public const int DUALE = 28;
-
-    public const int MELD_WARRIOR = 29;
-    public const int MELD_SPEARMAN = 30;
-
+    public const int GALTSA = 0, GREM = 1, ENDU = 2,
+        KOROTE = 3, MOLNER = 4, ETUENA = 5,
+        CLYPTE = 6, GOLIATH = 7, KVERM = 8,
+        LATU = 9, EKE_TU = 10, OETEM = 11,
+        EKE_FU = 12, EKE_SHI_AMI = 13, EKE_LORD = 14,
+        KETEMCOL = 15, MAHUKIN = 16, DRONGO = 17,
+        MAHEKET = 18, CALUTE = 19, ETALKET = 20,
+        MUATEM = 21, DRAK = 22, ZERRKU = 23,
+        GOKIN = 24, TAJAQAR = 25, TAJAERO = 26,
+        TERRA_QUAL = 27, DUALE = 28,
+        MELD_WARRIOR = 29, MELD_SPEARMAN = 30;
 
     public int xp;
     public bool xp_taken = false;
@@ -57,11 +33,13 @@ public class Enemy : Unit {
         set { _target = value; }
     } 
 
-    protected void init(string name, int att, int hp, int xp, 
-            int style, int atr1=0, int atr2=0, int atr3=0) {
-        base.init(name, att, hp, style, atr1, atr2, atr3);
+    
+    public Enemy(string name, int ID, int att, int def, int hp, int xp, int style,
+            int atr1=0, int atr2=0, int atr3=0) : 
+            base(name, ID, att, def, hp, style, atr1, atr2, atr3) {
         type = ENEMY;
         this.xp = xp;
+        defending = true;
     }
 
     public static Enemy create_enemy(int ID) {
@@ -117,7 +95,7 @@ public class Enemy : Unit {
 
     public override int take_damage(int dmg) {
         health = Mathf.Max(0, health - dmg);
-        slot.update_healthbar(health);
+        slot.update_healthbar();
 
         if (health <= 0) {
             dead = true;
@@ -131,11 +109,6 @@ public class Enemy : Unit {
         if (!piercing)
             dmg -= defense;
         return dmg > 0 ? dmg : 0;
-    }
-
-    public override float calc_hp_remaining(int dmg) {
-        float damaged_hp = health - dmg;
-        return damaged_hp > 0 ? damaged_hp : 0;
     }
 
     public override int get_post_dmg_state(int dmg) {
@@ -153,213 +126,144 @@ public class Enemy : Unit {
 
 // Plains
 public class Galtsa : Enemy {
-    public Galtsa() {
-        ID = GALTSA;
-        init("Galtsa", 2, 2, 2, MELEE, CHARGE, GROUPING_2);
+    public Galtsa() : base("Galtsa", GALTSA, 2, 0, 2, 2, MELEE, CHARGE, GROUPING_2) {
     }
 }
 public class Grem : Enemy {
-    public Grem() {
-        ID = GREM;
-        init("Grem", 1, 1, 1, MELEE);
+    public Grem() : base("Grem", GREM, 1, 0, 1, 1, MELEE) {
     }
 }
 public class Endu : Enemy {
-    public Endu() {
-        ID = ENDU;
-        init("Endu", 4, 2, 3, MELEE, CHARGE);
+    public Endu() : base("Endu", ENDU, 4, 0, 2, 3, MELEE, CHARGE) {
     }
 }
 public class Korote : Enemy {
-    public Korote() {
-        ID = KOROTE;
-        init("Korote", 1, 2, 2, MELEE, FLANKING, GROUPING_2);
+    public Korote() : base("Korote", KOROTE, 1, 0, 2, 2, MELEE, FLANKING, GROUPING_2) {
     }
 }
 public class Molner : Enemy {
-    public Molner() {
-        ID = MOLNER;
-        init("Molner", 2, 2, 2, MELEE, FLANKING, CHARGE, GROUPING_2);
+    public Molner() : base("Molner", MOLNER, 2, 0, 2, 2, MELEE, FLANKING, CHARGE, GROUPING_2) {
     }
 }
 public class Etuena : Enemy {
-    public Etuena() {
-        ID = ETUENA;
-        init("Etuena", 2, 3, 3, MELEE, FLYING, CHARGE, GROUPING_2);
+    public Etuena() : base("Etuena", ETUENA, 2, 0, 3, 3, MELEE, FLYING, CHARGE, GROUPING_2) {
     }
 }
 public class Clypte : Enemy {
-    public Clypte() {
-        ID = CLYPTE;
-        init("Clypte", 3, 5, 3, RANGE, TARGET_RANGE);
+    public Clypte() : base("Clypte", CLYPTE, 3, 0, 5, 3, RANGE, TARGET_RANGE) {
     }
 }
 public class Goliath : Enemy {
-    public Goliath() {
-        ID = GOLIATH;
-        init("Goliath", 12, 8, 6, MELEE, TERROR_3, CHARGE);
+    public Goliath() : base("Goliath", GOLIATH, 12, 0, 8, 6, MELEE, TERROR_3, CHARGE) {
     }
 }
 
 // Forest
 public class Kverm : Enemy {
-    public Kverm() {
-        ID = KVERM;
-        init("Kverm", 2, 1, 1, MELEE, STALK);
+    public Kverm() : base("Kverm", KVERM, 2, 0, 1, 1, MELEE, STALK) {
     }
 }
 public class Latu : Enemy {
-    public Latu() {
-        ID = LATU;
-        init("Latu", 3, 3, 3, MELEE, STALK, AGGRESSIVE);
+    public Latu() : base("Latu", LATU, 3, 0, 3, 3, MELEE, STALK, AGGRESSIVE) {
         max_num_actions = 3;
-        num_actions = 3;
+        num_actions = max_num_actions;
     }
 }
 public class Eke_tu : Enemy {
-    public Eke_tu() {
-        ID = EKE_TU;
-        init("Eke Tu", 1, 2, 2, MELEE, TARGET_RANGE, AGGRESSIVE);
+    public Eke_tu() : base("Eke Tu", EKE_TU, 1, 0, 2, 2, MELEE, TARGET_RANGE, AGGRESSIVE) {
         max_num_actions = 3;
-        num_actions = 3;
+        num_actions = max_num_actions;
     }
 }
 public class Oetem : Enemy {
-    public Oetem() {
-        ID = OETEM;
-        init("Oetem", 4, 3, 3, MELEE, GROUPING_2);
+    public Oetem() : base("Oetem", OETEM, 4, 0, 3, 3, MELEE, GROUPING_2) {
     }
 }
 public class Eke_fu : Enemy {
-    public Eke_fu() {
-        ID = EKE_FU;
-        init("Eke Fu", 3, 2, 2, MELEE, GROUPING_2, FLANKING);
+    public Eke_fu() : base("Eke Fu", EKE_FU, 3, 0, 2, 2, MELEE, GROUPING_2, FLANKING) {
     }
 }
 public class Eke_shi_ami : Enemy {
-    public Eke_shi_ami() {
-        ID = EKE_SHI_AMI;
-        init("Eke Shi Ami", 3, 5, 4, RANGE, PIERCING, STUN, TARGET_HEAVY);
+    public Eke_shi_ami() : base("Eke Shi Ami", EKE_SHI_AMI, 3, 0, 5, 4, RANGE, PIERCING, STUN, TARGET_HEAVY) {
     }
 }
 public class Eke_Lord : Enemy {
-    public Eke_Lord() {
-        ID = EKE_LORD;
-        init("Eke Lord", 6, 12, 12, MELEE, ARCING_STRIKE, STUN, TARGET_HEAVY);
+    public Eke_Lord() : base("Eke Lord", EKE_LORD, 6, 0, 12, 12, MELEE, ARCING_STRIKE, STUN, TARGET_HEAVY) {
     }
 }
 public class Ketemcol : Enemy {
-    public Ketemcol() {
-        ID = KETEMCOL;
-        init("Ketemcol", 2, 8, 6, MELEE, ARCING_STRIKE, STUN);
-        defense = 1;
+    public Ketemcol() : base("Ketemcol", KETEMCOL, 2, 1, 8, 6, MELEE, ARCING_STRIKE, STUN) {
     }
 }
 
 // Titrum
 public class Mahukin : Enemy {
-    public Mahukin() {
-        ID = MAHUKIN;
-        init("Mahukin", 2, 3, 4, MELEE, GROUPING_2);
-        defense = 2;
+    public Mahukin() : base("Mahukin", MAHUKIN, 2, 2, 3, 4, MELEE, GROUPING_2) {
     }
 }
 public class Drongo : Enemy {
-    public Drongo() {
-        ID = DRONGO;
-        init("Drongo", 3, 6, 6, MELEE);
-        defense = 3;
+    public Drongo() : base("Drongo", DRONGO, 3, 3, 6, 6, MELEE) {
     }
 }
 public class Maheket : Enemy {
-    public Maheket() {
-        ID = MAHEKET;
-        init("Maheket", 3, 3, 5, MELEE, GROUPING_2);
-        defense = 2;
+    public Maheket() : base("Maheket", MAHEKET, 3, 2, 3, 5, MELEE, GROUPING_2) {
     }
 }
 public class Calute : Enemy {
-    public Calute() {
-        ID = CALUTE;
-        init("Calute", 6, 6, 5, MELEE, STALK, AGGRESSIVE);
+    public Calute() : base("Calute", CALUTE, 6, 0, 6, 5, MELEE, STALK, AGGRESSIVE) {
         max_num_actions = 3;
-        num_actions = 3;
+        num_actions = max_num_actions;
     }
 }
 public class Etalket : Enemy {
-    public Etalket() {
-        ID = ETALKET;
-        init("Etalket", 2, 5, 4, MELEE, STALK, TERROR_3);
+    public Etalket() : base("Etalket", ETALKET, 2, 0, 5, 4, MELEE, STALK, TERROR_3) {
     }
 }
 public class Muatem : Enemy {
-    public Muatem() {
-        ID = MUATEM;
-        init("Muatem", 7, 4, 12, MELEE, CRUSHING_BLOW);
-        defense = 5;
+    public Muatem() : base("Muatem", MUATEM, 7, 5, 4, 12, MELEE, CRUSHING_BLOW) {
     }
 }
 
 // Mountain/Cliff
 public class Drak : Enemy {
-    public Drak() {
-        ID = DRAK;
-        init("Drak", 3, 5, 3, MELEE, TERROR_2, FLYING);
+    public Drak() : base("Drak", DRAK, 3, 0, 5, 3, MELEE, TERROR_2, FLYING) {
     }
 }
 public class Zerrku : Enemy {
-    public Zerrku() {
-        ID = ZERRKU;
-        init("Zerrku", 3, 3, 4, RANGE, GROUPING_2);
+    public Zerrku() : base("Zerrku",ZERRKU, 3, 0, 3, 4, RANGE, GROUPING_2) {
     }
 }
 public class Gokin : Enemy {
-    public Gokin() {
-        ID = GOKIN;
-        init("Gokin", 2, 2, 2, MELEE, FLANKING, GROUPING_2);
+    public Gokin() : base("Gokin", GOKIN, 2, 0, 2, 2, MELEE, FLANKING, GROUPING_2) {
     }
 }
 
 // Cave
 public class Tajaqar : Enemy {
-    public Tajaqar() {
-        ID = TAJAQAR;
-        init("Tajaqar", 3, 3, 5, MELEE, FLANKING, GROUPING_2);
-        defense = 1;
+    public Tajaqar() : base("Tajaqar", TAJAQAR, 3, 1, 3, 5, MELEE, FLANKING, GROUPING_2) {
     }
 }
 public class Tajaero : Enemy {
-    public Tajaero() {
-        ID = TAJAERO;
-        init("Tajaero", 3, 2, 4, RANGE, FLYING);
+    public Tajaero() : base("Tajaero", TAJAERO, 3, 0, 2, 4, RANGE, FLYING) {
     }
 }
 public class Terra_Qual : Enemy {
-    public Terra_Qual() {
-        ID = TERRA_QUAL;
-        init("Terra Qual", 5, 10, 12, MELEE, ARCING_STRIKE);
-        defense = 2;
+    public Terra_Qual() : base("Terra Qual", TERRA_QUAL, 5, 2, 10, 12, MELEE, ARCING_STRIKE) {
     }
 }
 public class Duale : Enemy {
-    public Duale() {
-        ID = DUALE;
-        init("Duale", 2, 6, 5, RANGE, AGGRESSIVE, FLANKING);
+    public Duale() : base("Duale", DUALE, 2, 0, 6, 5, RANGE, AGGRESSIVE, FLANKING) {
         max_num_actions = 3;
-        num_actions = 3;
+        num_actions = max_num_actions;
     }
 }
 
 public class Meld_Warrior : Enemy {
-    public Meld_Warrior() {
-        ID = MELD_WARRIOR;
-        init("Meld Warrior", 1, 1, 1, MELEE, CHARGE, GROUPING_1);
+    public Meld_Warrior() : base("Meld Warrior", MELD_WARRIOR, 1, 0, 1, 1, MELEE, CHARGE, GROUPING_1) {
     }
 }
 
 public class Meld_Spearman : Enemy {
-    public Meld_Spearman() {
-        ID = MELD_SPEARMAN;
-        init("Meld Spearman", 1, 1, 2, MELEE, CHARGE);
+    public Meld_Spearman() : base("Meld Spearman", MELD_SPEARMAN, 1, 0, 1, 2, MELEE, CHARGE) {
     }
 }

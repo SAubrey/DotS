@@ -46,7 +46,7 @@ public class TurnPhaser : MonoBehaviour, ISaveLoad {
     }
     
     public void advance_turn() {
-        TurnPhaser.I.turn++;
+        turn++;
 
         foreach (Discipline disc in Controller.I.discs.Values) {
             disc.register_turn();
@@ -55,7 +55,7 @@ public class TurnPhaser : MonoBehaviour, ISaveLoad {
     }  
     
     public void end_disciplines_turn() {
-        Map.I.close_cell_UI();
+        MapUI.I.close_cell_UI();
         advance_player();
     }
 
@@ -63,6 +63,11 @@ public class TurnPhaser : MonoBehaviour, ISaveLoad {
         active_disc_ID++;
         if (active_disc_ID == 0)
             advance_turn();
+
+        if (Controller.I.get_disc().dead) {
+            Controller.I.get_disc().respawn();
+        }
+
         
         // If leader of a battle, bypass stages and enter battle.
         Battle b = Map.I.get_current_cell().battle;

@@ -55,7 +55,6 @@ public class BattlePhaser : MonoBehaviour {
     void Awake() {
         if (I == null) {
             I = this;
-            DontDestroyOnLoad(gameObject);
         } else {
             Destroy(gameObject);
         }
@@ -122,6 +121,7 @@ public class BattlePhaser : MonoBehaviour {
         cell.has_seen_combat = true;
 
         setup_participant_UI(cell);
+        MapUI.I.close_cell_UI();
         CamSwitcher.I.set_active(CamSwitcher.BATTLE, true);
     }
 
@@ -271,14 +271,14 @@ public class BattlePhaser : MonoBehaviour {
     }
 
     private void range() {
-        if (!battle.cell.travelcard.follow_rule(TravelCard.AMBUSH))
+        if (!battle.cell.travelcard.follow_rule(TravelCard.AMBUSH)) {
             range_stage = true;
-            
+
+        }
         can_skip = true;
         // Ranged units attack (enemy and player after player chooses who to attack)
         // (unless someone has first strike!)
         // range units can shoot anywhere, riflemen can only shoot cardinally
-
         EnemyBrain.I.stage_range_attacks();
     }
 
@@ -322,24 +322,31 @@ public class BattlePhaser : MonoBehaviour {
         phase++;
     }
 
+    /* Battlion deaths trigger their respawn.
+    The game is only over when the city runs out of health or
+    the player quits.
+    */
     private void post_phases() {
-        if (battle_finished) {
-            if (player_won) {
-                Debug.Log("Player won the battle.");
-                battle.leader.adjust_resources_visibly(battle.cell.get_travelcard_consequence());
-                battle.cell.complete_travelcard();
-            } else if (enemy_won) {
-                // Forced retreat.
-                battle.retreat();
-                Debug.Log("Enemy won the battle.");
-
-            }
-            battle.end();
-            CamSwitcher.I.flip_map_battle();
-        } else {
+        if (!battle_finished) {
+            // If the battle is not finished, save the board exactly as it is.
             Formation.I.save_board(battle);
+            return;
+        }
+
+        if (player_won) {
+            Debug.Log("Player won the battle.");
+            battle.leader.adjust_resources_visibly(battle.cell.get_travelcard_consequence());
+            battle.cell.complete_travelcard();
+            battle.end();
+        } else if (enemy_won) {
+            if (!Controller.I.get_disc().dead) {
+                battle.retreat();
+            }
+            // Forced retreat.
+            Debug.Log("Enemy won the battle. This will only be called if the player has no units on the field, but some in reserve.");
         }
         reset();
+        CamSwitcher.I.set_active(CamSwitcher.MAP, true);
     }
 
     // Called by Unity button. 
@@ -362,6 +369,7 @@ public class BattlePhaser : MonoBehaviour {
 
     private bool player_units_on_field { 
         //get { return Controller.I.get_active_bat().get_all_placed_units().Count > 0; }
+        // Ignores if an individual battalion should be retreated and ignored int eh turn cycle.
         get { return battle.count_all_placed_units() > 0; }
     } 
 

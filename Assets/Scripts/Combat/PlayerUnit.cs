@@ -50,12 +50,11 @@ public class PlayerUnit : Unit {
         pu.owner_ID = owner_ID;
         return pu;
     }
-    
-    protected void init(string name, int att, int def, int res, 
-            int style, int atr1=0, int atr2=0, int atr3=0) {
-        base.init(name, att, res, style, atr1, atr2, atr3);
+
+    public PlayerUnit(string name, int ID, int att, int def, int hp, int style, 
+            int atr1=0, int atr2=0, int atr3=0) : 
+            base(name, ID, att, def, hp, style, atr1, atr2, atr3) {
         type = PLAYER;
-        defense = def;
     }
 
     /* A player unit is injured if the damage taken is equal or greater
@@ -68,7 +67,7 @@ public class PlayerUnit : Unit {
     public override int take_damage(int final_dmg) {
         int state = get_post_dmg_state(final_dmg);
         health = (int)calc_hp_remaining(final_dmg);
-        slot.update_healthbar(health);
+        slot.update_healthbar();
 
         if (state == INJURED) {
             injured = true;
@@ -84,6 +83,10 @@ public class PlayerUnit : Unit {
         if (defending) {
             num_actions--;
             defending = false; 
+            if (final_dmg > 0) {
+                //defense = 0;
+                slot.update_defense();
+            }
         }
         return state;
     }
@@ -95,35 +98,27 @@ public class PlayerUnit : Unit {
             return swap_places(end);
         } else {
             if (attack_set)
-                AttackQueuer.I.get_player_queue().remove_attack(attack_id, LineDrawer.I);
+                AttackQueuer.I.get_player_queue().remove_attack(attack_id);
             move(end);
         }
         return true;
     }
 
-    // Accounts for additional attribute damage.
+    // Accounts for additional attribute granted damage.
     public override int get_attack_dmg() {
-        int sum_dmg = attack_dmg;
-        sum_dmg += get_bonus_att_dmg();
-        return sum_dmg;
+        return attack_dmg + get_bonus_att_dmg();
     }
 
-    // Accounts for additional attribute defense.
+    // Accounts for additional attribute granted defense.
     public override int get_defense() {
-        int sum_def = defense;
-        sum_def += get_bonus_def();
-        return sum_def;
+        return defense + get_bonus_def();
     }
 
     public override int calc_dmg_taken(int dmg, bool piercing=false) {
-        if (defending && !piercing)
+        if (defending && !piercing) {
             dmg -= get_defense();
+        }
         return dmg > 0 ? dmg : 0;
-    }
-
-    // Passed damage should have already accounted for possible defense reduction.
-    public override float calc_hp_remaining(int dmg) {
-        return Mathf.Max(health - dmg, 0);
     }
 
     // Passed damage should have already accounted for possible defense reduction.
@@ -182,42 +177,31 @@ public class PlayerUnit : Unit {
 }
 
 public class Warrior : PlayerUnit {
-    public Warrior() {
-        init("Warrior", 1, 1, 3, MELEE, GROUPING_1);
-        ID = WARRIOR;
+    public Warrior() : base("Warrior", WARRIOR, 1, 1, 3, MELEE, GROUPING_1) {
         attribute_requires_action = true;
     }
 }
 
 public class Spearman : PlayerUnit {
-    public Spearman() {
-        init("Spearman", 1, 2, 2, MELEE, COUNTER_CHARGE);
-        ID = SPEARMAN;
+    public Spearman() : base("Spearman", SPEARMAN, 1, 2, 2, MELEE, COUNTER_CHARGE) {
         passive_attribute = true;
     }
 }
 
 public class Archer : PlayerUnit {
-    public Archer() {
-        init("Archer", 2, 0, 1, RANGE);
-        ID = ARCHER;
+    public Archer() : base("Archer", ARCHER, 2, 0, 1, RANGE) {
         passive_attribute = true;
     }
 }
 
 public class Miner : PlayerUnit {
-    public Miner() {
-        init("Miner", 1, 0, 3, MELEE, HARVEST);
-        ID = MINER;
+    public Miner() : base("Miner", MINER, 1, 0, 3, MELEE, HARVEST) {
         passive_attribute = true;
     }
 }
 
 public class Inspirator : PlayerUnit {
-    public Inspirator() {
-        init("Inspirator", 0, 0, 1, MELEE, INSPIRE);
-        ID = INSPIRATOR;
-    }
+    public Inspirator() : base("Inspirator", INSPIRATOR, 0, 0, 1, MELEE, INSPIRE) {}
 
     public override bool set_attribute_active(bool state) {
         if (attribute_active == state)
@@ -240,31 +224,21 @@ public class Inspirator : PlayerUnit {
 }
 
 public class Seeker : PlayerUnit {
-    public Seeker() {
-        init("Seeker", 1, 1, 2, MELEE, TRUE_SIGHT);
-        ID = SEEKER;
-    }
+    public Seeker() : base("Seeker", SEEKER, 1, 1, 2, MELEE, TRUE_SIGHT) {}
 }
 
 public class Guardian : PlayerUnit {
-    public Guardian() {
-        init("Guardian", 2, 3, 5, MELEE, PARRY);
-        ID = GUARDIAN;
-    }
+    public Guardian() : base("Guardian", GUARDIAN, 2, 3, 5, MELEE, PARRY) {}
 }
 
 public class Arbalest : PlayerUnit {
-    public Arbalest() {
-        init("Arbalest", 3, 0, 2, RANGE, PIERCING);
-        ID = ARBALEST;
+    public Arbalest() : base("Arbalest", ARBALEST, 3, 0, 2, RANGE, PIERCING) {
         passive_attribute = true;
     }
 }
 
 public class Mender : PlayerUnit {
-    public Mender() {
-        init("Mender", 0, 3, 4, MELEE, HEAL_1);
-        ID = MENDER;
+    public Mender() : base("Mender", MENDER, 0, 3, 4, MELEE, HEAL_1) {
         max_num_actions = 1;
         _num_actions = max_num_actions;
     }
@@ -280,18 +254,13 @@ public class Mender : PlayerUnit {
 }
 
 public class Skirmisher : PlayerUnit {
-    public Skirmisher() {
-        init("Skirmisher", 2, 2, 2, RANGE, STUN, GROUPING_2); 
-        ID = SKIRMISHER;
-        // "range or melee" achieved by range
-    
+    public Skirmisher() : base("Skirmisher", SKIRMISHER, 2, 2, 2, RANGE, STUN, GROUPING_2) {
+        attribute_requires_action = true;
     }
 }
 
 public class Scout : PlayerUnit {
-    public Scout() {
-        init("Scout", 3, 0, 2, RANGE, PIERCING);
-        ID = SCOUT;
+    public Scout() : base("Scout", SCOUT, 3, 0, 2, RANGE, PIERCING) {
         passive_attribute = true;
         // Double strike
         max_num_actions = 3;
@@ -300,35 +269,24 @@ public class Scout : PlayerUnit {
 }
 
 public class Carter : PlayerUnit {
-    public Carter() {
-        init("Carter", 2, 2, 4, MELEE);
-        ID = CARTER;
+    public Carter() : base("Carter", CARTER, 2, 2, 4, MELEE) {
         passive_attribute = true;
         // inv increase by 6
     }
 }
 
 public class Dragoon : PlayerUnit {
-    public Dragoon() {
-        init("Dragoon", 4, 1, 3, MELEE, GROUPING_2, PIERCING);
-        ID = DRAGOON;
-        movement_range = 2;
-    }
+    public Dragoon() : base("Dragoon", DRAGOON, 4, 1, 3, MELEE, GROUPING_2, PIERCING) {}
 }
 
 public class Paladin : PlayerUnit {
-    public Paladin() {
-        init("Paladin", 2, 2, 4, MELEE, GROUPING_2);
-        ID = PALADIN;
+    public Paladin() : base("Paladin", PALADIN, 2, 2, 4, MELEE, GROUPING_2) {
+        attribute_requires_action = true;
     }
 }
 
 public class Drummer : PlayerUnit {
-    public Drummer() {
-        init("Drummer", 1, 1, 2, MELEE, BOLSTER);
-        ID = DRUMMER;
-        // grouping 2 - does this still apply?
-    }
+    public Drummer() : base("Drummer", DRUMMER, 1, 1, 2, MELEE, BOLSTER) {}
 
     public override bool set_attribute_active(bool state) {
         if (attribute_active == state)
@@ -344,16 +302,13 @@ public class Drummer : PlayerUnit {
 }
 
 public class ShieldMaiden : PlayerUnit {
-    public ShieldMaiden() {
-        init("Shield Maiden", 3, 4, 4, MELEE, GROUPING_1, COMBINED_EFFORT);
-        ID = SHIELD_MAIDEN;
+    public ShieldMaiden() : base("Shield Maiden", SHIELD_MAIDEN, 3, 4, 4, MELEE, GROUPING_1, COMBINED_EFFORT) {
+        attribute_requires_action = true;
     }
 }
 
 public class Pikeman : PlayerUnit {
-    public Pikeman() {
-        init("Pikeman", 3, 1, 3, MELEE, REACH, PIERCING, COUNTER_CHARGE);
-        ID = PIKEMAN;
+    public Pikeman() : base("Pikeman", PIKEMAN, 3, 1, 3, MELEE, REACH, PIERCING, COUNTER_CHARGE) {
         passive_attribute = true;
     }
 }

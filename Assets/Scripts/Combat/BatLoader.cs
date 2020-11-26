@@ -246,7 +246,6 @@ public class BatLoader : MonoBehaviour {
             load_unit_text(b, type_ID);
             unit_buttons[type_ID].interactable = b.units[type_ID].Count > 0;
         }
-        Debug.Log("loading bat in battlefield: " + b.disc.name);
         MapUI.I.highlight_discipline(discT, b.disc.ID);
     }
 

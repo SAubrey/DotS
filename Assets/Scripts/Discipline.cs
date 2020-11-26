@@ -11,11 +11,29 @@ public class Discipline : Storeable, ISaveLoad {
     public int mine_qty {
         get => mine_qty_multiplier *= bat.count_placeable(PlayerUnit.MINER);
     }
-    public bool has_mined_in_turn = false;
-    public bool has_moved_in_turn = false;
-    public bool has_scouted_in_turn = false;
+    public bool has_mined_in_turn, has_moved_in_turn, has_scouted_in_turn = false;
     public bool has_acted_in_turn { get => has_moved_in_turn || has_scouted_in_turn; }
-    
+    public bool dead { get; private set; } = false;
+    private MapCell _cell;
+    public MapCell cell {
+        get => _cell;
+        set {
+            if (value == null)
+                return;
+            previous_cell = cell;
+            _cell = value;
+            pos = cell.pos.to_vec3;
+        }
+    }
+    public MapCell previous_cell { get; private set; }
+    private Vector3 _pos;
+    public Vector3 pos {
+        get { return _pos; }
+        set {
+            _pos = value;
+            piece.transform.position = new Vector3(value.x, value.y, 0);
+        }
+    }
 
     protected override void Start() {
         base.Start();
@@ -34,8 +52,10 @@ public class Discipline : Storeable, ISaveLoad {
     }
 
     public override void register_turn() {
-        base.register_turn();
-        check_insanity();
+        if (!dead) {
+            base.register_turn();
+            check_insanity();
+        }
         has_mined_in_turn = false;
         has_moved_in_turn = false;
         has_scouted_in_turn = false;
@@ -58,15 +78,21 @@ public class Discipline : Storeable, ISaveLoad {
     lose all resources,
     drop equipment and experience on the cell of death to be retrieved.
     */
-    public void die_and_respawn() {
-        pos = Statics.CITY_POS;
-        bat.add_default_troops();
+    public void die() {
+        cell.battle.end();
         bat.kill_injured_units();
         remove_resources_lost_on_death();
         Map.I.get_cell(pos).drop_XP(experience);
-        //c.map.get_cell(pos).drop_equipment());
-        // show dropped xp
+        Debug.Log(pos);
+        pos = new Vector3(-100, -100, 0);
+        dead = true;
+    }
 
+    public void respawn() {
+        bat.add_default_troops();
+        move(Map.I.city_cell);
+        has_moved_in_turn = false;
+        dead = false;
     }
 
     private void check_insanity() {
@@ -116,33 +142,14 @@ public class Discipline : Storeable, ISaveLoad {
         }
         has_mined_in_turn = true;
         cell.star_crystals -= sc_mined;
-        Map.I.open_cell_UI_script.update_star_crystal_text();
+        if (MapUI.I.cell_UI_is_open)
+            MapUI.I.open_cell_UI_script.update_star_crystal_text();
     }
 
     public void reset() {
         restart_battle_from_drawn_card = false;
         foreach (int type in PlayerUnit.unit_types) {  
             bat.units[type].Clear();
-        }
-    }
-    private MapCell _cell;
-    public MapCell cell {
-        get => _cell;
-        set {
-            if (value == null)
-                return;
-            previous_cell = cell;
-            _cell = value;
-            pos = cell.pos.to_vec3;
-        }
-    }
-    public MapCell previous_cell { get; private set; }
-    private Vector3 _pos;
-    public Vector3 pos {
-        get { return _pos; }
-        set {
-            _pos = value;
-            piece.transform.position = new Vector3(value.x, value.y, 0);
         }
     }
 

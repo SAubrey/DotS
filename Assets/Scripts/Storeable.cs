@@ -80,15 +80,15 @@ public class Storeable : MonoBehaviour, ISaveLoad {
 
     public void remove_resources_lost_on_death() {
         Dictionary<string, int> adjs = new Dictionary<string, int>();
-        adjs.Add(STAR_CRYSTALS, star_crystals);
-        adjs.Add(MINERALS, minerals);
-        adjs.Add(ARELICS, arelics);
-        adjs.Add(MRELICS, mrelics);
-        adjs.Add(ERELICS, erelics);
-        adjs.Add(EQUIMARES, equimares);
+        adjs.Add(STAR_CRYSTALS, -star_crystals);
+        adjs.Add(MINERALS, -minerals);
+        adjs.Add(ARELICS, -arelics);
+        adjs.Add(MRELICS, -mrelics);
+        adjs.Add(ERELICS, -erelics);
+        adjs.Add(EQUIMARES, -equimares);
 
-        set_var_without_check(LIGHT, 4);
-        set_var_without_check(UNITY, 10);
+        _light = 4;
+        _unity = 10;
         adjust_resources_visibly(adjs);
     }
 
@@ -148,7 +148,7 @@ public class Storeable : MonoBehaviour, ISaveLoad {
         return val;
     }
 
-    public void set_var_without_check(string var, int val) {
+    public void add_var_without_check(string var, int val) {
         if (var == LIGHT)
             _light += val;
         else if (var == UNITY)
@@ -193,10 +193,6 @@ public class Storeable : MonoBehaviour, ISaveLoad {
 
     protected int _light = 4;
     public new int light { get { return _light; } }
-        /*set { 
-            _light = get_valid_change_amount(LIGHT, value - _light); 
-            update_text_fields(LIGHT, _light);
-        }*/
     
     protected int _unity = 0;
     public int unity { get { return _unity; } }

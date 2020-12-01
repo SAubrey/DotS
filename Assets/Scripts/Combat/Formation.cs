@@ -11,22 +11,44 @@ public class Formation : MonoBehaviour {
     // Organized by column, row
     private Dictionary<int, Dictionary<int, Group>> groups = 
         new Dictionary<int, Dictionary<int, Group>>();
-
+    public List<Group> c0;// = new List<Group>();
+    public List<Group> c1;// = new List<Group>();
+    public List<Group> c2;// = new List<Group>();
+    public List<Group> c3;// = new List<Group>();
+    public List<Group> c4;// = new List<Group>();
+    public List<Group> c5;// = new List<Group>();
+    public List<Group> c6;// = new List<Group>();
+    public List<Group> c7;// = new List<Group>();
+    public List<Group> c8;// = new List<Group>();
+    public List<Group> c9;// = new List<Group>();
+    public List<Group> c10;// = new List<Group>();
     void Awake() {
         if (I == null) {
             I = this;
-            DontDestroyOnLoad(gameObject);
         } else {
             Destroy(gameObject);
         }
     }
 
+    private void add_groups() {
+        List<List<Group>> gs = new List<List<Group>>() {
+            c0, c1, c2, c3, c4, c5, c6, c7, c8, c9, c10 };
+        foreach (List<Group> col in gs) {
+            foreach (Group g in col) {
+                //Debug.Log("adding group at" + g.col + "," + g.row);
+                add_group(g);
+            }
+        }
+    }
+
     void Start() {
+        add_groups();
         build_t1_battlefield();
     }
 
     // For groups to add themselves. 
     public void add_group(Group g) {
+        //Debug.Log(g.col + "," + g.row);
         if (!groups.ContainsKey(g.col)) {
             groups.Add(g.col, new Dictionary<int, Group>());
         }
@@ -40,7 +62,14 @@ public class Formation : MonoBehaviour {
             if (groups[col].ContainsKey(row))
                 return groups[col][row];
         }
-        return null;
+        Group g = find_group_by_coordinates(col, row);
+        Debug.Log("Had to find group by coordinates" + col + "," + row);
+        if (g == null) {
+            Debug.Log("Group is null at " + col + "," + row);
+            return null;
+        }
+        g.init();
+        return g;
     }
 
     public List<Slot> get_highest_full_slots(int unit_type) {
@@ -198,12 +227,27 @@ public class Formation : MonoBehaviour {
 
     }
 
+    // Set the tile zone type.
     public void set_groups(int colmin, int colmax, int rowmin, int rowmax, int type) {
         for (int c = colmin; c <= colmax; c++) {
             for (int r = rowmin; r <= rowmax; r++) {
+                //Debug.Log(c + "," + r);
                 get_group(c, r).set_type(type);
+
             }
         }
+    }
+
+    public Group find_group_by_coordinates(int c, int r) {
+        GameObject[] gos = GameObject.FindGameObjectsWithTag("Group");
+        foreach (GameObject g in gos) {
+            Group group = g.GetComponentInChildren<Group>();
+            if (group.col == c && group.row == r) {
+                group.init();
+                return group;
+            }
+        }
+        return null;
     }
 }
 

@@ -149,7 +149,7 @@ public class MapCellUI : MonoBehaviour {
     // To determine if the unlock button can be pressed, including that the 
     // requirements can be met if it is an unlockable cell.
     private bool can_unlock() {
-        if (!cell.requires_unlock)
+        if (!cell.locked)
             return false;
         if (cell.has_rune_gate && !cell.restored_rune_gate && 
             Controller.I.get_disc().get_var(Storeable.STAR_CRYSTALS) >= 10) {
@@ -181,6 +181,7 @@ public class MapCellUI : MonoBehaviour {
             }
             cell.complete_travelcard();
         }
+        cell.locked = false;
     }
 
     private void enable_button(Button b, bool state) {

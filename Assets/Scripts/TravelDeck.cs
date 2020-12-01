@@ -102,7 +102,6 @@ public class TravelDeck : MonoBehaviour, ISaveLoad {
     void Awake() {
         if (I == null) {
             I = this;
-            DontDestroyOnLoad(gameObject);
         } else {
             Destroy(gameObject);
         }

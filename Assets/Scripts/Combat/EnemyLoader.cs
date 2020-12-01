@@ -29,7 +29,6 @@ public class EnemyLoader : MonoBehaviour {
     public const int T3 = 3;
 
     private Controller c;
-    private Formation f;
     public System.Random rand;
     public Dictionary<int, List<List<List<int>>>> biomes = 
         new Dictionary<int, List<List<List<int>>>>();
@@ -47,7 +46,6 @@ public class EnemyLoader : MonoBehaviour {
     void Awake() {
         if (I == null) {
             I = this;
-            DontDestroyOnLoad(gameObject);
         } else {
             Destroy(gameObject);
         }
@@ -55,7 +53,6 @@ public class EnemyLoader : MonoBehaviour {
 
     void Start() {
         c = GameObject.Find("Controller").GetComponent<Controller>();
-        f = GameObject.Find("Formation").GetComponent<Formation>();
         rand = new System.Random();
 
         make_biome(plains_tiers);
@@ -177,7 +174,13 @@ public class EnemyLoader : MonoBehaviour {
     }
 
     private bool fill_slot(Enemy enemy, Pos pos) {
-        Slot s = f.get_group(pos.x, pos.y).get_highest_empty_slot();
+        //Debug.Log(pos.x + " : " + pos.y);
+        //Formation.I.check_groups();
+        Group g = Formation.I.get_group(pos.x, pos.y);
+        if (g == null) {
+            //Debug.Log("null group")
+        }
+        Slot s = Formation.I.get_group(pos.x, pos.y).get_highest_empty_slot();
         if (s != null) {
             s.fill(enemy);
             return true;

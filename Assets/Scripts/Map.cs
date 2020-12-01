@@ -48,11 +48,11 @@ public class Map : MonoBehaviour, ISaveLoad {
     public Tile city, shadow;
     public CityCell city_cell;
 
-    public IDictionary<int, Tile> tiles = new Dictionary<int, Tile>();// {
+    public Dictionary<int, Tile> tiles = new Dictionary<int, Tile>();// {
         //{CITY, city},
         //{PLAINS_1, plains_1}
     //};
-    public IDictionary<Tile, int> tile_to_tileID = new Dictionary<Tile, int>();
+    public Dictionary<Tile, int> tile_to_tileID = new Dictionary<Tile, int>();
 
     private static readonly Dictionary<int, Dictionary<int, int>> bag_counters
      = new Dictionary<int, Dictionary<int, int>>();
@@ -67,28 +67,28 @@ public class Map : MonoBehaviour, ISaveLoad {
         {TITRUM_1, 2},
     };
     private readonly Dictionary<int, int> t2_bag_count = new Dictionary<int, int>() { // 96
-        {PLAINS_2, 14},
-        {FOREST_2, 14},
+        {PLAINS_2, 20},
+        {FOREST_2, 20},
         {RUINS_2, 12},
         {CLIFF_2, 2},
         {CAVE_2, 6},
         {STAR_2, 7},
         {TITRUM_2, 8},
-        {MIRE, 10},
+        //{MIRE, 0}, // 10
         {SETTLEMENT, 2},
         {LUSH_LAND_2, 5},
         {MOUNTAIN_2, 14},
         {RUNE_GATE, 2},
     };  
     private readonly Dictionary<int, int> t3_bag_count = new Dictionary<int, int>() { // 212
-        {PLAINS_2, 38},
-        {FOREST_2, 38},
+        {PLAINS_2, 50},
+        {FOREST_2, 50},
         {RUINS_2, 24},
         {CLIFF_2, 4},
         {CAVE_2, 12},
         {STAR_2, 14},
         {TITRUM_2, 16},
-        {MIRE, 20},
+        //{MIRE, 0},
         {SETTLEMENT, 4},
         {LUSH_LAND_2, 10},
         {MOUNTAIN_2, 28},
@@ -133,7 +133,7 @@ public class Map : MonoBehaviour, ISaveLoad {
         tiles.Add(SETTLEMENT, settlement);
         // Tier 2
         tiles.Add(RUNE_GATE, rune_gate);
-        tiles.Add(MIRE, mire);
+        //tiles.Add(MIRE, mire);
         tiles.Add(PLAINS_2, plains_2);
         tiles.Add(FOREST_2, forest_2);
         tiles.Add(RUINS_2, ruins_2);
@@ -337,6 +337,10 @@ public class Map : MonoBehaviour, ISaveLoad {
 
     public List<Enemy> get_enemies_here() {
         return Controller.I.get_disc().cell.get_enemies();
+    }
+
+    public void retreat_battalion() {
+        Controller.I.get_disc().move_to_previous_cell();
     }
     
     public void build_rune_gate(Pos pos) {

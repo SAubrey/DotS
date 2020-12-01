@@ -31,7 +31,7 @@ public class BattlePhaser : MonoBehaviour {
     // Lookup by biome, tier
     private Dictionary<int, Sprite> biome_sprites  = new Dictionary<int, Sprite>();
     public Sprite plains1, forest1, ruins1, cliff1, cave1, titrum1;
-    public Sprite plains2, forest2, ruins2, cliff2, cave2, titrum2, mountain2;
+    public Sprite plains2, forest2, ruins2, cliff2, cave2, titrum2, mountain2, mire2;
     public bool placement_stage = true;
     public bool init_placement_stage = true;
     public bool range_stage = false;
@@ -273,7 +273,6 @@ public class BattlePhaser : MonoBehaviour {
     private void range() {
         if (!battle.cell.travelcard.follow_rule(TravelCard.AMBUSH)) {
             range_stage = true;
-
         }
         can_skip = true;
         // Ranged units attack (enemy and player after player chooses who to attack)
@@ -355,6 +354,7 @@ public class BattlePhaser : MonoBehaviour {
             return;
         
         battle.retreat();
+        CamSwitcher.I.set_active(CamSwitcher.MAP, true);
         reset();
     }
 

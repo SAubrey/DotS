@@ -48,7 +48,6 @@ public class MapUI : MonoBehaviour {
     public Canvas canvas;
     public GameObject map_canvas;
 
-
     void Awake() {
         if (I == null) {
             I = this;
@@ -174,7 +173,7 @@ public class MapUI : MonoBehaviour {
             }
         }
 
-        Vector3 pos = CamSwitcher.I.mapCam.ScreenToWorldPoint(Input.mousePosition);
+        Vector3 pos = CamSwitcher.I.map_cam.ScreenToWorldPoint(Input.mousePosition);
         if (Map.I.get_tile(pos.x, pos.y) == null)
             return;
 

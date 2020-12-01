@@ -6,10 +6,7 @@ using UnityEngine.UI;
 
 // Slot group
 public class Group : MonoBehaviour {
-    public const int UP = 0;
-    public const int DOWN = 180;
-    public const int LEFT = 90;
-    public const int RIGHT = 270;
+    public const int UP = 0, DOWN = 180, LEFT = 90, RIGHT= 270;
     public const int MAX = 3;
     
     // Group types. Used to limit unit placement.
@@ -36,7 +33,11 @@ public class Group : MonoBehaviour {
         img = GetComponent<Image>();
     }
     void Start() {
-        Formation.I.add_group(this);
+        init();
+    }
+
+    public void init() {
+        //Formation.I.add_group(this);
         direction = default_direction;
         set_color(type);
         reorder_slots_visually(direction);

@@ -43,11 +43,14 @@ public class TravelCardManager : MonoBehaviour {
         }
     }
 
-    // Activated when 'Continue' is pressed on travel card.
-    public void continue_travel_card() {
+    // Activated when 'Continue' is pressed on travel card or 'Yes' on warning to enter.
+    public void continue_travel_card(bool show_warning=true) {
         // Preempt entrance with warning.
-        if ((cell.biome_ID == MapCell.CAVE_ID || cell.biome_ID == MapCell.RUINS_ID) 
-                && cell.has_enemies) {
+        // cell does not have enemies at this point
+        if (show_warning && 
+            ((cell.biome_ID == MapCell.CAVE_ID || 
+            cell.biome_ID == MapCell.RUINS_ID) && 
+            cell.travelcard.follow_rule(TravelCard.ENTER_COMBAT))) {
             MapUI.I.set_active_ask_to_enterP(true);
         } else {
             handle_travelcard(cell);
@@ -56,18 +59,21 @@ public class TravelCardManager : MonoBehaviour {
 
     // Called by the continue button of the travel card. 
     public void handle_travelcard(MapCell cell) {
+        Debug.Log("handling travelcard");
         if (cell == null)
             return;
         if (!cell.creates_travelcard || cell.travelcard_complete)
             return;
             
         if (cell.travelcard.follow_rule(TravelCard.ENTER_COMBAT)) { // If a combat travel card was pulled.
+        Debug.Log("beginning battle");
             BattlePhaser.I.begin_new_battle(cell);
         } else if (cell.travelcard.follow_rule(TravelCard.AFFECT_RESOURCES)) {
             Controller.I.get_disc().adjust_resources_visibly(cell.get_travelcard_consequence());
             cell.complete_travelcard();
         } 
     }
+
 
     // Called by the roll button of the travel card. 
     public void roll() {

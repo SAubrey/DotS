@@ -93,6 +93,7 @@ public class MapCell {
     public bool travelcard_complete = false;
     public Battle battle;
     public bool has_seen_combat = false;
+    public bool locked = false;
     private List<Enemy> enemies = new List<Enemy>();
     // Travelcards cannot be set to null.  
     private TravelCard _travelcard;
@@ -110,6 +111,7 @@ public class MapCell {
         this.tier = tier;
         this.pos = pos;
         this.biome_ID = biome_ID;
+        locked = requires_unlock;
     }
 
     public void enter() {

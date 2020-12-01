@@ -33,7 +33,6 @@ public class Selector : MonoBehaviour {
     void Awake() {
         if (I == null) {
             I = this;
-            DontDestroyOnLoad(gameObject);
         } else {
             Destroy(gameObject);
         }

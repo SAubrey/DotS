@@ -4,22 +4,15 @@ using UnityEngine;
 
 public class CamSwitcher : MonoBehaviour {
     public static CamSwitcher I { get; private set; }
-    public const int MENU = 1;
-    public const int MAP = 2;
-    public const int BATTLE = 3;
-
-    public Camera menuCam;
+    public const int MENU = 1, MAP = 2, BATTLE= 3;
+    public Camera menu_cam, map_cam, battle_cam;
     public GameObject menu_canvas;
-    public Camera battleCam;
     public GameObject battle_canvas;
     public GameObject battleUI_canvas;
-    public Camera mapCam;
     public GameObject map_canvas;
     public GameObject mapUI_canvas;
     public SoundManager sound_manager;
-
     public GameObject pause_panel, battle_pause_panel;
-    
 
     private bool paused = false;
     public int current_cam = MENU;
@@ -27,7 +20,6 @@ public class CamSwitcher : MonoBehaviour {
     void Awake() {
         if (I == null) {
             I = this;
-            DontDestroyOnLoad(gameObject);
         } else {
             Destroy(gameObject);
         }
@@ -95,7 +87,7 @@ public class CamSwitcher : MonoBehaviour {
     public void set_active(int screen, bool active) {
         if (screen == MENU) {  
             menu_canvas.SetActive(active);
-            menuCam.enabled = active;
+            menu_cam.enabled = active;
             if (active) {
                 set_active(MAP, false);
                 set_active(BATTLE, false);
@@ -103,17 +95,18 @@ public class CamSwitcher : MonoBehaviour {
             }
         } else if (screen == MAP) {
             map_canvas.SetActive(active);
-            mapCam.enabled = active;
+            map_cam.enabled = active;
             mapUI_canvas.SetActive(active);
             if (active) {
                 // Set the camera in the middle of the map.
-                mapCam.transform.SetPositionAndRotation(new Vector3(10, 10, -14), Quaternion.identity);
+                map_cam.transform.SetPositionAndRotation(new Vector3(10, 10, -14), Quaternion.identity);
+                MapUI.I.load_battalion_count(Controller.I.get_disc().bat);
                 set_active(BATTLE, false);
                 set_active(MENU, false);
             }
         } else if (screen == BATTLE) {
             battle_canvas.SetActive(active);
-            battleCam.enabled = active;
+            battle_cam.enabled = active;
             battleUI_canvas.SetActive(active);
             if (active) {
                 BackgroundLoader.I.load(Map.I.get_current_cell().biome_ID);

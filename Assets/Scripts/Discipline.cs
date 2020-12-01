@@ -72,6 +72,10 @@ public class Discipline : Storeable, ISaveLoad {
         cell.enter();
     }
 
+    public void move_to_previous_cell() {
+        move(previous_cell);
+    }
+
     /*
     Upon death, move the player piece to the city,
     reset troop composition to default, 

@@ -114,6 +114,7 @@ public class Att3_1 : Att {
 public class Att4_1 : Att {
     public Att4_1( Sprite sprite) : base(TravelDeck.ATT4_1, sprite) {
         this.enemy_count = 7;
+        set_rule(AMBUSH, true);
     }
 }
 

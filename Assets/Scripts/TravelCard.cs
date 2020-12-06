@@ -162,6 +162,7 @@ public class Chance1_1 : Chance {
 public class Chance2_1 : Chance {
     public Chance2_1(Sprite sprite) : base(TravelDeck.CHANCE2_1, sprite) {
         this.enemy_count = 0;
+        die_num_sides = 6;
     }
 
     public override void use_roll_result(int result, Controller c) {

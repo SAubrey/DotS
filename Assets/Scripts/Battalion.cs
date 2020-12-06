@@ -24,6 +24,9 @@ public class Battalion {
             units.Add(unit_type, new List<PlayerUnit>());
 
         add_default_troops();
+        if (disc.ID == 0) {
+            add_units(PlayerUnit.SEEKER, 1);
+        }
         // Units for testing
         //add_units(PlayerUnit.MENDER, 1);
         //add_units(PlayerUnit.SCOUT, 1);

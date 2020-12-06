@@ -94,6 +94,7 @@ public class MapCell {
     public Battle battle;
     public bool has_seen_combat = false;
     public bool locked = false;
+    public bool glows, flickers = false;
     private List<Enemy> enemies = new List<Enemy>();
     // Travelcards cannot be set to null.  
     private TravelCard _travelcard;
@@ -177,7 +178,7 @@ public class MapCell {
             return;
         discovered = true;
         Map.I.tm.SetTile(new Vector3Int((int)pos.x, (int)pos.y, 0), tile);
-        Map.I.adjust_light_size(this);
+        MapUI.I.place_cell_light(this);
     }
 
     public void complete_travelcard() {
@@ -350,6 +351,7 @@ public class Star : MapCell {
         star_crystals = 18;
         creates_travelcard = false;
         travelcard_complete = true;
+        glows = true;
     }
 }
 
@@ -357,6 +359,7 @@ public class Titrum : MapCell {
     public Titrum(int tier, Tile tile, Pos pos) : base(tier, tile, pos, TITRUM_ID) {
         name = TITRUM;
         minerals = 24;
+        glows = true;
     }
 }
 public class LushLand : MapCell {
@@ -388,5 +391,6 @@ public class RuneGate : MapCell {
     public RuneGate(int tier, Tile tile, Pos pos) : base(tier, tile, pos, RUNE_GATE_ID) {
         name = RUNE_GATE;
         has_rune_gate = true;
+        glows = true;
     }
 }

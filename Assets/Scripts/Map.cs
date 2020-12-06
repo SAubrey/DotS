@@ -48,10 +48,7 @@ public class Map : MonoBehaviour, ISaveLoad {
     public Tile city, shadow;
     public CityCell city_cell;
 
-    public Dictionary<int, Tile> tiles = new Dictionary<int, Tile>();// {
-        //{CITY, city},
-        //{PLAINS_1, plains_1}
-    //};
+    public Dictionary<int, Tile> tiles = new Dictionary<int, Tile>();
     public Dictionary<Tile, int> tile_to_tileID = new Dictionary<Tile, int>();
 
     private static readonly Dictionary<int, Dictionary<int, int>> bag_counters
@@ -101,8 +98,6 @@ public class Map : MonoBehaviour, ISaveLoad {
 
     public List<MapCell> oscillating_cells = new List<MapCell>();
     private System.Random rand;
-    private int max_discovered_tile_distance = 0;
-    public UnityEngine.Experimental.Rendering.Universal.Light2D light2d;
     void Awake() {
         if (I == null) {
             I = this;
@@ -261,6 +256,8 @@ public class Map : MonoBehaviour, ISaveLoad {
             tier, tile_to_tileID[tile], tile, pos));
         place_tile(shadow, pos.x, pos.y);
         tile.color = Color.white;
+        
+        get_cell(pos.to_vec3).discover();
     }
 
     public Tile get_tile(float x, float y) {
@@ -410,16 +407,6 @@ public class Map : MonoBehaviour, ISaveLoad {
         }
     }
 
-    public void adjust_light_size(MapCell cell) {
-        int dist = Statics.calc_map_distance(cell.pos, new Pos(10, 10));
-        Debug.Log("distance from city: " + dist);
-        if (dist > max_discovered_tile_distance) {
-            max_discovered_tile_distance = dist;
-            light2d.pointLightInnerRadius = dist;
-            light2d.pointLightOuterRadius = dist + 3;
-        }
-
-    }
     public void toggle_waiting_for_second_gate() {
         waiting_for_second_gate = !waiting_for_second_gate;
     }

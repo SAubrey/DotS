@@ -47,6 +47,13 @@ public class MapUI : MonoBehaviour {
     public GraphicRaycaster graphic_raycaster;
     public Canvas canvas;
     public GameObject map_canvas;
+    public GameObject map_cell_light_prefab;
+    private int max_discovered_tile_distance = 0;
+    public UnityEngine.Experimental.Rendering.Universal.Light2D city_light;
+    public Color star_light_color, titrum_light_color, rune_gate_light_color,
+        forest_light_color, lush_land_color, cave_color, mountain_color, plains_color,
+        ruins_color;
+    public Dictionary<int, Color> cell_light_colors;
 
     void Awake() {
         if (I == null) {
@@ -54,6 +61,19 @@ public class MapUI : MonoBehaviour {
         } else {
             Destroy(gameObject);
         }
+
+        cell_light_colors = new Dictionary<int, Color>() {
+            {MapCell.STAR_ID, star_light_color},
+            {MapCell.TITRUM_ID, titrum_light_color},
+            {MapCell.RUNE_GATE_ID, rune_gate_light_color},
+            {MapCell.FOREST_ID, forest_light_color},
+            {MapCell.LUSH_LAND_ID, lush_land_color},
+            {MapCell.CAVE_ID, cave_color},
+            {MapCell.MOUNTAIN_ID, mountain_color},
+            {MapCell.PLAINS_ID, plains_color},
+            //{MapCell.SETTLEMENT_ID, settlement_color},
+            {MapCell.RUINS_ID, ruins_color},
+        };
         
         // Populate city dictionary
         city_inv.Add(Storeable.LIGHT, c_light);
@@ -148,6 +168,26 @@ public class MapUI : MonoBehaviour {
 
         update_storeable_resource_UI(Controller.I.city);
         update_storeable_resource_UI(Controller.I.get_disc());
+    }
+    
+    public void adjust_light_size(MapCell cell) {
+        int dist = Statics.calc_map_distance(cell.pos, new Pos(10, 10));
+        Debug.Log("distance from city: " + dist);
+        if (dist > max_discovered_tile_distance) {
+            max_discovered_tile_distance = dist;
+            city_light.pointLightInnerRadius = dist;
+            city_light.pointLightOuterRadius = dist + 3;
+        }
+    }
+
+    public void place_cell_light(MapCell cell) {
+        if (cell == Map.I.city_cell || cell == null)
+            return;
+        GameObject light = Instantiate(map_cell_light_prefab);
+        light.transform.SetParent(map_canvas.transform);
+        Vector3 p = cell.pos.to_vec3;
+        light.transform.position = new Vector3(p.x + 0.5f, p.y + 0.5f, 0);
+        light.GetComponent<MapCellLight>().init(cell);
     }
 
     public void update_storeable_resource_UI(Storeable s) {

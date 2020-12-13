@@ -116,7 +116,7 @@ public class Discipline : Storeable, ISaveLoad {
         if (roll <= chance) {
             // Units flee into the darkness.
             for (int i = 0; i < quantity; i++) {
-                bat.lose_random_unit();
+                bat.lose_random_unit("Your ranks crumble without the light of the stars.");
             }
         }
     }
@@ -173,7 +173,7 @@ public class Discipline : Storeable, ISaveLoad {
         _mrelics = data.sresources.mrelics;
 
         pos = new Vector3(data.col, data.row);
-        cell.travelcard = TravelDeck.I.get_card(data.redrawn_travel_card_ID);
+        cell.travelcard = TravelDeck.I.make_card(data.redrawn_travel_card_ID);
         restart_battle_from_drawn_card = cell.travelcard != null;
 
         // Create healthy units.

@@ -43,10 +43,10 @@ public class Line : MonoBehaviour {
         lr.endWidth = 1f;
         if (u.get_type() == Unit.ENEMY) {
             lr.startColor = new Color(.9f, .1f, .1f, 0);
-            lr.endColor = new Color(.9f, .1f, .1f, .8f);
+            lr.endColor = new Color(.9f, .1f, .1f, .4f);
         } else {
             lr.startColor = new Color(1, 1, 1, 0);
-            lr.endColor = new Color(1, 1, 1, .8f);
+            lr.endColor = new Color(1, 1, 1, .4f);
         }
         lr.SetPosition(0, start_pos);
         lr.SetPosition(1, end_pos);

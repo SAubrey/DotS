@@ -44,9 +44,10 @@ public class Controller : MonoBehaviour {
         Formation.I.reset();
         BattlePhaser.I.reset(from_save);
         
+        // Order matters
+        TravelDeck.I.init(from_save);
         Map.I.init(from_save);
         TurnPhaser.I.reset();
-        TravelDeck.I.init(from_save);
 
         game_has_begun = true;
     }
@@ -59,8 +60,8 @@ public class Controller : MonoBehaviour {
     // Called by save button
     public void save_game() {
         // Double check the user wants to overwrite their save.
-        
         save_warningP.SetActive(false);
+        
         List<GameData> serializables = new List<GameData>() {
             { Map.I.save() },
             { astra.save() },

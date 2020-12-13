@@ -39,11 +39,14 @@ public class MapUI : MonoBehaviour {
     public TextMeshProUGUI discT, map_cellT, battle_cellT;
     public Button next_stageB;
     public GameObject ask_to_enterP, game_overP, travel_cardP;
+    public TextMeshProUGUI travelcard_descriptionT, travelcard_typeT, 
+        travelcard_subtextT, travelcard_consequenceT;
     public Image travel_cardI;
     public Button travelcard_continueB, travelcard_rollB;
 
     public GameObject cell_UI_prefab, dropped_XP_prefab;
     public MapCellUI open_cell_UI_script;
+    public MapCell last_open_cell;
     public GraphicRaycaster graphic_raycaster;
     public Canvas canvas;
     public GameObject map_canvas;
@@ -227,6 +230,7 @@ public class MapUI : MonoBehaviour {
     private void generate_cell_UI(MapCell cell) {
         GameObject cell_UI = Instantiate(cell_UI_prefab, canvas.transform);
         open_cell_UI_script = cell_UI.GetComponentInChildren<MapCellUI>();
+        last_open_cell = cell;
         open_cell_UI_script.init(cell);
     }
     
@@ -319,12 +323,33 @@ public class MapUI : MonoBehaviour {
     public void display_travelcard(TravelCard tc) {
         if (tc == null)
             return;
-        set_active_travelcardP(true);
-        travel_cardI.sprite = tc.sprite;
+        bool active_disc_at_selected_cell = 
+            Controller.I.get_disc().cell == open_cell_UI_script.cell;
+        bool interactable = !tc.complete && active_disc_at_selected_cell;
+        set_active_travelcard_continueB(interactable);
+        //travel_cardI.sprite = tc.sprite;
+
+        // Update text
+        travelcard_typeT.text = tc.type_text;
+        travelcard_descriptionT.text = tc.description;
+        travelcard_subtextT.text = tc.subtext;
+        travelcard_consequenceT.text = tc.consequence_text;
+        travel_cardP.SetActive(true);
     }
 
-    public void set_active_travelcardP(bool state) {
-        travel_cardP.SetActive(state);
+    public void close_travelcardP() {
+        set_active_ask_to_enterP(false);
+        set_active_travelcard_continueB(false);
+        set_active_travelcard_rollB(false);
+        travel_cardP.SetActive(false);
+    }
+
+    public void toggle_travelcard(TravelCard tc) {
+        if (travel_cardP.activeSelf) {
+            close_travelcardP();
+        } else {
+            display_travelcard(tc);
+        }
     }
     
     public void set_active_travelcard_rollB(bool state) {

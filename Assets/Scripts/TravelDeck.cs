@@ -8,31 +8,16 @@ public class TravelDeck : MonoBehaviour, ISaveLoad {
     public static TravelDeck I { get; private set; }
 
     // <TYPE><NUM>_<TIER>
-    public const int ATT1_1 = 1;
-    public const int ATT2_1 = 2;
-    public const int ATT3_1 = 3;
-    public const int ATT4_1 = 4;
-    public const int ATT5_1 = 5;
-    public const int ATT6_1 = 6;
-    public const int ATT7_1 = 7;
-    public const int CHANCE1_1 = 8;
-    public const int CHANCE2_1 = 9;
-    public const int CHANCE3_1 = 10;
+    public const int ATT1_1 = 1, ATT2_1 = 2, ATT3_1 = 3, ATT4_1 = 4, ATT5_1 = 5, ATT6_1 = 6;
+    public const int CHANCE1_1 = 8, CHANCE2_1 = 9, CHANCE3_1 = 10;
     public const int BLESSING1_1 = 11;
-    public const int CAVE1_1 = 12;
-    public const int CAVE2_1 = 13;
-    public const int EVENT1_1 = 14;
-    public const int EVENT2_1 = 15;
-    public const int EVENT3_1 = 16;
-    public const int EVENT4_1 = 17;
-    public const int EVENT5_1 = 18;
-    public const int RUINS1_1 = 19;
-    public const int RUINS2_1 = 20;
-    public const int RUINS3_1 = 21;
-    public const int RUINS4_1 = 22;
-    public const int LOCATION1_1 = 23;
-    public const int LOCATION2_1 = 24;
-    public const int LOCATION3_1 = 25;
+    public const int CAVE1_1 = 12, CAVE2_1 = 13;
+    public const int EVENT1_1 = 14, EVENT2_1 = 15, EVENT3_1 = 16, EVENT4_1 = 17, EVENT5_1 = 18;
+    public const int EVENT1_2 = 19, EVENT2_2 = 20, EVENT3_2 = 21, 
+        EVENT4_2 = 22, EVENT5_2 = 23, EVENT6_2 = 24;
+    public const int RUINS1_1 = 25, RUINS2_1 = 26, RUINS3_1 = 27, RUINS4_1 = 28;
+    public const int LOCATION1_1 = 29, LOCATION2_1 = 30, LOCATION3_1 = 31;
+    public const int LOCATION1_2 = 32;
 
     public Sprite attacked1_1, attacked2_1, attacked3_1, attacked4_1, 
             attacked5_1, attacked6_1, attacked7_1;
@@ -43,34 +28,34 @@ public class TravelDeck : MonoBehaviour, ISaveLoad {
     public Sprite location1_1, location2_1, location3_1;
     public Sprite ruins1_1, ruins2_1, ruins3_1, ruins4_1;
 
-    // One of each actual card object for reference. Read only. <ID, card>
-    private Dictionary<int, TravelCard> cards = new Dictionary<int, TravelCard>() {};
+    // One of each actual card object for reference. <ID, card>
+    //private readonly Dictionary<int, TravelCard> cards = new Dictionary<int, TravelCard>() {};
 
     // <TIER, CARD COUNTS> This is what the deck is generated from.
     private Dictionary<int, Dictionary<int, int>> card_counters 
         = new Dictionary<int, Dictionary<int, int>>();
     private Dictionary<int, int> t1_card_counts = new Dictionary<int, int>() {
-        {ATT1_1, 1}, {ATT2_1, 1}, {ATT3_1, 1}, {ATT4_1, 1}, {ATT5_1, 1}, {ATT6_1, 1}, {ATT7_1, 1},
+        {ATT1_1, 1}, {ATT2_1, 1}, {ATT3_1, 1}, {ATT4_1, 1}, {ATT5_1, 1}, {ATT6_1, 1},
         {CHANCE1_1, 1}, {CHANCE2_1, 1}, {CHANCE3_1, 1},
         {CAVE1_1, 1}, {CAVE2_1, 1},
         {RUINS1_1, 1}, {RUINS2_1, 1}, {RUINS3_1, 1}, {RUINS4_1, 0},
-        {LOCATION2_1, 1}, {LOCATION3_1, 1},
+        {LOCATION2_1, 0}, {LOCATION3_1, 1},
         {EVENT1_1, 1}, {EVENT2_1, 1}, {EVENT3_1, 1}, {EVENT4_1, 1}, {EVENT5_1, 1},
     };
     private Dictionary<int, int> t2_card_counts = new Dictionary<int, int>() {
-        {ATT1_1, 1}, {ATT2_1, 1}, {ATT3_1, 1}, {ATT4_1, 1}, {ATT5_1, 1}, {ATT6_1, 1}, {ATT7_1, 1},
+        {ATT1_1, 1}, {ATT2_1, 1}, {ATT3_1, 1}, {ATT4_1, 1}, {ATT5_1, 1}, {ATT6_1, 1},
         {CHANCE1_1, 1}, {CHANCE2_1, 1}, {CHANCE3_1, 1},
         {CAVE1_1, 1}, {CAVE2_1, 1},
         {RUINS1_1, 1}, {RUINS2_1, 1}, {RUINS3_1, 1}, {RUINS4_1, 0},
-        {LOCATION2_1, 1}, {LOCATION3_1, 1},
+        {LOCATION2_1, 0}, {LOCATION3_1, 1},
         {EVENT1_1, 1}, {EVENT2_1, 1}, {EVENT3_1, 1}, {EVENT4_1, 1}, {EVENT5_1, 1},
     };
     private Dictionary<int, int> t3_card_counts = new Dictionary<int, int>() {
-        {ATT1_1, 1}, {ATT2_1, 1}, {ATT3_1, 1}, {ATT4_1, 1}, {ATT5_1, 1}, {ATT6_1, 1}, {ATT7_1, 1},
+        {ATT1_1, 1}, {ATT2_1, 1}, {ATT3_1, 1}, {ATT4_1, 1}, {ATT5_1, 1}, {ATT6_1, 1},
         {CHANCE1_1, 1}, {CHANCE2_1, 1}, {CHANCE3_1, 1},
         {CAVE1_1, 1}, {CAVE2_1, 1},
         {RUINS1_1, 1}, {RUINS2_1, 1}, {RUINS3_1, 1}, {RUINS4_1, 0},
-        {LOCATION2_1, 1}, {LOCATION3_1, 1},
+        {LOCATION2_1, 0}, {LOCATION3_1, 1},
         {EVENT1_1, 1}, {EVENT2_1, 1}, {EVENT3_1, 1}, {EVENT4_1, 1}, {EVENT5_1, 1},
     };
 
@@ -117,7 +102,7 @@ public class TravelDeck : MonoBehaviour, ISaveLoad {
         decks.Add(1, new List<int>() );
         decks.Add(2, new List<int>() );
         decks.Add(3, new List<int>() );
-
+/*
         cards.Add(ATT1_1, new Att1_1(attacked1_1));
         cards.Add(ATT2_1, new Att2_1(attacked2_1));
         cards.Add(ATT3_1, new Att3_1(attacked3_1));
@@ -141,7 +126,7 @@ public class TravelDeck : MonoBehaviour, ISaveLoad {
         cards.Add(EVENT2_1, new Event2_1(event2_1));
         cards.Add(EVENT3_1, new Event3_1(event3_1));
         cards.Add(EVENT4_1, new Event4_1(event4_1));
-        cards.Add(EVENT5_1, new Event5_1(event5_1));
+        cards.Add(EVENT5_1, new Event5_1(event5_1));*/
 
         allowed_cards[MapCell.PLAINS_ID].AddRange(new int[] {
             TravelCard.COMBAT, TravelCard.BLESSING, TravelCard.CHANCE, 
@@ -172,20 +157,10 @@ public class TravelDeck : MonoBehaviour, ISaveLoad {
             new_game();
     }
 
-    public GameData save() {
-        return new TravelDeckData(this, Controller.TRAVEL_DECK);
-    }
-
     private void new_game() {
-        MapUI.I.set_active_travelcardP(false);
+        MapUI.I.close_travelcardP();
         clear_data();
         populate_decks();
-    }
-
-    private void clear_data() {
-        foreach (List<int> deck in decks.Values) {
-            deck.Clear();
-        }
     }
 
     // Called once.
@@ -195,6 +170,17 @@ public class TravelDeck : MonoBehaviour, ISaveLoad {
                 decks[tier].Add(card_id);
             }
         }
+    }
+
+    private void clear_data() {
+        foreach (List<int> deck in decks.Values) {
+            deck.Clear();
+        }
+    }
+
+
+    public GameData save() {
+        return new TravelDeckData(this, Controller.TRAVEL_DECK);
     }
 
     public void load(GameData generic) {
@@ -219,29 +205,29 @@ public class TravelDeck : MonoBehaviour, ISaveLoad {
         if (biome_ID == MapCell.LUSH_LAND_ID || biome_ID == MapCell.STAR_ID) {
             return null;
         } else if (biome_ID == MapCell.RUNE_GATE_ID) {
-            return cards[LOCATION1_1];
+            return make_card(LOCATION1_1);
         } else if (combat_cards_only) {
-            return cards[ATT1_1];
+            return make_card(ATT1_1); // debug only
         }
 
-        if (decks[tier].Count > 0) {
-            // Draw from deck
-            List<int> drawable_cards = aggregate_drawable_cards(tier, biome_ID);
-            if (drawable_cards.Count <= 0) {
-                // Out of cards for this biome (unlikely but possible).
-                // Just draw any applicable one.
-                return get_random_matching_card(biome_ID);
-            }
-
-            // Draw
-            int index = rand.Next(0, drawable_cards.Count);
-            int card_id = drawable_cards[index];
-
-            // Remove drawn card
-            decks[tier].Remove(card_id);
-            return cards[card_id];
+        if (decks[tier].Count <= 0)
+            return null;
+            
+        // Draw from deck
+        List<int> drawable_cards = aggregate_drawable_cards(tier, biome_ID);
+        if (drawable_cards.Count <= 0) {
+            // Out of cards for this biome (unlikely but possible).
+            // Just draw any applicable one.
+            return draw_random_card(biome_ID);
         }
-        return null;
+
+        // Draw
+        int index = rand.Next(0, drawable_cards.Count);
+        int card_id = drawable_cards[index];
+
+        // Remove drawn card
+        decks[tier].Remove(card_id);
+        return make_card(card_id);
     }
 
     // Returns cards that can be drawn at the current tile biome.
@@ -258,23 +244,43 @@ public class TravelDeck : MonoBehaviour, ISaveLoad {
     private bool check_if_card_in_biome(int biome_ID, int card_id) {
         if (!allowed_cards.ContainsKey(biome_ID))
             return false;
-        return allowed_cards[biome_ID].Contains(cards[card_id].type);
+        return allowed_cards[biome_ID].Contains(make_card(card_id).type);
     }
 
-    private TravelCard get_random_matching_card(int biome_ID) {
-        foreach (int card_id in cards.Keys) {
+    private TravelCard draw_random_card(int biome_ID) {
+        return make_card(ATT1_1);
+        /*foreach (int card_id in cards.Keys) {
             if (check_if_card_in_biome(biome_ID, card_id)) {
-                return cards[card_id];
+                return make_card(card_id);
             }
         }
-        return cards[0];
-    }
-    
-    private void remove_card(int tier, int card_id) {
-        decks[tier].Remove(card_id);
+        return make_card(0);*/
     }
 
-    public TravelCard get_card(int ID) {
-        return cards[ID];
+    public TravelCard make_card(int ID) {
+        if (ID == ATT1_1) return new Att1_1(attacked1_1);
+        if (ID == ATT2_1) return new Att2_1(attacked2_1);
+        if (ID == ATT3_1) return new Att3_1(attacked3_1);
+        if (ID == ATT4_1) return new Att4_1(attacked4_1);
+        if (ID == ATT5_1) return new Att5_1(attacked5_1);
+        if (ID == ATT6_1) return new Att6_1(attacked6_1);
+        if (ID == CHANCE1_1) return new Chance1_1(chance1_1);
+        if (ID == CHANCE2_1) return new Chance2_1(chance2_1);
+        if (ID == CHANCE3_1) return new Chance3_1(chance3_1);
+        if (ID == CAVE1_1) return new Cave1_1(cave1_1);
+        if (ID == CAVE2_1) return new Cave2_1(cave2_1);
+        if (ID == RUINS1_1) return new Ruins1_1(ruins1_1);
+        if (ID == RUINS2_1) return new Ruins2_1(ruins2_1);
+        if (ID == RUINS3_1) return new Ruins3_1(ruins3_1);
+        if (ID == RUINS4_1) return new Ruins4_1(ruins4_1);
+        if (ID == LOCATION1_1) return new Location1_1(location1_1);
+        if (ID == LOCATION2_1) return new Location2_1(location2_1);
+        if (ID == LOCATION3_1) return new Location3_1(location3_1);
+        if (ID == EVENT1_1) return new Event1_1(event1_1);
+        if (ID == EVENT2_1) return new Event2_1(event2_1);
+        if (ID == EVENT3_1) return new Event3_1(event3_1);
+        if (ID == EVENT4_1) return new Event4_1(event4_1);
+        if (ID == EVENT5_1) return new Event5_1(event5_1);
+        return null;
     }
 }

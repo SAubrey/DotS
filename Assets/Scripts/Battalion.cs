@@ -48,7 +48,7 @@ public class Battalion {
         }
     }
 
-    public void lose_random_unit() {
+    public void lose_random_unit(string message="") {
         // Get indices with available units.
         ArrayList spawned_unit_types = new ArrayList();
         for (int i = 0; i < units.Count; i++) {
@@ -61,8 +61,8 @@ public class Battalion {
 
         int roll = Random.Range(0, spawned_unit_types.Count - 1);
         int removed_unit_type_ID = (int)spawned_unit_types[roll];
-        string s = units[removed_unit_type_ID][0].get_name() +
-            " Your ranks crumble without the light of the stars.";
+        
+        string s = units[removed_unit_type_ID][0].get_name() + " " + message;
         units[removed_unit_type_ID].RemoveAt(0);
         disc.create_rising_info(s, -1);
     }
@@ -244,25 +244,12 @@ public class Battalion {
         }
     }
 
-    public bool has_miner { 
-        get {
-            foreach (int punit in units.Keys) {
-                if (punit == PlayerUnit.MINER)
-                    return true;
-            }
-            return false;
-        }
-    }
+    public bool has_miner { get => get_unit(PlayerUnit.MINER) != null; }
 
-    public bool has_seeker { 
-        get {
-            foreach (int punit in units.Keys) {
-                if (punit == PlayerUnit.SEEKER) 
-                    return true;
-            }
-            return false;
-        }
-    }
+    public bool has_seeker { get => get_unit(PlayerUnit.SEEKER) != null; }
+
+    public bool has_scout { get => get_unit(PlayerUnit.SCOUT) != null; }
+    
 
     public List<PlayerUnit> get_all_placed_units() {
         List<PlayerUnit> punits = new List<PlayerUnit>();

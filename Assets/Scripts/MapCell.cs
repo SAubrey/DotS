@@ -90,7 +90,16 @@ public class MapCell {
     public bool creates_travelcard = true;
     public bool has_rune_gate = false;
     public bool restored_rune_gate = false;
-    public bool travelcard_complete = false;
+    private bool _travelcard_complete = false;
+    public bool travelcard_complete {
+        get { return _travelcard_complete; }
+        set {
+            _travelcard_complete = value;
+            if (travelcard != null) {
+                travelcard.complete = value;
+            }
+        }
+    }
     public Battle battle;
     public bool has_seen_combat = false;
     public bool locked = false;
@@ -118,7 +127,10 @@ public class MapCell {
     public void enter() {
         if (!entered) {
             entered = true;
-            TravelCardManager.I.draw_and_display_travel_card(this);
+            if (creates_travelcard && !travelcard_complete) {
+                MapUI.I.display_travelcard(travelcard);
+                travelcard.action(TravelCardManager.I);
+            }
             discover();
         } 
         else if (should_activate_travelcard_without_showing) {
@@ -127,6 +139,14 @@ public class MapCell {
         if (dropped_XP > 0) {
             pickup_XP(Controller.I.get_disc());
         }
+    }
+    
+    public void discover() {
+        if (discovered)
+            return;
+        discovered = true;
+        Map.I.tm.SetTile(new Vector3Int((int)pos.x, (int)pos.y, 0), tile);
+        MapUI.I.place_cell_light(this);
     }
 
     public void post_battle() {
@@ -173,14 +193,6 @@ public class MapCell {
         creates_travelcard && !travelcard_complete && entered && !has_battle;
     }
 
-    public void discover() {
-        if (discovered)
-            return;
-        discovered = true;
-        Map.I.tm.SetTile(new Vector3Int((int)pos.x, (int)pos.y, 0), tile);
-        MapUI.I.place_cell_light(this);
-    }
-
     public void complete_travelcard() {
         travelcard_complete = true;
     }
@@ -199,6 +211,7 @@ public class MapCell {
         post_phase();
         battle = null;
         end_color_oscillation();
+        set_tile_color();
     }
 
     private void begin_color_oscillation() {

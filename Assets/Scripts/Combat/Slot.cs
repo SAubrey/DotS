@@ -16,8 +16,8 @@ public class Slot : EventTrigger {
     
     public static readonly Color selected_color = new Color(1, 1, 1, .8f);
     public static readonly Color unselected_color = new Color(1, 1, 1, .1f);
-    private static readonly Color healthbar_fill_color = new Color(.8f, .1f, .1f, .3f);
-    private static readonly Color staminabar_fill_color = new Color(.1f, .8f, .1f, .3f);
+    private static readonly Color healthbar_fill_color = new Color(.8f, .1f, .1f, .45f);
+    private static readonly Color staminabar_fill_color = new Color(.1f, .8f, .1f, .45f);
     private static readonly Color statbar_bg_color = new Color(.4f, .4f, .4f, .3f);
     public Slider healthbar, staminabar;
     public Canvas info_canv;

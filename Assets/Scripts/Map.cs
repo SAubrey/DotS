@@ -252,12 +252,17 @@ public class Map : MonoBehaviour, ISaveLoad {
     public void create_cell(int tier, int x, int y) {
         Pos pos = new Pos(x, y);
         Tile tile = grab_tile(tier);
-        map.Add(pos, MapCell.create_cell(
-            tier, tile_to_tileID[tile], tile, pos));
+        MapCell cell = MapCell.create_cell(
+            tier, tile_to_tileID[tile], tile, pos);
+        map.Add(pos, cell);
         place_tile(shadow, pos.x, pos.y);
         tile.color = Color.white;
-        
-        get_cell(pos.to_vec3).discover();
+
+        if (cell.creates_travelcard) {
+            cell.travelcard = TravelDeck.I.draw_card(cell.tier, cell.biome_ID);
+            Debug.Log(cell.travelcard);
+        }
+        get_cell(pos.to_vec3).discover(); // debug
     }
 
     public Tile get_tile(float x, float y) {

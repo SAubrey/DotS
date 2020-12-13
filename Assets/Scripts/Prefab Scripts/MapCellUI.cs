@@ -6,20 +6,20 @@ using TMPro;
 
 
 public class MapCellUI : MonoBehaviour {
-    public TextMeshProUGUI cell_typeT, enemy_countT, star_crystalsT, battleT;
-    public Button scoutB, teleportB, moveB, unlockB, battleB, mineB;
-    private MapCell cell;
+    public TextMeshProUGUI cell_typeT, enemy_countT, mineableT, battleT;
+    public Button scoutB, teleportB, moveB, unlockB, battleB, mineB, show_travelcardB;
+    public MapCell cell { get; private set; }
 
     public void init(MapCell cell) {
         this.cell = cell;
         cell_typeT.text = build_titleT();
         enemy_countT.text = build_enemy_countT(cell.get_enemies().Count, cell.discovered);
-        star_crystalsT.text = cell.discovered ? cell.star_crystals.ToString() : "?";
         update_star_crystal_text();
         Vector3 pos = new Vector3(cell.pos.x, cell.pos.y, 0);
         //transform.position =
             //map.c.cam_switcher.mapCam.WorldToScreenPoint(new Vector3(pos.x + 0.5f, pos.y - 2.5f, 0));
         transform.position = new Vector3(pos.x + 0.5f, pos.y - 1.5f, 0); // camera mode, not overlay
+        gameObject.transform.SetAsFirstSibling();
 
         enable_button(moveB, Map.I.can_move(pos));
         enable_button(scoutB, Map.I.can_scout(pos));
@@ -27,6 +27,7 @@ public class MapCellUI : MonoBehaviour {
         enable_button(unlockB, can_unlock());
         enable_button(battleB, cell.can_setup_group_battle());
         enable_button(mineB, cell.can_mine(Controller.I.get_disc().bat));
+        enable_button(show_travelcardB, can_show_travelcard());
         if (cell.can_setup_group_battle()) {
             battleT.text = build_group_battleB_T();
         }
@@ -34,15 +35,15 @@ public class MapCellUI : MonoBehaviour {
 
     public void update_star_crystal_text() {
         if (!cell.discovered) {
-            star_crystalsT.text = "?";
+            mineableT.text = "?";
             return;
         }
         if (cell.star_crystals > 0)
-            star_crystalsT.text = cell.star_crystals.ToString() + " Star Crystals";
+            mineableT.text = cell.star_crystals.ToString() + " Star Crystals";
         else if (cell.minerals > 0)
-            star_crystalsT.text = cell.star_crystals.ToString() + " Minerals";
+            mineableT.text = cell.minerals.ToString() + " Minerals";
         else
-            star_crystalsT.text = "No mineable resources.";
+            mineableT.text = "No mineable resources.";
     }
 
     private string build_titleT() {
@@ -144,6 +145,15 @@ public class MapCellUI : MonoBehaviour {
 
     public void mine() {
         Controller.I.get_disc().mine(cell);
+    }
+
+    public bool can_show_travelcard() {
+        return cell.creates_travelcard && cell.discovered;
+    }
+
+    public void show_travelcard() {
+        Debug.Log("Travelcard: " + cell.travelcard);
+        MapUI.I.toggle_travelcard(cell.travelcard);
     }
 
     // To determine if the unlock button can be pressed, including that the 

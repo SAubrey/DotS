@@ -271,7 +271,7 @@ public class BattlePhaser : MonoBehaviour {
     }
 
     private void range() {
-        if (!battle.cell.travelcard.follow_rule(TravelCard.AMBUSH)) {
+        if (!battle.cell.travelcard.rules.ambush) {
             range_stage = true;
         }
         can_skip = true;

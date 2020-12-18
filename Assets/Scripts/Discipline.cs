@@ -34,6 +34,7 @@ public class Discipline : Storeable, ISaveLoad {
             piece.transform.position = new Vector3(value.x, value.y, 0);
         }
     }
+    public EquipmentInventory equipment_inventory = new EquipmentInventory();
 
     protected override void Start() {
         base.Start();
@@ -41,8 +42,8 @@ public class Discipline : Storeable, ISaveLoad {
 
         _light = 4;
         _unity = 10;
-  
-        pos = new Vector3(10.5f, 10.5f);
+
+        pos = new Vector3(12.5f, 12.5f);
         mine_qty_multiplier = ID == ENDURA ? 4 : 3;
     }
 
@@ -121,8 +122,21 @@ public class Discipline : Storeable, ISaveLoad {
         }
     }
 
-    public Pos get_Pos() {
-        return new Pos((int)pos.x, (int)pos.y);
+    public void receive_travelcard_consequence() {
+        if (get_travelcard() == null)
+            return;
+        adjust_resources_visibly(cell.get_travelcard_consequence());
+        if (get_travelcard().equipment_reward_amount > 0) {
+            string name = equipment_inventory.add_random_equipment(cell.tier);
+            create_rising_info(name, 1);
+        }
+        cell.complete_travelcard();
+    }
+
+    public void add_xp_in_battle(int xp, Enemy enemy) {
+        // Show xp rising over enemy
+        change_var(Storeable.EXPERIENCE, xp, false);
+        create_rising_info("XP", xp, enemy.get_slot().gameObject);
     }
 
     public TravelCard get_travelcard() {
@@ -131,13 +145,13 @@ public class Discipline : Storeable, ISaveLoad {
 
     public void mine(MapCell cell) {
         int sc_mined = 0;
-        if (cell.biome_ID == MapCell.TITRUM_ID || cell.biome_ID == MapCell.MOUNTAIN_ID) {
+        if (cell.ID == MapCell.TITRUM_ID || cell.ID == MapCell.MOUNTAIN_ID) {
             if (cell.minerals >= mine_qty) {
                 sc_mined = change_var(Storeable.MINERALS, mine_qty, true);
             } else {
                 sc_mined = change_var(Storeable.MINERALS, cell.minerals, true);
             }
-        } else if (cell.biome_ID == MapCell.STAR_ID) {
+        } else if (cell.ID == MapCell.STAR_ID) {
             if (cell.star_crystals >= mine_qty) {
                 sc_mined = change_var(Storeable.STAR_CRYSTALS, mine_qty, true);
             } else {

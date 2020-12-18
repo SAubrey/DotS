@@ -104,14 +104,22 @@ public class PlayerUnit : Unit {
         return true;
     }
 
-    // Accounts for additional attribute granted damage.
     public override int get_attack_dmg() {
-        return attack_dmg + get_bonus_att_dmg();
+        return attack_dmg + get_bonus_att_dmg() + get_bonus_from_equipment(Unit.ATTACK_BOOST);
     }
 
-    // Accounts for additional attribute granted defense.
     public override int get_defense() {
-        return defense + get_bonus_def();
+        return defense + get_bonus_def() + get_bonus_from_equipment(Unit.DEFENSE_BOOST);
+    }
+
+    public override int get_boosted_max_health() {
+        return max_health + get_bonus_health() + get_stat_boost(HEALTH_BOOST) +
+            get_bonus_from_equipment(Unit.HEALTH_BOOST);
+    }
+
+    public int get_bonus_from_equipment(int stat_ID) {
+        Discipline d = Controller.I.get_bat_from_ID(owner_ID).disc;
+        return d.equipment_inventory.get_stat_boost_amount(ID, stat_ID);
     }
 
     public override int calc_dmg_taken(int dmg, bool piercing=false) {

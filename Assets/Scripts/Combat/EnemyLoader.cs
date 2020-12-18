@@ -99,10 +99,10 @@ public class EnemyLoader : MonoBehaviour {
         for (int i = 0; i < quantity; i++) {
             int rarity = roll_rarity(); 
             int enemyID = -1;
-            if (cell.biome_ID == MapCell.RUINS_ID) {
+            if (cell.ID == MapCell.RUINS_ID) {
                 enemyID = pick_enemy(cell.travelcard.enemy_biome_ID, cell.tier, rarity);
             } else {
-                enemyID = pick_enemy(cell.biome_ID, cell.tier, rarity);
+                enemyID = pick_enemy(cell.ID, cell.tier, rarity);
             }
             cell.add_enemy(Enemy.create_enemy(enemyID));
         }

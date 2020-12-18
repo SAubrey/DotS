@@ -92,9 +92,13 @@ public class Storeable : MonoBehaviour, ISaveLoad {
         adjust_resources_visibly(adjs);
     }
 
-    public void create_rising_info(string type, int value) {
+    public void create_rising_info(string type, int value, GameObject origin=null) {
         GameObject ri = GameObject.Instantiate(rising_info_prefab, map_UI_canvas.transform);
-        ri.transform.position = origin_of_rise_obj.transform.position;
+
+        if (origin == null) {
+            origin = origin_of_rise_obj;
+        }
+        ri.transform.position = origin.transform.position;
 
         RisingInfo ri_script = ri.GetComponent<RisingInfo>();
         ri_script.init(type, value, Statics.disc_colors[ID]);

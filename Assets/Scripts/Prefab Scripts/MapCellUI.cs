@@ -152,8 +152,8 @@ public class MapCellUI : MonoBehaviour {
     }
 
     public void show_travelcard() {
-        Debug.Log("Travelcard: " + cell.travelcard);
-        MapUI.I.toggle_travelcard(cell.travelcard);
+        //MapUI.I.toggle_travelcard(cell.travelcard);
+        MapUI.I.display_travelcard(cell.travelcard);
     }
 
     // To determine if the unlock button can be pressed, including that the 
@@ -184,7 +184,7 @@ public class MapCellUI : MonoBehaviour {
             cell.restored_rune_gate = true;
         } else if (cell.has_travelcard) {
             if (cell.get_unlockable().requires_seeker) {
-                Controller.I.get_disc().adjust_resources_visibly(cell.get_travelcard_consequence());
+                Controller.I.get_disc().receive_travelcard_consequence();
             }
             else {
                 Controller.I.get_disc().change_var(cell.get_unlock_type(), cell.get_unlock_cost(), true);

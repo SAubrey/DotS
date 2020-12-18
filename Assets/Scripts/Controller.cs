@@ -45,7 +45,6 @@ public class Controller : MonoBehaviour {
         BattlePhaser.I.reset(from_save);
         
         // Order matters
-        TravelDeck.I.init(from_save);
         Map.I.init(from_save);
         TurnPhaser.I.reset();
 
@@ -68,7 +67,6 @@ public class Controller : MonoBehaviour {
             { martial.save() },
             { endura.save() },
             { city.save() },
-            { TravelDeck.I.save() },
         };
         
         foreach (var s in serializables) {
@@ -87,7 +85,6 @@ public class Controller : MonoBehaviour {
         martial.load(FileIO.load_game("martial"));
         endura.load(FileIO.load_game("endura"));
         city.load(FileIO.load_game("city"));
-        TravelDeck.I.load(FileIO.load_game(TRAVEL_DECK));
 
         init(true);
         CamSwitcher.I.flip_menu_map();
@@ -97,9 +94,9 @@ public class Controller : MonoBehaviour {
         foreach (Discipline disc in discs.Values) {
             disc.new_game();
         }
-        astra.pos = new Vector3(10.5f, 10.9f, 0);
-        martial.pos = new Vector3(10.1f, 10.1f, 0);
-        endura.pos = new Vector3(10.9f, 10.1f, 0);
+        astra.pos = new Vector3(12.5f, 12.9f, 0);
+        martial.pos = new Vector3(12.1f, 12.1f, 0);
+        endura.pos = new Vector3(12.9f, 12.1f, 0);
         city.new_game();
         MapUI.I.update_storeable_resource_UI(city);
         MapUI.I.update_storeable_resource_UI(astra);

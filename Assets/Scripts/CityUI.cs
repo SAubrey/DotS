@@ -460,14 +460,14 @@ public class CityUI : MonoBehaviour {
             Controller.I.martial.change_var(Storeable.UNITY, 10);
         }
         else if (ID == STOREHOUSE) {
-            Controller.I.city.capacity = 108;
+            Controller.I.city.capacity += 36;
             MapUI.update_capacity_text(city_capacityT, 
                 Controller.I.city.get_sum_storeable_resources(), 108);
             MapUI.update_capacity_text(MapUI.I.city_capacityT,
                 Controller.I.city.get_sum_storeable_resources(), 108);
         } 
         else if (ID == STOREHOUSE2) {
-            Controller.I.city.capacity = 144;
+            Controller.I.city.capacity += 36;
             MapUI.update_capacity_text(city_capacityT, 
                 Controller.I.city.get_sum_storeable_resources(), 144);
             MapUI.update_capacity_text(MapUI.I.city_capacityT,

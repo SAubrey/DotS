@@ -28,10 +28,6 @@ public class BattlePhaser : MonoBehaviour {
     public Sprite empty_sprite;
     public Color inactive_color;
     public Image biome_icon;
-    // Lookup by biome, tier
-    private Dictionary<int, Sprite> biome_sprites  = new Dictionary<int, Sprite>();
-    public Sprite plains1, forest1, ruins1, cliff1, cave1, titrum1;
-    public Sprite plains2, forest2, ruins2, cliff2, cave2, titrum2, mountain2, mire2;
     public bool placement_stage = true;
     public bool init_placement_stage = true;
     public bool range_stage = false;
@@ -67,19 +63,6 @@ public class BattlePhaser : MonoBehaviour {
         disc_sprites.Add(Discipline.ASTRA, astra_icon);
         disc_sprites.Add(Discipline.MARTIAL, martial_icon);
         disc_sprites.Add(Discipline.ENDURA, endura_icon);
-
-        biome_sprites.Add(Map.PLAINS_1, plains1);
-        biome_sprites.Add(Map.PLAINS_2, plains2);
-        biome_sprites.Add(Map.FOREST_1, forest1);
-        biome_sprites.Add(Map.RUINS_1, ruins1);
-        biome_sprites.Add(Map.RUINS_2, ruins2);
-        biome_sprites.Add(Map.CLIFF_1, cliff1);
-        biome_sprites.Add(Map.CLIFF_2, cliff2);
-        biome_sprites.Add(Map.CAVE_1, cave1);
-        biome_sprites.Add(Map.CAVE_2, cave2);
-        biome_sprites.Add(Map.TITRUM_1, titrum1);
-        biome_sprites.Add(Map.TITRUM_2, titrum2);
-        biome_sprites.Add(Map.MOUNTAIN_2, mountain2);
         
     }
 
@@ -157,7 +140,7 @@ public class BattlePhaser : MonoBehaviour {
                 }
             }
         }
-        biome_icon.sprite = biome_sprites[Map.I.tile_to_tileID[battle.cell.tile]];
+        biome_icon.sprite = Map.I.tiles[cell.ID][cell.tier].sprite;
         BatLoader.I.load_bat(active_bat);
         update_participant_UI();
     }
@@ -334,8 +317,7 @@ public class BattlePhaser : MonoBehaviour {
 
         if (player_won) {
             Debug.Log("Player won the battle.");
-            battle.leader.adjust_resources_visibly(battle.cell.get_travelcard_consequence());
-            battle.cell.complete_travelcard();
+            battle.leader.receive_travelcard_consequence();
             battle.end();
         } else if (enemy_won) {
             if (!Controller.I.get_disc().dead) {

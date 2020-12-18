@@ -19,6 +19,7 @@ public class Slot : EventTrigger {
     private static readonly Color healthbar_fill_color = new Color(.8f, .1f, .1f, .45f);
     private static readonly Color staminabar_fill_color = new Color(.1f, .8f, .1f, .45f);
     private static readonly Color statbar_bg_color = new Color(.4f, .4f, .4f, .3f);
+    private static readonly Color equipment_text_color = new Color(1f, .67f, .32f, 1f);
     public Slider healthbar, staminabar;
     public Canvas info_canv;
     public Image healthbar_bg, healthbar_fill;
@@ -156,6 +157,7 @@ public class Slot : EventTrigger {
         attfgI.color = Color.white;
         deffgI.color = Color.white;
         set_color();
+        show_equipment_boosts();
         set_nameT(unit.get_name());
         update_unit_img(group.get_dir());
         set_active_UI(true);
@@ -355,6 +357,19 @@ public class Slot : EventTrigger {
         img.color = get_unit().is_playerunit ? 
             Statics.disc_colors[get_punit().owner_ID] : Color.white;
         show_selection(Selector.I.selected_slot == this);
+    }
+
+    private void show_equipment_boosts() {
+        if (unit.is_enemy)
+            return;
+
+        EquipmentInventory ei = Controller.I.get_bat_from_ID(get_punit().owner_ID).disc.equipment_inventory;
+        hpT.color = ei.get_stat_boost_amount(unit.get_ID(), Unit.HEALTH_BOOST) > 0 ? 
+            equipment_text_color : Color.white;
+        defT.color = ei.get_stat_boost_amount(unit.get_ID(), Unit.DEFENSE_BOOST) > 0 ? 
+            equipment_text_color : Color.white;
+        attT.color = ei.get_stat_boost_amount(unit.get_ID(), Unit.ATTACK_BOOST) > 0 ? 
+            equipment_text_color : Color.white;
     }
 
     public void show_dead() {

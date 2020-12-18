@@ -36,6 +36,9 @@ public class CamSwitcher : MonoBehaviour {
         if (Input.GetKeyDown(KeyCode.Escape)) {
             toggle_paused();
         }
+        if (Input.GetKeyDown(KeyCode.C)) 
+            flip_menu_map();
+        
     }
 
     void cycle() {
@@ -98,8 +101,9 @@ public class CamSwitcher : MonoBehaviour {
             map_cam.enabled = active;
             mapUI_canvas.SetActive(active);
             if (active) {
-                // Set the camera in the middle of the map.
-                map_cam.transform.SetPositionAndRotation(new Vector3(10, 10, -14), Quaternion.identity);
+                // Set the camera on the active player.
+                Vector3 p = new Vector3(Controller.I.get_disc().pos.x, Controller.I.get_disc().pos.y, -14);
+                map_cam.transform.SetPositionAndRotation(p, Quaternion.identity);
                 MapUI.I.load_battalion_count(Controller.I.get_disc().bat);
                 set_active(BATTLE, false);
                 set_active(MENU, false);
@@ -109,7 +113,7 @@ public class CamSwitcher : MonoBehaviour {
             battle_cam.enabled = active;
             battleUI_canvas.SetActive(active);
             if (active) {
-                BackgroundLoader.I.load(Map.I.get_current_cell().biome_ID);
+                BackgroundLoader.I.load(Map.I.get_current_cell().ID);
                 set_active(MAP, false);
                 set_active(MENU, false);
             } else {

@@ -14,7 +14,8 @@ public class Enemy : Unit {
         MUATEM = 21, DRAK = 22, ZERRKU = 23,
         GOKIN = 24, TAJAQAR = 25, TAJAERO = 26,
         TERRA_QUAL = 27, DUALE = 28,
-        MELD_WARRIOR = 29, MELD_SPEARMAN = 30;
+        MELD_WARRIOR = 29, MELD_SPEARMAN = 30,
+        T1_GUARDIAN = 31, T2_GUARDIAN = 32;
 
     public int xp;
     public bool xp_taken = false;
@@ -265,5 +266,17 @@ public class Meld_Warrior : Enemy {
 
 public class Meld_Spearman : Enemy {
     public Meld_Spearman() : base("Meld Spearman", MELD_SPEARMAN, 1, 0, 1, 2, MELEE, CHARGE) {
+    }
+}
+
+public class t1_Guardian : Enemy {
+    public t1_Guardian() : base("Guardian", T1_GUARDIAN, 5, 5, 20, 10, MELEE, TERROR_1) {
+
+    }
+}
+
+public class t2_Guardian : Enemy {
+    public t2_Guardian() : base("Deep Guardian", T2_GUARDIAN, 7, 5, 40, 20, RANGE, TERROR_1) {
+
     }
 }

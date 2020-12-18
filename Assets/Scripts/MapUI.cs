@@ -42,7 +42,7 @@ public class MapUI : MonoBehaviour {
     public TextMeshProUGUI travelcard_descriptionT, travelcard_typeT, 
         travelcard_subtextT, travelcard_consequenceT;
     public Image travel_cardI;
-    public Button travelcard_continueB, travelcard_rollB;
+    public Button travelcard_continueB, travelcard_rollB, travelcard_exitB;
 
     public GameObject cell_UI_prefab, dropped_XP_prefab;
     public MapCellUI open_cell_UI_script;
@@ -321,13 +321,16 @@ public class MapUI : MonoBehaviour {
     }
 
     public void display_travelcard(TravelCard tc) {
-        if (tc == null)
+        if (tc == null || travel_cardP.activeSelf)
             return;
         bool active_disc_at_selected_cell = 
             Controller.I.get_disc().cell == open_cell_UI_script.cell;
         bool interactable = !tc.complete && active_disc_at_selected_cell;
         set_active_travelcard_continueB(interactable);
-        //travel_cardI.sprite = tc.sprite;
+        set_active_travelcard_exitB(!interactable);
+        set_active_next_stageB(false);
+
+        tc.on_open(TravelCardManager.I);
 
         // Update text
         travelcard_typeT.text = tc.type_text;
@@ -342,6 +345,7 @@ public class MapUI : MonoBehaviour {
         set_active_travelcard_continueB(false);
         set_active_travelcard_rollB(false);
         travel_cardP.SetActive(false);
+        set_active_next_stageB(true);
     }
 
     public void toggle_travelcard(TravelCard tc) {
@@ -356,6 +360,10 @@ public class MapUI : MonoBehaviour {
         travelcard_rollB.interactable = state;
         TextMeshProUGUI t = travelcard_rollB.GetComponentInChildren<TextMeshProUGUI>();
         t.text = state ? "Roll" : "";
+    }
+
+    public void set_active_travelcard_exitB(bool state) {
+        travelcard_exitB.interactable = state;
     }
     
     public void set_active_travelcard_continueB(bool state) {
@@ -374,5 +382,9 @@ public class MapUI : MonoBehaviour {
     public void toggle_units_panel() {
         unitsP_active = !unitsP_active;
         unitsP.SetActive(unitsP_active);
+    }
+
+    public void set_active_next_stageB(bool state) {
+        next_stageB.interactable = state;
     }
 }

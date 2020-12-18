@@ -319,7 +319,7 @@ public class Attack {
     public void post_player_attack(int state) {
         int xp = enemy.take_xp_from_death();
         if (state == Unit.DEAD && xp > 0) {
-            Controller.I.get_disc().change_var(Storeable.EXPERIENCE, xp, true);
+            Controller.I.get_disc().add_xp_in_battle(xp, enemy);
         }
     }
 

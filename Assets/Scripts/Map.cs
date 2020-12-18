@@ -8,27 +8,6 @@ public class Map : MonoBehaviour, ISaveLoad {
     public static Map I { get; private set; }
 
     // Tile IDs
-    public const int PLAINS_1 = 0;
-    public const int FOREST_1 = 1;
-    public const int RUINS_1 = 2;
-    public const int CLIFF_1 = 3;
-    public const int CAVE_1 = 4;
-    public const int STAR_1 = 5;
-    public const int TITRUM_1 = 6;
-    public const int MIRE = 7;
-    public const int SETTLEMENT = 8;
-    public const int RUNE_GATE = 9;
-    public const int CITY = 10;
-
-    public const int PLAINS_2 = 11;
-    public const int FOREST_2 = 12;
-    public const int RUINS_2 = 13;
-    public const int CLIFF_2 = 14;
-    public const int CAVE_2 = 15;
-    public const int STAR_2 = 16;
-    public const int TITRUM_2 = 17;
-    public const int LUSH_LAND_2 = 18;
-    public const int MOUNTAIN_2 = 19;
 
     public Tilemap tm;
     public Tile plains_1, plains_2;
@@ -41,6 +20,7 @@ public class Map : MonoBehaviour, ISaveLoad {
     public Tile mire;
     public Tile lush_land_2;
     public Tile mountain_2;
+    public Tile impasse;
     
     public Tile settlement;
     public Tile rune_gate;
@@ -48,48 +28,50 @@ public class Map : MonoBehaviour, ISaveLoad {
     public Tile city, shadow;
     public CityCell city_cell;
 
-    public Dictionary<int, Tile> tiles = new Dictionary<int, Tile>();
+    //public Dictionary<int, Tile> tiles = new Dictionary<int, Tile>();
+    public Dictionary<int, List<Tile>> tiles = new Dictionary<int, List<Tile>>();
     public Dictionary<Tile, int> tile_to_tileID = new Dictionary<Tile, int>();
 
+    // Filled and then removed from as cells are drawn.
+    public Dictionary<int, List<int>> bags = new Dictionary<int, List<int>>();
     private static readonly Dictionary<int, Dictionary<int, int>> bag_counters
      = new Dictionary<int, Dictionary<int, int>>();
-    public Dictionary<int, List<int>> bags = new Dictionary<int, List<int>>();
     private readonly Dictionary<int, int> t1_bag_count = new Dictionary<int, int>() {
-        {PLAINS_1, 6},
-        {FOREST_1, 6},
-        {RUINS_1, 4},
-        {CLIFF_1, 1},
-        {CAVE_1, 1},
-        {STAR_1, 4},
-        {TITRUM_1, 2},
+        {MapCell.PLAINS_ID, 6},
+        {MapCell.FOREST_ID, 6},
+        {MapCell.RUINS_ID, 4},
+        {MapCell.CLIFF_ID, 1},
+        {MapCell.CAVE_ID, 1},
+        {MapCell.STAR_ID, 4},
+        {MapCell.TITRUM_ID, 2},
     };
-    private readonly Dictionary<int, int> t2_bag_count = new Dictionary<int, int>() { // 96
-        {PLAINS_2, 20},
-        {FOREST_2, 20},
-        {RUINS_2, 12},
-        {CLIFF_2, 2},
-        {CAVE_2, 6},
-        {STAR_2, 7},
-        {TITRUM_2, 8},
-        //{MIRE, 0}, // 10
-        {SETTLEMENT, 2},
-        {LUSH_LAND_2, 5},
-        {MOUNTAIN_2, 14},
-        {RUNE_GATE, 2},
+    private readonly Dictionary<int, int> t2_bag_count = new Dictionary<int, int>() { // 96 + 4 * 4
+        {MapCell.PLAINS_ID, 42}, //32
+        {MapCell.FOREST_ID, 22},
+        {MapCell.RUINS_ID, 12},
+        {MapCell.CLIFF_ID, 2},
+        {MapCell.CAVE_ID, 6},
+        {MapCell.STAR_ID, 7},
+        {MapCell.TITRUM_ID, 8},
+        //{MIRE_ID, 0}, // 10
+        {MapCell.SETTLEMENT_ID, 2},
+        {MapCell.LUSH_LAND_ID, 5},
+        {MapCell.MOUNTAIN_ID, 14},
+        {MapCell.RUNE_GATE_ID, 2},
     };  
-    private readonly Dictionary<int, int> t3_bag_count = new Dictionary<int, int>() { // 212
-        {PLAINS_2, 50},
-        {FOREST_2, 50},
-        {RUINS_2, 24},
-        {CLIFF_2, 4},
-        {CAVE_2, 12},
-        {STAR_2, 14},
-        {TITRUM_2, 16},
-        //{MIRE, 0},
-        {SETTLEMENT, 4},
-        {LUSH_LAND_2, 10},
-        {MOUNTAIN_2, 28},
-        {RUNE_GATE, 4},
+    private readonly Dictionary<int, int> t3_bag_count = new Dictionary<int, int>() { // 212 + 8 x 4
+        {MapCell.PLAINS_ID, 82},
+        {MapCell.FOREST_ID, 54},
+        {MapCell.RUINS_ID, 24},
+        {MapCell.CLIFF_ID, 4},
+        {MapCell.CAVE_ID, 12},
+        {MapCell.STAR_ID, 14},
+        {MapCell.TITRUM_ID, 16},
+        //{MIRE_ID, 0},
+        {MapCell.SETTLEMENT_ID, 4},
+        {MapCell.LUSH_LAND_ID, 10},
+        {MapCell.MOUNTAIN_ID, 28},
+        {MapCell.RUNE_GATE_ID, 4},
     };
     
     public Dictionary<Pos, MapCell> map = new Dictionary<Pos, MapCell>();
@@ -117,35 +99,27 @@ public class Map : MonoBehaviour, ISaveLoad {
         bag_counters.Add(2, t2_bag_count);
         bag_counters.Add(3, t3_bag_count);
         // Tier 1
-        tiles.Add(CITY, city);
-        tiles.Add(PLAINS_1, plains_1);
-        tiles.Add(FOREST_1, forest_1);
-        tiles.Add(RUINS_1, ruins_1);
-        tiles.Add(CLIFF_1, cliff_1);
-        tiles.Add(CAVE_1, cave_1);
-        tiles.Add(STAR_1, star_1);
-        tiles.Add(TITRUM_1, titrum_1);
-        tiles.Add(SETTLEMENT, settlement);
-        // Tier 2
-        tiles.Add(RUNE_GATE, rune_gate);
-        //tiles.Add(MIRE, mire);
-        tiles.Add(PLAINS_2, plains_2);
-        tiles.Add(FOREST_2, forest_2);
-        tiles.Add(RUINS_2, ruins_2);
-        tiles.Add(CLIFF_2, cliff_2);
-        tiles.Add(CAVE_2, cave_2);
-        tiles.Add(STAR_2, star_2);
-        tiles.Add(TITRUM_2, titrum_2);
-        tiles.Add(MOUNTAIN_2, mountain_2);
-        tiles.Add(LUSH_LAND_2, lush_land_2);
+        tiles.Add(MapCell.CITY_ID, new List<Tile> {city, city, city});
+        tiles.Add(MapCell.PLAINS_ID, new List<Tile> {plains_1, plains_2, plains_2});
+        tiles.Add(MapCell.FOREST_ID, new List<Tile> {forest_1, forest_2, forest_2});
+        tiles.Add(MapCell.RUINS_ID, new List<Tile> {ruins_1, ruins_2, ruins_2});
+        tiles.Add(MapCell.CLIFF_ID, new List<Tile> {cliff_1, cliff_2, cliff_2});
+        tiles.Add(MapCell.CAVE_ID, new List<Tile> {cave_1, cave_2, cave_2});
+        tiles.Add(MapCell.STAR_ID, new List<Tile> {star_1, star_2, star_2});
+        tiles.Add(MapCell.TITRUM_ID, new List<Tile> {titrum_1, titrum_2, titrum_2});
+        tiles.Add(MapCell.SETTLEMENT_ID, new List<Tile> {settlement, settlement, settlement});
+        tiles.Add(MapCell.RUNE_GATE_ID, new List<Tile> {rune_gate, rune_gate, rune_gate});
+        tiles.Add(MapCell.MOUNTAIN_ID, new List<Tile> {mountain_2, mountain_2, mountain_2});
+        tiles.Add(MapCell.LUSH_LAND_ID, new List<Tile> {lush_land_2, lush_land_2, lush_land_2});
+        tiles.Add(MapCell.GUARDIAN_PASS_ID, new List<Tile> {mountain_2, mountain_2, mountain_2});
 
         create_city();
 
-        // Populate inverse dictionary.
+        /*// Populate inverse dictionary.
         foreach (KeyValuePair<int, Tile> pair in tiles) {
             if (!tile_to_tileID.ContainsKey(pair.Value))
                 tile_to_tileID.Add(pair.Value, pair.Key);
-        }
+        }*/
     }
 
     public void init(bool from_save) {
@@ -170,8 +144,18 @@ public class Map : MonoBehaviour, ISaveLoad {
         generate_t3(tm);
     }
 
+    private void populate_decks() {
+        for (int tier = 1; tier <= 3; tier++) { // For each tier
+            foreach (int cell_ID in bag_counters[tier].Keys) {
+                for (int i = 0; i < bag_counters[tier][cell_ID]; i++) {
+                    bags[tier].Add(cell_ID);
+                }
+            }
+        }
+    }
+
     private void create_city() {
-        city_cell = (CityCell)MapCell.create_cell(1, CITY, city, new Pos(10, 10), MapCell.CITY);
+        city_cell = (CityCell)MapCell.create_cell(MapCell.CITY_ID, 1, city, new Pos(12, 12));
         city_cell.discover();
         map.Add(city_cell.pos, city_cell);
     }
@@ -182,6 +166,7 @@ public class Map : MonoBehaviour, ISaveLoad {
         bags[3].Clear();
         map.Clear();
         MapUI.I.close_cell_UI();
+        MapUI.I.close_travelcardP();
     }
 
     public bool can_move(Vector3 destination) {
@@ -198,7 +183,7 @@ public class Map : MonoBehaviour, ISaveLoad {
         Controller.I.get_disc().has_scouted_in_turn = true;
         
         // Draw card in advance to reveal enemy count if applicable.
-        cell.travelcard = TravelDeck.I.draw_card(cell.tier, cell.biome_ID);
+        cell.travelcard = TravelDeck.I.draw_card(cell.tier, cell.ID);
         if (!cell.has_travelcard)
             return;
         if (cell.travelcard.enemy_count > 0) {
@@ -228,39 +213,33 @@ public class Map : MonoBehaviour, ISaveLoad {
     }
 
     // Randomly pick tiles from grab bags. 
-    private Tile grab_tile(int tier) {
+    private int grab_cell(int tier) {
         if (bags[tier].Count <= 0)
-            return null;
+            throw new System.Exception("Out of cells to draw for this tier.");
 
         int index = rand.Next(bags[tier].Count);
-        int tile_ID = bags[tier][index];
+        int cell_ID = bags[tier][index];
 
         bags[tier].RemoveAt(index);
-        return tiles[tile_ID];
+        return cell_ID;
     }
 
-    private void populate_decks() {
-        for (int tier = 1; tier <= 3; tier++) { // For each tier
-            foreach (int tile_type_ID in bag_counters[tier].Keys) {
-                for (int i = 0; i < bag_counters[tier][tile_type_ID]; i++) {
-                    bags[tier].Add(tile_type_ID);
-                }
-            }
-        }
-    }
 
-    public void create_cell(int tier, int x, int y) {
+    public void create_cell(int tier, int x, int y, int ID=-1) {
         Pos pos = new Pos(x, y);
-        Tile tile = grab_tile(tier);
+        if (ID == -1) {
+            ID = grab_cell(tier);
+        }
+        Tile tile = tiles[ID][tier - 1];
         MapCell cell = MapCell.create_cell(
-            tier, tile_to_tileID[tile], tile, pos);
+            ID, tier, tile, pos);
+        
         map.Add(pos, cell);
         place_tile(shadow, pos.x, pos.y);
         tile.color = Color.white;
 
         if (cell.creates_travelcard) {
-            cell.travelcard = TravelDeck.I.draw_card(cell.tier, cell.biome_ID);
-            Debug.Log(cell.travelcard);
+            cell.travelcard = TravelDeck.I.draw_card(cell.tier, cell.ID);
         }
         get_cell(pos.to_vec3).discover(); // debug
     }
@@ -304,7 +283,7 @@ public class Map : MonoBehaviour, ISaveLoad {
         foreach (SMapCell mcs in data.cells) {
             Pos pos = new Pos(mcs.x, mcs.y);
             MapCell cell = MapCell.create_cell(
-                mcs.tier, mcs.tile_type, tiles[mcs.tile_type], pos);
+                mcs.ID, mcs.tier, tiles[mcs.ID][mcs.tier], pos);
             cell.minerals = mcs.minerals;
             cell.star_crystals = mcs.star_crystals;
 
@@ -349,65 +328,72 @@ public class Map : MonoBehaviour, ISaveLoad {
         map[pos].restored_rune_gate = true;
     }
 
+
     void generate_t1(Tilemap tm) {
-        for (int x = 8; x < 13; x++) {
-            for (int y = 8; y < 13; y++) {
-                if (x == 10 && y == 10) {
+        for (int x = 10; x < 15; x++) {
+            for (int y = 10; y < 15; y++) {
+                if (x == 12 && y == 12) {
                     place_tile(city, x, y);
                 } else {
                     create_cell(1, x, y);
                 }
             } 
         }
+        create_cell(1, 12, 9, MapCell.GUARDIAN_PASS_ID);
+        create_cell(1, 12, 15, MapCell.GUARDIAN_PASS_ID);
     }
 
     void generate_t2(Tilemap tm) {
         // t2 origin is 5, 5
         // Horizontal bars
-        for (int x = 5; x < 16; x++) {
-            for (int y = 5; y < 8; y++) {
+        for (int x = 6; x < 19; x++) {
+            for (int y = 6; y < 9; y++) {
                 create_cell(2, x, y);
-                create_cell(2, x, y + 8);
+                create_cell(2, x, y + 10);
             }
         }
 
         // Vertical bars
-        for (int x = 5; x < 8; x++) {
-            for (int y = 8; y < 13; y++) {
+        for (int x = 6; x < 9; x++) {
+            for (int y = 9; y < 16; y++) {
                 create_cell(2, x, y);
-                create_cell(2, x + 8, y);
+                create_cell(2, x + 10, y);
             }
         }
+        create_cell(2, 5, 12, MapCell.GUARDIAN_PASS_ID);
+        create_cell(2, 19, 12, MapCell.GUARDIAN_PASS_ID);
+        create_cell(2, 12, 5, MapCell.GUARDIAN_PASS_ID);
+        create_cell(2, 12, 19, MapCell.GUARDIAN_PASS_ID);
     }
 
     void generate_t3(Tilemap tm) {
         // (9 wide 3 deep over 2 wide band)
         // Horizontal protrusion
-        for (int x = 6; x < 15; x++) {
+        for (int x = 8; x < 17; x++) {
             for (int y = 0; y < 3; y++) {
                 create_cell(3, x, y);
-                create_cell(3, x, y + 18);
+                create_cell(3, x, y + 22);
             }
         }
         // Vertical protrusion
         for (int x = 0; x < 3; x++) {
-            for (int y = 6; y < 15; y++) {
+            for (int y = 8; y < 17; y++) {
                 create_cell(3, x, y);
-                create_cell(3, x + 18, y);
+                create_cell(3, x + 22, y);
             }
         }
         // Horizontal bar
-        for (int x = 3; x < 18; x++) {
+        for (int x = 3; x < 22; x++) {
             for (int y = 3; y < 5; y++) {
                 create_cell(3, x, y);
-                create_cell(3, x, y + 13);
+                create_cell(3, x, y + 17);
             }
         }
         // Vertical bar
         for (int x = 3; x < 5; x++) {
-            for (int y = 5; y < 16; y++) {
+            for (int y = 5; y < 20; y++) {
                 create_cell(3, x, y);
-                create_cell(3, x + 13, y);
+                create_cell(3, x + 17, y);
             }
         }
     }

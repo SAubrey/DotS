@@ -30,32 +30,32 @@ public class TravelCardManager : MonoBehaviour {
     // Activated when 'Continue' is pressed on travel card or 'Yes' on warning to enter.
     public void continue_travel_card(bool show_warning=true) {
         MapCell cell = MapUI.I.last_open_cell;
-        // Preempt entrance with warning.
-        // cell does not have enemies at this point
+        // Preempt entrance with warning?
         if (show_warning && 
-            ((cell.biome_ID == MapCell.CAVE_ID || 
-            cell.biome_ID == MapCell.RUINS_ID) && 
+            ((cell.ID == MapCell.CAVE_ID || 
+            cell.ID == MapCell.RUINS_ID) && 
             cell.travelcard.rules.enter_combat)) {
             MapUI.I.set_active_ask_to_enterP(true);
-        } else {
-            handle_travelcard(cell);
-        }
+            return;
+        } 
+        activate_travelcard(cell);
     }
 
     // Called by the continue button of the travel card. 
-    public void handle_travelcard(MapCell cell) {
-        Debug.Log("handling travelcard");
+    public void activate_travelcard(MapCell cell) {
         if (cell == null)
             return;
         if (!cell.creates_travelcard || cell.travelcard_complete)
             return;
-            
+        if (cell.travelcard == null) {
+            throw new System.ArgumentException("Cell must have a travelcard");
+        }
+
+        cell.travelcard.on_continue(TravelCardManager.I);
         if (cell.travelcard.rules.enter_combat) { // If a combat travel card was pulled.
-        Debug.Log("beginning battle");
             BattlePhaser.I.begin_new_battle(cell);
-        } else if (cell.travelcard.rules.affect_resources) {
-            Controller.I.get_disc().adjust_resources_visibly(cell.get_travelcard_consequence());
-            cell.complete_travelcard();
+        } else if (cell.travelcard.rules.affect_resources && !cell.locked) {
+            Controller.I.get_disc().receive_travelcard_consequence();
         } 
     }
 

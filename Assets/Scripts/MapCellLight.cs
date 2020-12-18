@@ -13,8 +13,8 @@ public class MapCellLight : MonoBehaviour {
         light_flicker.light2d = cell_light;
         light_glow.light2d = cell_light;
         
-        if (MapUI.I.cell_light_colors.ContainsKey(cell.biome_ID))
-            set_color(MapUI.I.cell_light_colors[cell.biome_ID]);
+        if (MapUI.I.cell_light_colors.ContainsKey(cell.ID))
+            set_color(MapUI.I.cell_light_colors[cell.ID]);
         set_glow(cell.glows);
         set_flicker(cell.flickers);
     }

@@ -36,7 +36,7 @@ public class MapData : GameData {
 
         foreach (MapCell mc in map.map.Values) {
             SMapCell mcs = 
-                new SMapCell(mc.tile_type_ID,
+                new SMapCell(mc.ID,
                         mc.pos.x, mc.pos.y, 
                         mc.tier, mc.discovered,
                         mc.minerals, mc.star_crystals);
@@ -47,15 +47,15 @@ public class MapData : GameData {
 
 [System.Serializable]
 public struct SMapCell {
+    public int ID;
     public int x, y;
     public int tier;
     public bool discovered;
     public int minerals, star_crystals;
-    public int tile_type;
-    public SMapCell(int tile_type, int x, int y, 
+    public SMapCell(int ID, int x, int y, 
             int tier, bool discovered,
             int minerals, int star_crystals) {
-        this.tile_type = tile_type;
+        this.ID = ID;
         this.x = x;
         this.y = y;
         this.tier = tier;
@@ -127,23 +127,5 @@ public class CityData : GameData {
         for (int i = 0; i < cui.upgrades.Count; i++) {
             purchases[i] = cui.upgrades[i].purchased;
         }   
-    }
-}
-
-[System.Serializable]
-public class TravelDeckData : GameData {
-    public List<int> t1_deck = new List<int>();
-    public List<int> t2_deck = new List<int>();
-    public List<int> t3_deck = new List<int>();
-    public TravelDeckData(TravelDeck td, string name) {
-        this.name = name;
-        foreach (int card_type in td.decks[1]) 
-            t1_deck.Add(card_type);
-        foreach (int card_type in td.decks[2]) 
-            t2_deck.Add(card_type);
-        foreach (int card_type in td.decks[3]) 
-            t3_deck.Add(card_type);
-        
-        
     }
 }

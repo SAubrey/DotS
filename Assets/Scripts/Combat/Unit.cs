@@ -126,6 +126,7 @@ public class Unit {
     public virtual int get_post_dmg_state(int dmg_after_def) { return 0; }
     public virtual int get_attack_dmg() { return attack_dmg; }
     public virtual int get_defense() { return defense; }
+    public virtual int get_health() { return health; }
     public virtual bool set_attribute_active(bool state) {
         attribute_active = state && can_activate_attribute();
         if (is_placed) {
@@ -269,7 +270,7 @@ public class Unit {
         return dx <= range && dy <= range;
     }
 
-    public int get_boosted_max_health( ) {
+    public virtual int get_boosted_max_health( ) {
         return max_health + get_bonus_health() + get_stat_boost(HEALTH_BOOST);
     }
     
@@ -285,6 +286,7 @@ public class Unit {
         if (is_actively_grouping) {
             sum_dmg += ((1 + attack_dmg) * (count_grouped_units() - 1));
         }
+        
         return sum_dmg;
     }
     

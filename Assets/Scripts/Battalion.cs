@@ -3,8 +3,6 @@ using System.Collections;
 using UnityEngine;
 
 public class Battalion {
-
-    public Controller c;
     public IDictionary<int, List<PlayerUnit>> units = 
         new Dictionary<int, List<PlayerUnit>>() { };
     private List<PlayerUnit> dead_units = new List<PlayerUnit>();
@@ -15,8 +13,7 @@ public class Battalion {
     private Discipline _disc;
     public Discipline disc { get => _disc; private set => _disc = value; }
     
-    public Battalion(Controller c, Discipline disc) {
-        this.c = c;
+    public Battalion(Discipline disc) {
         this.disc = disc;
 
         // Initialize units dictionary.
@@ -25,7 +22,7 @@ public class Battalion {
 
         add_default_troops();
         if (disc.ID == 0) {
-            add_units(PlayerUnit.SEEKER, 1);
+            add_units(PlayerUnit.SEEKER, 1, true);
         }
         // Units for testing
         //add_units(PlayerUnit.MENDER, 1);
@@ -40,11 +37,17 @@ public class Battalion {
         add_units(PlayerUnit.MINER, 1);
     }
 
-    public void add_units(int type, int count) {
+    public void add_units(int type, int count, bool show=false) {
         for (int i = 0; i < count; i++) {
             if (units.ContainsKey(type)) {
                 units[type].Add(PlayerUnit.create_punit(type, disc.ID));
             }
+        }
+        if (disc.active) {
+            disc.trigger_unit_count_change();
+        }
+        if (show) {
+            disc.show_adjustment(PlayerUnit.create_punit(type, -1).get_name(), count);
         }
     }
 
@@ -59,12 +62,13 @@ public class Battalion {
         if (spawned_unit_types.Count <= 0)
             return; // No more units to remove.
 
-        int roll = Random.Range(0, spawned_unit_types.Count - 1);
+        int roll = UnityEngine.Random.Range(0, spawned_unit_types.Count - 1);
         int removed_unit_type_ID = (int)spawned_unit_types[roll];
         
         string s = units[removed_unit_type_ID][0].get_name() + " " + message;
         units[removed_unit_type_ID].RemoveAt(0);
-        disc.create_rising_info(s, -1);
+        disc.trigger_unit_count_change();
+        disc.show_adjustment(s, -1);
     }
 
     public void reset_all_stage_actions() {

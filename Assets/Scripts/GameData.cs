@@ -87,13 +87,13 @@ public class DisciplineData : GameData {
 public struct SStoreableResources {
     public int light, unity, star_crystals, minerals, arelics, erelics, mrelics;
     public SStoreableResources(Storeable s) {
-        light = s.light;
-        unity = s.unity;
-        star_crystals = s.star_crystals;
-        minerals = s.minerals;
-        arelics = s.arelics;
-        erelics = s.erelics;
-        mrelics = s.mrelics;
+        light = s.get_res(Storeable.LIGHT);
+        unity = s.get_res(Storeable.UNITY);
+        star_crystals = s.get_res(Storeable.STAR_CRYSTALS);
+        minerals = s.get_res(Storeable.MINERALS);
+        arelics = s.get_res(Storeable.ARELICS);
+        erelics = s.get_res(Storeable.ERELICS);
+        mrelics = s.get_res(Storeable.MRELICS);
     }
 }
 

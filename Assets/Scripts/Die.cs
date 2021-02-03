@@ -7,7 +7,6 @@ using TMPro;
 
 public class Die : MonoBehaviour {
     public TextMeshProUGUI read_outT;
-    private Random rand;
     private bool animating = false;
     private int anim_sides = 0;
     private float num_side_changes = 10;
@@ -60,7 +59,6 @@ public class Die : MonoBehaviour {
 
     private void animate_roll(int sides) {
         anim_sides = sides;
-        Debug.Log("Animated sides: " + anim_sides);
         animating = true;
     }
 

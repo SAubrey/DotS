@@ -6,6 +6,7 @@ TagManager:
   tags:
   - Cell Window
   - Group
+  - MapWindow
   layers:
   - Default
   - TransparentFX

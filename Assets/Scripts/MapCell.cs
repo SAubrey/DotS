@@ -105,6 +105,7 @@ public class MapCell {
     public bool locked = false;
     public bool glows, flickers = false;
     private List<Enemy> enemies = new List<Enemy>();
+    public GameObject fog;
     // Travelcards cannot be set to null.  
     private TravelCard _travelcard;
     public TravelCard travelcard { 
@@ -113,6 +114,7 @@ public class MapCell {
             if (value == null)
                 return;
             _travelcard = value;
+            locked = requires_unlock;
         }
      }
 
@@ -125,18 +127,15 @@ public class MapCell {
     }
 
     public void enter() {
+        if (creates_travelcard && !travelcard_complete) {
+            MapUI.I.display_travelcard(travelcard);
+        }
         if (!entered) {
             entered = true;
-            if (creates_travelcard && !travelcard_complete) {
-                MapUI.I.display_travelcard(travelcard);
-            }
             discover();
         } 
-        //else if (should_activate_travelcard_without_showing) {
-            //TravelCardManager.I.activate_travelcard(this);
-        //}
         if (dropped_XP > 0) {
-            pickup_XP(Controller.I.get_disc());
+            pickup_XP(TurnPhaser.I.active_disc);
         }
     }
     
@@ -146,6 +145,11 @@ public class MapCell {
         discovered = true;
         Map.I.tm.SetTile(new Vector3Int((int)pos.x, (int)pos.y, 0), tile);
         MapUI.I.place_cell_light(this);
+        //MapUI.I.remove_fog(this);
+        GameObject.Destroy(fog);
+        if (ID == STAR_ID) {
+            MapUI.I.place_sparkle_ps(this);
+        }
     }
 
     public void post_battle() {
@@ -197,7 +201,7 @@ public class MapCell {
     }
 
     public void assign_group_leader() {
-        battle = new Battle(Map.I, this, Controller.I.get_disc(), true);
+        battle = new Battle(Map.I, this, TurnPhaser.I.active_disc, true);
         begin_color_oscillation();
     }
 
@@ -231,7 +235,7 @@ public class MapCell {
     // Can currently only group battle if the player has retreated/scouted the tile
     // and a group has not already been formed on this cell.
     public bool can_setup_group_battle() {
-        return has_enemies && Map.check_adjacent(Controller.I.get_disc().pos, pos.to_vec3);
+        return has_enemies && Map.check_adjacent(TurnPhaser.I.active_disc.pos, pos.to_vec3);
     }
 
     public void add_enemy(Enemy e) {
@@ -252,7 +256,7 @@ public class MapCell {
         get {
             if (has_rune_gate && !restored_rune_gate) {
                 return true;
-            } else if (travelcard != null) {
+            } else if (has_travelcard) {
                 if (travelcard.unlockable != null)
                     return true;
             }
@@ -311,7 +315,9 @@ public class MapCell {
     }
 
     public int pickup_XP(Discipline d) {
-        d.change_var(Storeable.EXPERIENCE, dropped_XP, true);
+        //d.change_var(Storeable.EXPERIENCE, dropped_XP, true);
+        d.resources[Discipline.EXPERIENCE] += dropped_XP;
+        d.show_adjustment("Experience", dropped_XP);
         dropped_XP = 0;
         GameObject.Destroy(dropped_XP_obj);
         return dropped_XP;

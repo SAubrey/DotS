@@ -102,9 +102,8 @@ public class CamSwitcher : MonoBehaviour {
             mapUI_canvas.SetActive(active);
             if (active) {
                 // Set the camera on the active player.
-                Vector3 p = new Vector3(Controller.I.get_disc().pos.x, Controller.I.get_disc().pos.y, -14);
+                Vector3 p = new Vector3(TurnPhaser.I.active_disc.pos.x, TurnPhaser.I.active_disc.pos.y, -14);
                 map_cam.transform.SetPositionAndRotation(p, Quaternion.identity);
-                MapUI.I.load_battalion_count(Controller.I.get_disc().bat);
                 set_active(BATTLE, false);
                 set_active(MENU, false);
             }
@@ -124,7 +123,8 @@ public class CamSwitcher : MonoBehaviour {
         if (active) { // If not turning this screen off.
             previous_cam = current_cam;
             current_cam = screen;
-            sound_manager.background_SFX_player.activate_screen(screen);
+            if (previous_cam != current_cam)
+                sound_manager.background_SFX_player.activate_screen(screen);
         }
     }
 }

@@ -1,11 +1,14 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System;
 
 public class Discipline : Storeable, ISaveLoad {
+    public const string EXPERIENCE = "experience";
     public const int ASTRA = 0, ENDURA = 1, MARTIAL = 2;
     public GameObject piece;
-    public Battalion bat;
+    public Battalion bat { get; private set; }
+    public bool active = false;
     public bool restart_battle_from_drawn_card = false;
     private int mine_qty_multiplier = 3;
     public int mine_qty {
@@ -34,28 +37,33 @@ public class Discipline : Storeable, ISaveLoad {
             piece.transform.position = new Vector3(value.x, value.y, 0);
         }
     }
-    public EquipmentInventory equipment_inventory = new EquipmentInventory();
+    
+    public EquipmentInventory equipment_inventory;
+    public event Action on_unit_count_change;
+    public void trigger_unit_count_change() { on_unit_count_change(); }
 
     protected override void Start() {
         base.Start();
-        bat = new Battalion(c, this);
-
-        _light = 4;
-        _unity = 10;
-
-        pos = new Vector3(12.5f, 12.5f);
+        resources.Add(EXPERIENCE, 0);
         mine_qty_multiplier = ID == ENDURA ? 4 : 3;
     }
 
-    public override void new_game() {
-        base.new_game();
+    public override void init(bool from_save) {
+        base.init(from_save);
+        bat = new Battalion(this);
+        equipment_inventory = new EquipmentInventory(this);
+
+        resources[LIGHT] = 4;
+        resources[UNITY] = 4;
+        resources[STAR_CRYSTALS] = 1;
+        resources[EXPERIENCE] = 500;
         cell = Map.I.city_cell;
     }
 
     public override void register_turn() {
         if (!dead) {
             base.register_turn();
-            check_insanity();
+            check_insanity(get_res(UNITY));
         }
         has_mined_in_turn = false;
         has_moved_in_turn = false;
@@ -65,8 +73,8 @@ public class Discipline : Storeable, ISaveLoad {
     public void move(MapCell cell) {
         // Offset position on cell to simulate human placement and prevent perfect overlap.
         this.cell = cell;
-        float randx = Random.Range(-0.2f, 0.2f); 
-        float randy = Random.Range(-0.2f, 0.2f);
+        float randx = UnityEngine.Random.Range(-0.2f, 0.2f); 
+        float randy = UnityEngine.Random.Range(-0.2f, 0.2f);
         pos = new Vector3(cell.pos.x + 0.5f + randx, cell.pos.y + 0.5f + randy, 0);
         has_moved_in_turn = true;
         MapUI.I.update_cell_text(cell.name);
@@ -84,10 +92,12 @@ public class Discipline : Storeable, ISaveLoad {
     drop equipment and experience on the cell of death to be retrieved.
     */
     public void die() {
-        cell.battle.end();
+        if (!cell.battle.is_group) {
+            cell.battle.end();
+        }
         bat.kill_injured_units();
         remove_resources_lost_on_death();
-        Map.I.get_cell(pos).drop_XP(experience);
+        Map.I.get_cell(pos).drop_XP(resources[EXPERIENCE]);
         Debug.Log(pos);
         pos = new Vector3(-100, -100, 0);
         dead = true;
@@ -100,7 +110,7 @@ public class Discipline : Storeable, ISaveLoad {
         dead = false;
     }
 
-    private void check_insanity() {
+    private void check_insanity(int unity) {
         // 5 == "wavering"
         // 4 == unable to build
         if (unity == 3) {
@@ -113,7 +123,7 @@ public class Discipline : Storeable, ISaveLoad {
     }
 
     private void roll_for_insanity(int quantity, int chance) {
-        int roll = Random.Range(1, 100);
+        int roll = UnityEngine.Random.Range(1, 100);
         if (roll <= chance) {
             // Units flee into the darkness.
             for (int i = 0; i < quantity; i++) {
@@ -125,18 +135,31 @@ public class Discipline : Storeable, ISaveLoad {
     public void receive_travelcard_consequence() {
         if (get_travelcard() == null)
             return;
-        adjust_resources_visibly(cell.get_travelcard_consequence());
+        show_adjustments(cell.get_travelcard_consequence());
         if (get_travelcard().equipment_reward_amount > 0) {
             string name = equipment_inventory.add_random_equipment(cell.tier);
-            create_rising_info(name, 1);
+            Statics.create_rising_info_map(
+                RisingInfo.build_resource_text(name, 1),
+                Statics.disc_colors[ID],
+                origin_of_rise_obj.transform,
+                rising_info_prefab);
         }
         cell.complete_travelcard();
     }
 
     public void add_xp_in_battle(int xp, Enemy enemy) {
         // Show xp rising over enemy
-        change_var(Storeable.EXPERIENCE, xp, false);
-        create_rising_info("XP", xp, enemy.get_slot().gameObject);
+        change_var(Discipline.EXPERIENCE, xp, false);
+        StartCoroutine(_add_xp_in_battle(xp, enemy));
+    }
+
+    private IEnumerator _add_xp_in_battle(int xp, Enemy enemy) {
+        yield return new WaitForSeconds(1f);
+        Statics.create_rising_info_battle(
+            RisingInfo.build_resource_text("XP", xp),
+            Statics.disc_colors[ID],
+            enemy.get_slot().transform, 
+            rising_info_prefab);
     }
 
     public TravelCard get_travelcard() {
@@ -144,24 +167,19 @@ public class Discipline : Storeable, ISaveLoad {
     }
 
     public void mine(MapCell cell) {
-        int sc_mined = 0;
+        int mined = 0;
         if (cell.ID == MapCell.TITRUM_ID || cell.ID == MapCell.MOUNTAIN_ID) {
-            if (cell.minerals >= mine_qty) {
-                sc_mined = change_var(Storeable.MINERALS, mine_qty, true);
-            } else {
-                sc_mined = change_var(Storeable.MINERALS, cell.minerals, true);
-            }
+            mined = Statics.valid_nonnegative_change(cell.minerals, mine_qty);
+            show_adjustment(Storeable.MINERALS, mined);
+            cell.minerals -= mined;
         } else if (cell.ID == MapCell.STAR_ID) {
-            if (cell.star_crystals >= mine_qty) {
-                sc_mined = change_var(Storeable.STAR_CRYSTALS, mine_qty, true);
-            } else {
-                sc_mined = change_var(Storeable.STAR_CRYSTALS, cell.star_crystals, true);
-            }
+            mined = Statics.valid_nonnegative_change(cell.star_crystals, mine_qty);
+            show_adjustment(Storeable.STAR_CRYSTALS, mined);
+            cell.star_crystals -= mined;
         }
         has_mined_in_turn = true;
-        cell.star_crystals -= sc_mined;
         if (MapUI.I.cell_UI_is_open)
-            MapUI.I.open_cell_UI_script.update_star_crystal_text();
+            MapUI.I.open_cell_UI_script.update_mineable_text();
     }
 
     public void reset() {
@@ -178,13 +196,13 @@ public class Discipline : Storeable, ISaveLoad {
     public override void load(GameData generic) {
         DisciplineData data = generic as DisciplineData;
         reset();
-        _light = data.sresources.light;
-        _unity = data.sresources.unity;
-        _star_crystals = data.sresources.star_crystals;
-        _minerals = data.sresources.minerals;
-        _arelics = data.sresources.arelics;
-        _erelics = data.sresources.erelics;
-        _mrelics = data.sresources.mrelics;
+        resources[LIGHT] = data.sresources.light;
+        resources[UNITY] = data.sresources.unity;
+        resources[STAR_CRYSTALS] = data.sresources.star_crystals;
+        resources[MINERALS] = data.sresources.minerals;
+        resources[ARELICS] = data.sresources.arelics;
+        resources[ERELICS] = data.sresources.erelics;
+        resources[MRELICS] = data.sresources.mrelics;
 
         pos = new Vector3(data.col, data.row);
         cell.travelcard = TravelDeck.I.make_card(data.redrawn_travel_card_ID);

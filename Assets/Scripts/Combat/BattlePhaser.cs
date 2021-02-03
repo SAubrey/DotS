@@ -45,7 +45,7 @@ public class BattlePhaser : MonoBehaviour {
         get { 
             if (battle == null)
                 return null;
-            return Controller.I.get_bat_from_ID(battle.active_bat_ID); 
+            return Controller.I.get_disc(battle.active_bat_ID).bat; 
         }
     }
     void Awake() {
@@ -90,7 +90,7 @@ public class BattlePhaser : MonoBehaviour {
         // Must be solo battle if null, because group battles will
         // have been created at least one turn in advance of battle initiation.
         if (battle == null) { 
-            battle = new Battle(Map.I, cell, Controller.I.get_disc(), false);
+            battle = new Battle(Map.I, cell, TurnPhaser.I.active_disc, false);
             cell.battle = battle;
             battle.begin();
         } 
@@ -231,7 +231,7 @@ public class BattlePhaser : MonoBehaviour {
             phaseT.text = "Phase " + phase;
 
             if (_phase > 3) {
-                post_phases();
+                battle.post_phases();
             }
         }
     }
@@ -291,11 +291,13 @@ public class BattlePhaser : MonoBehaviour {
 
     // Only called by AttackQueuer after battle animations have finished.
     public void post_battle() {
-        battle.post_battle();
         if (stage == ASSESSMENT) advance_phase();
         can_skip = true;
-
-        check_finished();
+        
+        if (battle.post_battle()) {
+            reset();
+            CamSwitcher.I.set_active(CamSwitcher.MAP, true);
+        }
     }
 
     private void advance_phase() {
@@ -304,35 +306,11 @@ public class BattlePhaser : MonoBehaviour {
         phase++;
     }
 
-    /* Battlion deaths trigger their respawn.
-    The game is only over when the city runs out of health or
-    the player quits.
-    */
-    private void post_phases() {
-        if (!battle_finished) {
-            // If the battle is not finished, save the board exactly as it is.
-            Formation.I.save_board(battle);
-            return;
-        }
-
-        if (player_won) {
-            Debug.Log("Player won the battle.");
-            battle.leader.receive_travelcard_consequence();
-            battle.end();
-        } else if (enemy_won) {
-            if (!Controller.I.get_disc().dead) {
-                battle.retreat();
-            }
-            // Forced retreat.
-            Debug.Log("Enemy won the battle. This will only be called if the player has no units on the field, but some in reserve.");
-        }
-        reset();
-        CamSwitcher.I.set_active(CamSwitcher.MAP, true);
-    }
+  
 
     // Called by Unity button. 
     public void retreat() {
-        if (!player_units_on_field || player_won)
+        if (!battle.player_units_on_field || battle.player_won)
             return;
         
         battle.retreat();
@@ -340,37 +318,11 @@ public class BattlePhaser : MonoBehaviour {
         reset();
     }
 
-    private void check_finished() {
-        if (battle_finished)
-            post_phases();
-    }
-
-    private bool units_in_reserve {
-        get { return battle.count_all_units_in_reserve() > 0; }
-    }
-
-    private bool player_units_on_field { 
-        //get { return Controller.I.get_active_bat().get_all_placed_units().Count > 0; }
-        // Ignores if an individual battalion should be retreated and ignored int eh turn cycle.
-        get { return battle.count_all_placed_units() > 0; }
-    } 
-
     // check each combat stage end
     // battalion_dead implies enemy_won, enemy_won does not imply battalion_dead.
     private bool battalion_dead {
         get => active_bat.count_healthy() <= 0;
     }
-
-    private bool player_won { 
-        //get { return Formation.I.get_all_full_slots(Unit.ENEMY).Count <= 0; }
-        get { return battle.cell.get_enemies().Count <= 0; }
-    } 
-
-    private bool enemy_won {
-        get { return !player_units_on_field; } //&& !units_in_reserve; }
-    }
-
-    private bool battle_finished { get { return player_won || enemy_won; } }
 
     private bool _can_skip = false;
     public bool can_skip {

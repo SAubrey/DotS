@@ -2,11 +2,11 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+
 public class AttackQueuer : MonoBehaviour {
     public static AttackQueuer I { get; private set; }
     public const int PU_TO_E = 0, E_TO_PU = 1;
     public const float WAIT_TIME = 3.0f;
-    public GameObject hit_splat_prefab;
     public GameObject FieldPanel;
 
     private AttackQueue enemy_queue, player_queue; // Queue of enemy attacks.
@@ -165,12 +165,17 @@ public class AttackQueuer : MonoBehaviour {
     }
 
     private void create_hitsplat(int dmg, int state, Slot def_slot) {
+        /*
         GameObject hs = GameObject.Instantiate(hit_splat_prefab);
         hs.transform.SetParent(FieldPanel.transform, false); 
         HitSplat hs_script = hs.GetComponent<HitSplat>();
         hs_script.init(dmg, state, def_slot);
-        // create XP hitsplat here if def unit is enemy?
-
+*/
+        Statics.create_rising_info_battle(
+            dmg.ToString(), 
+            Statics.get_unit_state_color(state), 
+            def_slot.transform,
+            TurnPhaser.I.active_disc.rising_info_prefab);
         // Blood streaks
         if (dmg > 0) {
             ParticleSystem psI = Instantiate(blood_ps);
@@ -277,7 +282,7 @@ public class AttackQueue {
 Attacks are 1:1 relationships, from att(attacker) to def(defdefer)
  */
 public class Attack {
-    private PlayerUnit punit;
+    public PlayerUnit punit { get; private set; }
     private Enemy enemy;
     private Slot att, def;
     public int direction;
@@ -319,7 +324,7 @@ public class Attack {
     public void post_player_attack(int state) {
         int xp = enemy.take_xp_from_death();
         if (state == Unit.DEAD && xp > 0) {
-            Controller.I.get_disc().add_xp_in_battle(xp, enemy);
+            TurnPhaser.I.active_disc.add_xp_in_battle(xp, enemy);
         }
     }
 

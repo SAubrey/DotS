@@ -96,6 +96,7 @@ public class Battle {
         AttackQueuer.I.get_player_queue().reset();
         
         foreach (Discipline d in participants) {
+            d.bat.in_battle = false;
             d.move(d.previous_cell);
             // Penalize
             d.change_var(Storeable.UNITY, -1, true);
@@ -120,15 +121,70 @@ public class Battle {
         cell.post_phase();
     }
 
-    public void post_battle() {
+    /* Battlion deaths trigger their respawn.
+    The game is only over when the city runs out of health or
+    the player quits.
+    */
+    public void post_phases() {
+        if (!finished) {
+            // If the battle is not finished, save the board exactly as it is.
+            Formation.I.save_board(this);
+            return;
+        }
+
+        // Are there no units on the field after combat? Both win (lose)
+        if (player_won && enemy_won) {
+            leader.receive_travelcard_consequence();
+            if (!TurnPhaser.I.active_disc.dead) {
+                retreat();
+            }
+        } else if (player_won) {
+            Debug.Log("Player won the battle.");
+            leader.receive_travelcard_consequence();
+        } else if (enemy_won) {
+            if (!TurnPhaser.I.active_disc.dead) {
+                retreat();
+            }
+            // Forced retreat.
+            Debug.Log("Enemy won the battle. This will only be called if the player has no units on the field, but some in reserve.");
+        }
+        end();
+    }
+
+    public bool post_battle() {
         foreach (Discipline d in participants) {
             d.bat.post_battle();
         }
-        if (check_all_dead()) {
-            end();
-        }
         cell.post_battle();
+        if (finished) {
+            post_phases();
+            return true;
+        }
+        return false;
     }
+
+    public bool finished { get { return player_won || enemy_won; } }
+
+
+    public bool player_won { 
+        //get { return Formation.I.get_all_full_slots(Unit.ENEMY).Count <= 0; }
+        get { return cell.get_enemies().Count <= 0; }
+    } 
+
+    public bool enemy_won {
+        get { return !player_units_on_field; } //&& !units_in_reserve; }
+    }
+
+    
+    public bool units_in_reserve {
+        get { return count_all_units_in_reserve() > 0; }
+    }
+
+    public bool player_units_on_field { 
+        //get { return Controller.I.get_active_bat().get_all_placed_units().Count > 0; }
+        // Ignores if an individual battalion should be retreated and ignored int eh turn cycle.
+        get { return count_all_placed_units() > 0; }
+    } 
 
     private bool check_all_dead() {
         foreach (Discipline d in participants) {
@@ -176,7 +232,7 @@ public class Battle {
     }
 
     public bool leader_is_active_on_map {
-        get { return Controller.I.get_disc() == leader; }
+        get { return TurnPhaser.I.active_disc == leader; }
     }
 
     public bool leaders_turn {

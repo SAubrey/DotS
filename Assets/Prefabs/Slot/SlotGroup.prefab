@@ -235,6 +235,16 @@ PrefabInstance:
       propertyPath: m_Name
       value: Slot2
       objectReference: {fileID: 0}
+    - target: {fileID: 5271601700642809452, guid: 87e1be6ca8d3f9449a295e3185b72b94,
+        type: 3}
+      propertyPath: m_LocalScale.x
+      value: 0.8
+      objectReference: {fileID: 0}
+    - target: {fileID: 5271601700642809452, guid: 87e1be6ca8d3f9449a295e3185b72b94,
+        type: 3}
+      propertyPath: m_LocalScale.y
+      value: 0.8
+      objectReference: {fileID: 0}
     - target: {fileID: 7774861284739994485, guid: 87e1be6ca8d3f9449a295e3185b72b94,
         type: 3}
       propertyPath: m_AnchorMax.x
@@ -418,6 +428,16 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: Slot1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5271601700642809452, guid: 87e1be6ca8d3f9449a295e3185b72b94,
+        type: 3}
+      propertyPath: m_LocalScale.x
+      value: 0.8
+      objectReference: {fileID: 0}
+    - target: {fileID: 5271601700642809452, guid: 87e1be6ca8d3f9449a295e3185b72b94,
+        type: 3}
+      propertyPath: m_LocalScale.y
+      value: 0.8
       objectReference: {fileID: 0}
     - target: {fileID: 7774861284739994485, guid: 87e1be6ca8d3f9449a295e3185b72b94,
         type: 3}

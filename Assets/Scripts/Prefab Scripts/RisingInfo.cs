@@ -6,7 +6,7 @@ public class RisingInfo : MonoBehaviour {
     protected float time_alive = 0;
     //public Text T;
     public TextMeshProUGUI T;
-    protected float translation_distance = 0.01f;
+    public float translation_distance = 0.01f;
 
     public void init(string resource, int value, Color color) {
         string readout = "";
@@ -18,12 +18,27 @@ public class RisingInfo : MonoBehaviour {
         T.color = color;
     }
 
+    public void init(Transform origin, string text, Color color) {
+        set_text(text);
+        T.color = color;
+        transform.position = origin.position;
+    }
+
     protected virtual void Update() {
         time_alive += Time.deltaTime;
         translate_up(translation_distance);
         fade();
         if (time_alive > timeout)
             die(); 
+    }
+
+    public static string build_resource_text(string resource, int value) {
+        string readout = "";
+        if (value > 0) {
+            readout = "+ ";
+        }
+        readout += value.ToString() + " " + resource;
+        return readout;
     }
 
     protected void translate_up(float dy) {

@@ -18,9 +18,9 @@ public class TravelCardManager : MonoBehaviour {
     // Don't pull a travel card on a discovered cell.
     public void restart_battle_from_drawn_card(MapCell cell) {
         // Load forced travel card from a previous save.
-        if (Controller.I.get_disc().restart_battle_from_drawn_card) {
-            MapUI.I.display_travelcard(Controller.I.get_disc().get_travelcard());
-            Controller.I.get_disc().restart_battle_from_drawn_card = false;
+        if (TurnPhaser.I.active_disc.restart_battle_from_drawn_card) {
+            MapUI.I.display_travelcard(TurnPhaser.I.active_disc.get_travelcard());
+            TurnPhaser.I.active_disc.restart_battle_from_drawn_card = false;
             Debug.Log("resuming loaded battle");
             return;
         }
@@ -55,7 +55,7 @@ public class TravelCardManager : MonoBehaviour {
         if (cell.travelcard.rules.enter_combat) { // If a combat travel card was pulled.
             BattlePhaser.I.begin_new_battle(cell);
         } else if (cell.travelcard.rules.affect_resources && !cell.locked) {
-            Controller.I.get_disc().receive_travelcard_consequence();
+            TurnPhaser.I.active_disc.receive_travelcard_consequence();
         } 
     }
 
@@ -63,12 +63,13 @@ public class TravelCardManager : MonoBehaviour {
     // Called by the roll button of the travel card. 
     public void roll() {
         die.roll(num_sides);
+        tc.rolled = true;
     }
 
     public void finish_roll(int result) {
         MapUI.I.set_active_travelcard_continueB(true);
-        //set_rollB(false);
-        tc.use_roll_result(result, Controller.I);
+        MapUI.I.travelcard_rollB.interactable = false;
+        tc.use_roll_result(result);
         tc = null;
     }
 

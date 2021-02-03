@@ -39,6 +39,7 @@ public class Enemy : Unit {
             int atr1=0, int atr2=0, int atr3=0) : 
             base(name, ID, att, def, hp, style, atr1, atr2, atr3) {
         type = ENEMY;
+        owner_ID = -1;
         this.xp = xp;
         defending = true;
     }
@@ -74,6 +75,8 @@ public class Enemy : Unit {
         else if (ID == TAJAERO) e = new Tajaero();
         else if (ID == TERRA_QUAL) e = new Terra_Qual();
         else if (ID == DUALE) e = new Duale();
+        else if (ID == MELD_SPEARMAN) e = new Meld_Spearman();
+        else if (ID == MELD_WARRIOR) e = new Meld_Warrior();
         return e;
     }
 
@@ -105,6 +108,19 @@ public class Enemy : Unit {
         return health <= 0 ? DEAD : INJURED;
     }
 
+    public override void attack() {
+        base.attack();
+        slot.play_animation(get_attack_animation_ID());
+    }
+
+    private string get_attack_animation_ID() {
+        if (combat_style == RANGE) {
+            return AnimationPlayer.ARROW_FIRE;
+        } else {
+            return AnimationPlayer.SLASH;
+        }
+    }
+
     public override int calc_dmg_taken(int dmg, bool piercing=false) {
         // adjust for defensive attributes?
         if (!piercing)
@@ -121,7 +137,11 @@ public class Enemy : Unit {
     }
 
     public int take_xp_from_death() {
-        return xp_taken ? -1 : xp;
+        if (!xp_taken) {
+            xp_taken = true;
+            return xp;
+        }
+        return 0;
     }
 }
 
@@ -260,23 +280,24 @@ public class Duale : Enemy {
 }
 
 public class Meld_Warrior : Enemy {
-    public Meld_Warrior() : base("Meld Warrior", MELD_WARRIOR, 1, 0, 1, 1, MELEE, CHARGE, GROUPING_1) {
+    public Meld_Warrior() : base("Meld Warrior", MELD_WARRIOR, 1, 1, 3, 3, MELEE, CHARGE, GROUPING_1) {
     }
 }
 
 public class Meld_Spearman : Enemy {
-    public Meld_Spearman() : base("Meld Spearman", MELD_SPEARMAN, 1, 0, 1, 2, MELEE, CHARGE) {
+    public Meld_Spearman() : base("Meld Spearman", MELD_SPEARMAN, 1, 2, 2, 3, MELEE, CHARGE) {
     }
 }
 
 public class t1_Guardian : Enemy {
-    public t1_Guardian() : base("Guardian", T1_GUARDIAN, 5, 5, 20, 10, MELEE, TERROR_1) {
-
+    public t1_Guardian() : base("Guardian", T1_GUARDIAN, 6, 0, 25, 30, MELEE, TERROR_3) {
+        // 5 terror
+        // swipes front and left tile, hits front and behind
     }
 }
 
 public class t2_Guardian : Enemy {
-    public t2_Guardian() : base("Deep Guardian", T2_GUARDIAN, 7, 5, 40, 20, RANGE, TERROR_1) {
+    public t2_Guardian() : base("Deep Guardian", T2_GUARDIAN, 10, 5, 40, 60, RANGE, TERROR_3) {
 
     }
 }

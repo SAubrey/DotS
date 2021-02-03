@@ -5,7 +5,7 @@ using UnityEngine.EventSystems;
 using TMPro;
 
 
-public class Slot : EventTrigger {
+public class Slot : MonoBehaviour {
     public Image img, unit_img;
     private Unit unit;
     private Camera cam;
@@ -39,6 +39,8 @@ public class Slot : EventTrigger {
     public Group group;
     public Button button;
     private bool _disabled = false;
+    public AnimationPlayer animation_player;
+    public GameObject animation_obj;
     
     void Awake() {
         cam = GameObject.Find("BattleCamera").GetComponent<Camera>();
@@ -81,7 +83,7 @@ public class Slot : EventTrigger {
             unit = null;
         }
 
-        update_unit_img(group.get_dir());
+        update_unit_img(group.direction);
         set_active_UI(false);
         set_nameT("");
         //show_selection(false);
@@ -104,12 +106,7 @@ public class Slot : EventTrigger {
     }
 
     public Unit get_unit() {
-        if (has_enemy) {
-            return get_enemy();
-        } else if (has_punit) {
-            return get_punit();
-        } 
-        return null;
+        return unit;
     }
 
     public bool disabled {
@@ -123,8 +120,10 @@ public class Slot : EventTrigger {
 
 
     // ----- GRAPHICAL -----
-
-    public override void OnPointerEnter(PointerEventData eventData) {
+    /* Boosts from equipment are included in the base number and colored orange
+    while boosts from attributes and attribute buffs are appended to the base number.  
+    */
+    /*public override void OnPointerEnter(PointerEventData eventData) {
         if (!has_enemy)
             return;
         if (Selector.I.selecting_target && 
@@ -143,9 +142,19 @@ public class Slot : EventTrigger {
             update_healthbar();
             Selector.I.hovered_slot = null;
         }
-    }
+    }*/
 
     public void init_UI(Unit u) {
+        set_attack_icon(u);
+        set_color();
+        show_equipment_boosts();
+        set_nameT(unit.get_name());
+        update_unit_img(group.direction);
+        set_active_UI(true);
+        update_text_UI();
+    }
+
+    private void set_attack_icon(Unit u) {
         // Change attack icon based on attack type.
         if (get_unit().is_range) {
             attfgI.sprite = range_icon;
@@ -156,12 +165,6 @@ public class Slot : EventTrigger {
         }
         attfgI.color = Color.white;
         deffgI.color = Color.white;
-        set_color();
-        show_equipment_boosts();
-        set_nameT(unit.get_name());
-        update_unit_img(group.get_dir());
-        set_active_UI(true);
-        update_text_UI();
     }
 
     // Updated when a boost is removed or applied,
@@ -196,10 +199,10 @@ public class Slot : EventTrigger {
  
     public string build_health_string(float hp, float preview_damage) {
         //float hp = get_unit().health; // This will already include the boost but not the bonus.
-        float hp_boost = get_unit().get_stat_boost(Unit.HEALTH_BOOST)
+        float hp_boost = get_unit().get_stat_boost(Unit.HEALTH)
             + get_unit().get_bonus_health();
 
-        string str = hp.ToString();
+        string str = (hp + get_unit().get_bonus_from_equipment(Unit.HEALTH)).ToString();
         if (preview_damage > 0)
             str += "(-" + preview_damage.ToString() + ")";
         if (hp_boost > 0) 
@@ -264,10 +267,11 @@ public class Slot : EventTrigger {
     }
 
     public string build_att_string() {
-        float att_boost = get_unit().get_stat_boost(Unit.ATTACK_BOOST)
+        float att_boost = get_unit().get_stat_boost(Unit.ATTACK)
             + get_unit().get_bonus_att_dmg();
 
-        string str = get_unit().get_raw_attack_dmg().ToString();
+        string str = (get_unit().get_raw_attack_dmg() +
+            get_unit().get_bonus_from_equipment(Unit.ATTACK)).ToString();
         if (att_boost > 0 && get_unit().attack_set) 
             str += "+" + att_boost.ToString();
         return str;
@@ -316,10 +320,11 @@ public class Slot : EventTrigger {
     }
 
     public string build_def_string() {
-        int def_boost = get_unit().get_stat_boost(Unit.DEFENSE_BOOST)
+        int def_boost = get_unit().get_stat_boost(Unit.DEFENSE)
             + get_unit().get_bonus_def();
 
-        string str = get_unit().get_raw_defense().ToString();
+        string str = (get_unit().get_raw_defense() + 
+            get_unit().get_bonus_from_equipment(Unit.DEFENSE)).ToString();
         if (def_boost > 0 && get_unit().defending) 
             str += "+" + def_boost.ToString();
         return str;
@@ -363,12 +368,12 @@ public class Slot : EventTrigger {
         if (unit.is_enemy)
             return;
 
-        EquipmentInventory ei = Controller.I.get_bat_from_ID(get_punit().owner_ID).disc.equipment_inventory;
-        hpT.color = ei.get_stat_boost_amount(unit.get_ID(), Unit.HEALTH_BOOST) > 0 ? 
+        EquipmentInventory ei = Controller.I.get_disc(get_punit().owner_ID).equipment_inventory;
+        hpT.color = ei.get_stat_boost_amount(unit.get_ID(), Unit.HEALTH) > 0 ? 
             equipment_text_color : Color.white;
-        defT.color = ei.get_stat_boost_amount(unit.get_ID(), Unit.DEFENSE_BOOST) > 0 ? 
+        defT.color = ei.get_stat_boost_amount(unit.get_ID(), Unit.DEFENSE) > 0 ? 
             equipment_text_color : Color.white;
-        attT.color = ei.get_stat_boost_amount(unit.get_ID(), Unit.ATTACK_BOOST) > 0 ? 
+        attT.color = ei.get_stat_boost_amount(unit.get_ID(), Unit.ATTACK) > 0 ? 
             equipment_text_color : Color.white;
     }
 
@@ -382,6 +387,10 @@ public class Slot : EventTrigger {
             img.color = injured;
     }
 
+    public void play_animation(string anim) {
+        animation_player.play(anim);
+    }
+
     private void update_unit_img(int dir) {
         unit_img.color = Color.white;
         unit_img.sprite = BatLoader.I.get_unit_img(unit, dir);
@@ -393,6 +402,7 @@ public class Slot : EventTrigger {
     public void rotate_to_direction(int direction) {
         unit_img.sprite = BatLoader.I.get_unit_img(unit, direction);
         unit_img.transform.LookAt(cam.transform);
+        set_animation_depth(direction);
         //unit_img.transform.forward *= -1;
          // Used if only using forward/back images to mirror them for right/left.
         if (direction == 0 || direction == 180) {
@@ -400,6 +410,14 @@ public class Slot : EventTrigger {
         } else 
             unit_img.transform.rotation = Quaternion.AngleAxis(180, Vector3.up);
         face_text_to_cam();
+    }
+
+    public void set_animation_depth(int direction) {
+        if (direction == Group.UP || direction == Group.RIGHT) {
+            animation_obj.transform.SetAsFirstSibling();
+        } else {
+            animation_obj.transform.SetAsLastSibling();
+        }
     }
 
     public void face_text_to_cam() {

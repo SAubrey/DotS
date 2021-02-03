@@ -7,8 +7,6 @@ using UnityEngine.Tilemaps;
 public class Map : MonoBehaviour, ISaveLoad {
     public static Map I { get; private set; }
 
-    // Tile IDs
-
     public Tilemap tm;
     public Tile plains_1, plains_2;
     public Tile forest_1, forest_2;
@@ -114,12 +112,6 @@ public class Map : MonoBehaviour, ISaveLoad {
         tiles.Add(MapCell.GUARDIAN_PASS_ID, new List<Tile> {mountain_2, mountain_2, mountain_2});
 
         create_city();
-
-        /*// Populate inverse dictionary.
-        foreach (KeyValuePair<int, Tile> pair in tiles) {
-            if (!tile_to_tileID.ContainsKey(pair.Value))
-                tile_to_tileID.Add(pair.Value, pair.Key);
-        }*/
     }
 
     public void init(bool from_save) {
@@ -172,7 +164,7 @@ public class Map : MonoBehaviour, ISaveLoad {
     public bool can_move(Vector3 destination) {
         Vector3 current_pos = get_current_cell().pos.to_vec3;
         return check_adjacent(destination, current_pos) && 
-            !Controller.I.get_disc().has_acted_in_turn &&
+            !TurnPhaser.I.active_disc.has_acted_in_turn &&
             !get_cell(destination).has_battle &&
             !get_cell(destination).has_group_pending;
     }
@@ -180,7 +172,7 @@ public class Map : MonoBehaviour, ISaveLoad {
     public void scout(Vector3 pos) {
         MapCell cell = map[new Pos((int)pos.x, (int)pos.y)];
         cell.discover();
-        Controller.I.get_disc().has_scouted_in_turn = true;
+        TurnPhaser.I.active_disc.has_scouted_in_turn = true;
         
         // Draw card in advance to reveal enemy count if applicable.
         cell.travelcard = TravelDeck.I.draw_card(cell.tier, cell.ID);
@@ -193,11 +185,11 @@ public class Map : MonoBehaviour, ISaveLoad {
     }
 
     public bool can_scout(Vector3 pos) {
-        return get_tile(pos.x, pos.y) != null && check_adjacent(pos, Controller.I.get_disc().pos) && 
-            Controller.I.get_disc().bat.get_unit(PlayerUnit.SCOUT) != null &&
+        return get_tile(pos.x, pos.y) != null && check_adjacent(pos, TurnPhaser.I.active_disc.pos) && 
+            TurnPhaser.I.active_disc.bat.get_unit(PlayerUnit.SCOUT) != null &&
             get_current_cell() != get_cell(pos) && get_cell(pos) != city_cell &&
             !get_cell(pos).discovered &&
-            !Controller.I.get_disc().has_acted_in_turn;
+            !TurnPhaser.I.active_disc.has_acted_in_turn;
     }
 
     public bool can_teleport(Vector3 pos) {
@@ -224,7 +216,6 @@ public class Map : MonoBehaviour, ISaveLoad {
         return cell_ID;
     }
 
-
     public void create_cell(int tier, int x, int y, int ID=-1) {
         Pos pos = new Pos(x, y);
         if (ID == -1) {
@@ -236,12 +227,13 @@ public class Map : MonoBehaviour, ISaveLoad {
         
         map.Add(pos, cell);
         place_tile(shadow, pos.x, pos.y);
+        cell.fog = MapUI.I.place_fog_ps(cell);
         tile.color = Color.white;
 
         if (cell.creates_travelcard) {
             cell.travelcard = TravelDeck.I.draw_card(cell.tier, cell.ID);
         }
-        get_cell(pos.to_vec3).discover(); // debug
+        //get_cell(pos.to_vec3).discover(); // debug
     }
 
     public Tile get_tile(float x, float y) {
@@ -251,8 +243,8 @@ public class Map : MonoBehaviour, ISaveLoad {
     }
 
     public MapCell get_current_cell(Discipline disc=null) {
-        //return disc == null ? get_cell(Controller.I.get_disc().pos) : get_cell(disc.pos);
-        return disc == null ? Controller.I.get_disc().cell : disc.cell;
+        //return disc == null ? get_cell(TurnPhaser.I.active_disc.pos) : get_cell(disc.pos);
+        return disc == null ? TurnPhaser.I.active_disc.cell : disc.cell;
     }
 
     public void place_tile(Tile tile, int x, int y) {
@@ -317,11 +309,11 @@ public class Map : MonoBehaviour, ISaveLoad {
     }
 
     public List<Enemy> get_enemies_here() {
-        return Controller.I.get_disc().cell.get_enemies();
+        return TurnPhaser.I.active_disc.cell.get_enemies();
     }
 
     public void retreat_battalion() {
-        Controller.I.get_disc().move_to_previous_cell();
+        TurnPhaser.I.active_disc.move_to_previous_cell();
     }
     
     public void build_rune_gate(Pos pos) {

@@ -7,6 +7,7 @@ public class SoundManager : MonoBehaviour {
 
     public BackgroundSFXPlayer background_SFX_player;
     public ImpactPlayer impact_player;
+    public UIPlayer UI_player;
     
     void Awake() {
         if (I == null) {

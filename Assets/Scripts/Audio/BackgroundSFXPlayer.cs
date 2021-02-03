@@ -4,26 +4,26 @@ using UnityEngine;
 
 public class BackgroundSFXPlayer : AudioPlayer {
     public AudioSource delay_source;
+    public AudioSource loop_source;
     public AudioClip menu;
     public AudioClip map_wind;
     public AudioClip map_rumble1;
     public AudioClip map_rumble2;
     public AudioClip battle_wind;
 
-    
     private bool delaying = false;
     private float delay_counter = 0;
     private float delay = 0;
     private float delay_counter_min = 30f;
     private float delay_counter_max = 120f;
 
-    
-    public void set_random_map_sfx() {
-        delay_source.clip = Random.Range(0, 2) == 0 ? map_rumble1 : map_rumble2;
-    }
+
     protected override void Start() {
         //base.Start();
+        delay_source = gameObject.AddComponent<AudioSource>();
         delay_source.loop = false;
+        loop_source = gameObject.AddComponent<AudioSource>();
+        loop_source.loop = true;
     }
 
     void Update() {
@@ -32,7 +32,7 @@ public class BackgroundSFXPlayer : AudioPlayer {
         
         delay_counter += Time.deltaTime;
         if (delay_counter >= delay) {
-            set_random_map_sfx();
+            delay_source.clip = get_random_map_sfx();
             delay_source.Play();
             delay = get_random_delay(delay_counter_min, delay_counter_max);
             delay_counter = 0;
@@ -40,16 +40,20 @@ public class BackgroundSFXPlayer : AudioPlayer {
     }
 
     public void activate_screen(int screen) {
-        if (screen == CamSwitcher.MENU) {  
-            source.clip = menu;
+        if (screen == CamSwitcher.MENU) {
+            play(loop_source, menu);
+            //source.clip = menu;
             delaying = false;
         } else if (screen == CamSwitcher.MAP) {
-            source.clip = map_wind;
+            play(loop_source, map_wind);
             delaying = true;
         } else if (screen == CamSwitcher.BATTLE) {
+            play(loop_source, battle_wind);
             delaying = false;
-            source.clip = battle_wind;
         }
-        source.Play();
+    }
+    
+    public AudioClip get_random_map_sfx() {
+        return Random.Range(0, 2) == 0 ? map_rumble1 : map_rumble2;
     }
 }

@@ -79,6 +79,7 @@ public class PlayerPanel : UnitPanel {
         set_press_defB(punit.defending);
         _defB_pressed = punit.defending;
         //if (punit.attribute_requires_action && (attB_pressed || defB_pressed)) {
+        attributeB.gameObject.SetActive(!punit.passive_attribute);
         set_press_attributeB(punit.is_attribute_active);
         _attributeB_pressed = punit.is_attribute_active;
         //} 

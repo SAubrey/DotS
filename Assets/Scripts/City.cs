@@ -8,31 +8,31 @@ public class City : Storeable {
 
     protected override void Start() {
         base.Start();
-        _light = 8;
-        _unity = 3;
+        resources[LIGHT] = 8;
+        resources[UNITY] = 3;
         ID = CITY;
     }
 
     public override void light_decay_cascade() {
         Dictionary<string, int> d = new Dictionary<string, int>();
         d.Add(LIGHT, -1);
-        if (light <= 0) {
-            if (star_crystals > 0) {
+        if (resources[LIGHT] <= 0) {
+            if (resources[STAR_CRYSTALS] > 0) {
                 d.Add(STAR_CRYSTALS, -1);
                 d[LIGHT] = light_refresh_amount;
-            } else if (unity > 0) {
+            } else if (resources[UNITY] > 0) {
                 d.Add(UNITY, -1);
                 d[LIGHT] = light_refresh_amount;
-            } else if (unity <= 0) {
+            } else if (resources[UNITY] <= 0) {
                 // Game over
                 // Raise game over window, game over accept button calls game over in Controller.
                 MapUI.I.set_active_game_overP(true);
             }
         }
-        adjust_resources_visibly(d);
+        show_adjustments(d);
     }
-    public override void new_game() {
-        base.new_game();
+    public override void init(bool from_save) {
+        base.init(from_save);
         light_refresh_amount = 8;
     }
 
@@ -42,13 +42,13 @@ public class City : Storeable {
 
     public override void load(GameData generic) {
         CityData data = generic as CityData;
-        _light = data.sresources.light;
-        _unity = data.sresources.unity;
-        _star_crystals = data.sresources.star_crystals;
-        _minerals = data.sresources.minerals;
-        _arelics = data.sresources.arelics;
-        _erelics = data.sresources.erelics;
-        _mrelics = data.sresources.mrelics;
+        resources[LIGHT] = data.sresources.light;
+        resources[UNITY] = data.sresources.unity;
+        resources[STAR_CRYSTALS] = data.sresources.star_crystals;
+        resources[MINERALS] = data.sresources.minerals;
+        resources[ARELICS] = data.sresources.arelics;
+        resources[ERELICS] = data.sresources.erelics;
+        resources[MRELICS] = data.sresources.mrelics;
 
         CityUI cui = CityUI.I;
         for (int i = 0; i < cui.upgrades.Count; i++) {

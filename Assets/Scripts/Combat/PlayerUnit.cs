@@ -26,7 +26,6 @@ public class PlayerUnit : Unit {
 
     public const int EMPTY = 100; // Graphical lookup usage.
     public bool injured = false;
-    public int owner_ID { get; private set; }
 
     public static PlayerUnit create_punit(int ID, int owner_ID) {
         PlayerUnit pu = null;
@@ -71,20 +70,17 @@ public class PlayerUnit : Unit {
 
         if (state == INJURED) {
             injured = true;
-            //slot.show_injured();
-            Controller.I.get_bat_from_ID(owner_ID).add_injured_unit(this);
-            BatLoader.I.load_unit_text(Controller.I.get_bat_from_ID(owner_ID), ID);
+            Controller.I.get_disc(owner_ID).bat.add_injured_unit(this);
+            BatLoader.I.load_unit_text(Controller.I.get_disc(owner_ID).bat, ID);
         } else if (state == DEAD) {
             dead = true;
-            //slot.show_dead(); 
-            BatLoader.I.load_unit_text(Controller.I.get_bat_from_ID(owner_ID), ID);
-            Controller.I.get_bat_from_ID(owner_ID).add_dead_unit(this);
+            BatLoader.I.load_unit_text(Controller.I.get_disc(owner_ID).bat, ID);
+            Controller.I.get_disc(owner_ID).bat.add_dead_unit(this);
         }
         if (defending) {
             num_actions--;
             defending = false; 
             if (final_dmg > 0) {
-                //defense = 0;
                 slot.update_defense();
             }
         }
@@ -104,22 +100,33 @@ public class PlayerUnit : Unit {
         return true;
     }
 
+    public override void attack() {
+        base.attack();
+        slot.play_animation(get_attack_animation_ID());
+    }
+
+    private string get_attack_animation_ID() {
+        if (combat_style == RANGE) {
+            return AnimationPlayer.ARROW_FIRE;
+        } else if (ID == SPEARMAN || ID == PIKEMAN || ID == CARTER
+            || ID == GUARDIAN || ID == SKIRMISHER) {
+            return AnimationPlayer.SPEAR_THRUST;
+        } else {
+            return AnimationPlayer.SWORD_SLASH;
+        }
+    }
+
     public override int get_attack_dmg() {
-        return attack_dmg + get_bonus_att_dmg() + get_bonus_from_equipment(Unit.ATTACK_BOOST);
+        return attack_dmg + get_bonus_att_dmg() + get_bonus_from_equipment(Unit.ATTACK);
     }
 
     public override int get_defense() {
-        return defense + get_bonus_def() + get_bonus_from_equipment(Unit.DEFENSE_BOOST);
+        return defense + get_bonus_def() + get_bonus_from_equipment(Unit.DEFENSE);
     }
 
     public override int get_boosted_max_health() {
-        return max_health + get_bonus_health() + get_stat_boost(HEALTH_BOOST) +
-            get_bonus_from_equipment(Unit.HEALTH_BOOST);
-    }
-
-    public int get_bonus_from_equipment(int stat_ID) {
-        Discipline d = Controller.I.get_bat_from_ID(owner_ID).disc;
-        return d.equipment_inventory.get_stat_boost_amount(ID, stat_ID);
+        return max_health + get_bonus_health() + get_stat_boost(HEALTH) +
+            get_bonus_from_equipment(Unit.HEALTH);
     }
 
     public override int calc_dmg_taken(int dmg, bool piercing=false) {
@@ -216,14 +223,14 @@ public class Inspirator : PlayerUnit {
             return false; // prevent double application/depplication
         bool active = base.set_attribute_active(state);
         if (active) {
-            apply_surrounding_effect(HEALTH_BOOST, 1, get_forward3x1_coords());
+            apply_surrounding_effect(HEALTH, 1, get_forward3x1_coords());
             // affecting num actions directly bypasses one-way street to allow
             // the user to undo and redo the buff. This means has_acted_in_stage
             // does not get enabled for inspirator, which only matters if units
             // are cycling after having acted.
             _num_actions--;
         } else {
-            apply_surrounding_effect(HEALTH_BOOST, -1, get_forward3x1_coords());
+            apply_surrounding_effect(HEALTH, -1, get_forward3x1_coords());
             _num_actions++;
         }
         slot.update_staminabar(num_actions);
@@ -232,7 +239,9 @@ public class Inspirator : PlayerUnit {
 }
 
 public class Seeker : PlayerUnit {
-    public Seeker() : base("Seeker", SEEKER, 1, 1, 2, MELEE, TRUE_SIGHT) {}
+    public Seeker() : base("Seeker", SEEKER, 1, 1, 2, MELEE, TRUE_SIGHT) {
+        passive_attribute = true;
+    }
 }
 
 public class Guardian : PlayerUnit {
@@ -301,9 +310,9 @@ public class Drummer : PlayerUnit {
             return false; // prevent double application/depplication
         bool active = base.set_attribute_active(state);
         if (active) {
-            apply_surrounding_effect(DEFENSE_BOOST, 1, get_forward3x1_coords());
+            apply_surrounding_effect(DEFENSE, 1, get_forward3x1_coords());
         } else {
-            apply_surrounding_effect(DEFENSE_BOOST, -1, get_forward3x1_coords());
+            apply_surrounding_effect(DEFENSE, -1, get_forward3x1_coords());
         }
         return active;
     }

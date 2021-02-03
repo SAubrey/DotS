@@ -245,7 +245,7 @@ public class BatLoader : MonoBehaviour {
             load_unit_text(b, type_ID);
             unit_buttons[type_ID].interactable = b.units[type_ID].Count > 0;
         }
-        MapUI.I.highlight_discipline(discT, b.disc.ID);
+        MapUI.I.highlight_discipline(discT, null, b.disc.ID);
     }
 
     public void load_unit_text(Battalion b, int ID) {

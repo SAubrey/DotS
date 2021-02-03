@@ -8,7 +8,7 @@ public class Unit {
     public const int ALIVE = 0, DEAD = 1, INJURED = 2;
 
     // Boost IDs
-    public const int HEALTH_BOOST = 1, DEFENSE_BOOST = 2, ATTACK_BOOST = 3;
+    public const int HEALTH = 1, DEFENSE = 2, ATTACK = 3, DAMAGE = 4;
 
 
     // Attributes (0 is null atr)
@@ -110,6 +110,8 @@ public class Unit {
 
     protected int type; // Player or Enemy
     protected int ID; // Code for the particular unit type. (not unique to unit)
+    public int owner_ID { get; protected set; }
+
     protected string name;
     // Unique identifier for looking up drawn attack lines and aggregating attacks.
     public int attack_id;
@@ -224,7 +226,7 @@ public class Unit {
                 && !out_of_range && !out_of_actions;
     }
 
-    public void attack() {
+    public virtual void attack() {
         attack_set = false;
         if (is_actively_grouping) {
             foreach (Slot s in slot.get_group().get_full_slots()) {
@@ -271,7 +273,7 @@ public class Unit {
     }
 
     public virtual int get_boosted_max_health( ) {
-        return max_health + get_bonus_health() + get_stat_boost(HEALTH_BOOST);
+        return max_health + get_bonus_health() + get_stat_boost(HEALTH);
     }
     
     // "Bonus" refers to any stat increases not from boost-type attributes.
@@ -304,6 +306,13 @@ public class Unit {
         return active_boost_amount;
     }
 
+    public int get_bonus_from_equipment(int stat_ID) {
+        if (is_enemy)
+            return 0;
+        Discipline d = Controller.I.get_disc(owner_ID).bat.disc;
+        return d.equipment_inventory.get_stat_boost_amount(ID, stat_ID);
+    }
+
     // Returns number of same units in group with Grouping that have actions remaining.
     public int count_grouped_units() {
         int grouped_units = slot.get_group().get_num_of_same_active_units_in_group(ID);
@@ -320,11 +329,11 @@ public class Unit {
         active_boost_type = boost_type;
         active_boost_amount = amount;
 
-        if (boost_type == HEALTH_BOOST) {
+        if (boost_type == HEALTH) {
             health += amount;
-        } else if (boost_type == ATTACK_BOOST) {
+        } else if (boost_type == ATTACK) {
             attack_dmg += amount;
-        } else if (boost_type == DEFENSE_BOOST) {
+        } else if (boost_type == DEFENSE) {
             defense += amount;
         }
     }
@@ -354,7 +363,7 @@ public class Unit {
     }
     
     protected List<Pos> get_forward3x1_coords() {
-        int direction = slot.get_group().get_dir();
+        int direction = slot.get_group().direction;
         Pos low = new Pos(slot.col, slot.row);
         Pos high = new Pos(slot.col, slot.row);
         if (direction == Group.UP) {

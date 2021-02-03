@@ -12,8 +12,8 @@ public static class UpgradeWriter {
         {CityUI.MEDITATION, ""},
         {CityUI.SANCTUARY, ""},
         {CityUI.TEMPLE3, UNIT_UPGRADE},
-        {CityUI.HALLOFADEPT, "Allows the Astra Discipline player to recruit unique Astra only units to their battalion."},
-        {CityUI.FAITHFUL, "Unlocks the heart of the Astra practice, Unity. Increases the max unity of each battalion by 10." +
+        {CityUI.HALLOFADEPT, "Allows the Astra Discipline player to recruit unique Astra-only units to their battalion."},
+        {CityUI.FAITHFUL, "Unlocks the heart of the Astra practice, Unity.\nIncreases the max unity of each battalion by 10.\n" +
             "Enemies encountered with the Terror attribute will increase unity by 3."}, // Unity decreases after?
         {CityUI.RUNE_PORT, "Rebuilds the ancient rune port allowing transport to any discovered rune gates."},
         {CityUI.CITADEL2, UNIT_UPGRADE},
@@ -25,7 +25,7 @@ public static class UpgradeWriter {
         {CityUI.ENCAMPMENTS, ""},
         {CityUI.STABLE, "Allows the city to store 10 equimares."},
         {CityUI.CRAFT_SHOP3, UNIT_UPGRADE},
-        {CityUI.MASTERS_GUILD, "Allows the Astra Discipline to recruit unique Endura only units to their battalion."},
+        {CityUI.MASTERS_GUILD, "Allows the Endura Discipline to recruit unique Endura-only units to their battalion."},
         {CityUI.RESILIENT, ""},
         {CityUI.RESTORE_GREAT_TORCH, "Restores the great Torch of Ayetzu to its former glory." + 
             "The light of each battalion can hold out 5 turns before using a star crystal instead of 4."},
@@ -38,7 +38,7 @@ public static class UpgradeWriter {
         {CityUI.STEADY_MARCH, ""},
         {CityUI.GARRISON, ""},
         {CityUI.FORGE3, UNIT_UPGRADE},
-        {CityUI.DOJO_CHOSEN, ""},
+        {CityUI.DOJO_CHOSEN, "Allows the Martial Discipline to recruit unique Martial-only units to their battalion."},
         {CityUI.REFINED, "Unlocks the heart of the Endura practice, Resilience. Resilience of all units is increased by 2."},
         {CityUI.BOW_ILUHATAR, ""},
         {CityUI.BARRACKS2, UNIT_UPGRADE},  

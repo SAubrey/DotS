@@ -13,8 +13,8 @@ public class MapCellUI : MonoBehaviour {
     public void init(MapCell cell) {
         this.cell = cell;
         cell_typeT.text = build_titleT();
-        enemy_countT.text = build_enemy_countT(cell.get_enemies().Count, cell.discovered);
-        update_star_crystal_text();
+        enemy_countT.text = build_enemy_countT(cell);
+        update_mineable_text();
         Vector3 pos = new Vector3(cell.pos.x, cell.pos.y, 0);
         //transform.position =
             //map.c.cam_switcher.mapCam.WorldToScreenPoint(new Vector3(pos.x + 0.5f, pos.y - 2.5f, 0));
@@ -26,14 +26,14 @@ public class MapCellUI : MonoBehaviour {
         enable_button(teleportB, Map.I.can_teleport(pos));
         enable_button(unlockB, can_unlock());
         enable_button(battleB, cell.can_setup_group_battle());
-        enable_button(mineB, cell.can_mine(Controller.I.get_disc().bat));
+        enable_button(mineB, cell.can_mine(TurnPhaser.I.active_disc.bat));
         enable_button(show_travelcardB, can_show_travelcard());
         if (cell.can_setup_group_battle()) {
             battleT.text = build_group_battleB_T();
         }
     }
 
-    public void update_star_crystal_text() {
+    public void update_mineable_text() {
         if (!cell.discovered) {
             mineableT.text = "?";
             return;
@@ -54,17 +54,25 @@ public class MapCellUI : MonoBehaviour {
         }
     }
 
-    private string build_enemy_countT(int enemy_count, bool discovered) {
-        if (!discovered)
+    private string build_enemy_countT(MapCell cell) {
+        int enemy_count = cell.get_enemies().Count;
+        if (cell.has_travelcard) {
+            // Enemies have not spawned yet but we know they are there.
+            if (enemy_count == 0 && cell.discovered && !cell.travelcard_complete
+                    && cell.travelcard.enemy_count > 0) {
+                enemy_count = cell.travelcard.enemy_count;
+            }
+        }
+        if (!cell.discovered) {
             return "We know not what waits in the darkness.";
-        if (enemy_count > 0) {
+        } if (enemy_count > 0) {
             return enemy_count + " enemies are lurking in the darkness.";
         } 
         return "This land is free from darkness.";
     }
 
     public string build_group_battleB_T() {
-        bool adjacent = Map.check_adjacent(Controller.I.get_disc().pos, cell.pos.to_vec3);
+        bool adjacent = Map.check_adjacent(TurnPhaser.I.active_disc.pos, cell.pos.to_vec3);
         if (!adjacent) {
             return "Group Battle";
         }
@@ -80,7 +88,7 @@ public class MapCellUI : MonoBehaviour {
                 return "Reinforce";
             } else if (cell.battle.group_pending) {
                 // Be able to leave in same turn
-                if (cell.battle.includes_disc(Controller.I.get_disc()))
+                if (cell.battle.includes_disc(TurnPhaser.I.active_disc))
                     return "Leave Group Battle";
                 else
                     return "Join Group Battle";
@@ -110,20 +118,20 @@ public class MapCellUI : MonoBehaviour {
                 // Reinforce - discipline's troops become available for placement
                 // in the outskirts of the battlefield once the turn reaches the 
                 // leader again.
-                cell.battle.add_participant(Controller.I.get_disc());
+                cell.battle.add_participant(TurnPhaser.I.active_disc);
             }
             else if (cell.battle.group_pending) {
-                if (cell.battle.includes_disc(Controller.I.get_disc()))
-                    cell.battle.remove_participant(Controller.I.get_disc());
+                if (cell.battle.includes_disc(TurnPhaser.I.active_disc))
+                    cell.battle.remove_participant(TurnPhaser.I.active_disc);
                 else
-                    cell.battle.add_participant(Controller.I.get_disc());
+                    cell.battle.add_participant(TurnPhaser.I.active_disc);
             }
         }
         battleT.text = build_group_battleB_T();
     }
 
     public void move() {
-        Controller.I.get_disc().move(cell);
+        TurnPhaser.I.active_disc.move(cell);
         close();
     }
 
@@ -139,12 +147,12 @@ public class MapCellUI : MonoBehaviour {
     }
 
     public void teleport() {
-        Controller.I.get_disc().move(cell);
+        TurnPhaser.I.active_disc.move(cell);
         close();
     }
 
     public void mine() {
-        Controller.I.get_disc().mine(cell);
+        TurnPhaser.I.active_disc.mine(cell);
     }
 
     public bool can_show_travelcard() {
@@ -162,17 +170,17 @@ public class MapCellUI : MonoBehaviour {
         if (!cell.locked)
             return false;
         if (cell.has_rune_gate && !cell.restored_rune_gate && 
-            Controller.I.get_disc().get_var(Storeable.STAR_CRYSTALS) >= 10) {
+            TurnPhaser.I.active_disc.get_res(Storeable.STAR_CRYSTALS) >= 10) {
             return true;
         }
 
         TravelCardUnlockable u = cell.get_unlockable();
-        if (u.requires_seeker && Controller.I.get_disc().bat.has_seeker) {
-            return true;
+        if (u.requires_seeker) {
+            return TurnPhaser.I.active_disc.bat.has_seeker;
         }
         // Must be a resource requirement.
-        if (Controller.I.get_disc().get_var(u.resource_type) >= 
-            u.resource_cost) {
+        if (TurnPhaser.I.active_disc.get_res(u.resource_type) >= 
+            Mathf.Abs(u.resource_cost)) {
             return true;
         }
         return false;         
@@ -180,14 +188,14 @@ public class MapCellUI : MonoBehaviour {
 
     public void unlock() {
         if (cell.has_rune_gate) {
-            Controller.I.get_disc().change_var(Storeable.STAR_CRYSTALS, -10, true);
+            TurnPhaser.I.active_disc.show_adjustment(Storeable.STAR_CRYSTALS, -10);
             cell.restored_rune_gate = true;
         } else if (cell.has_travelcard) {
             if (cell.get_unlockable().requires_seeker) {
-                Controller.I.get_disc().receive_travelcard_consequence();
+                TurnPhaser.I.active_disc.receive_travelcard_consequence();
             }
             else {
-                Controller.I.get_disc().change_var(cell.get_unlock_type(), cell.get_unlock_cost(), true);
+                TurnPhaser.I.active_disc.show_adjustment(cell.get_unlock_type(), cell.get_unlock_cost());
             }
             cell.complete_travelcard();
         }

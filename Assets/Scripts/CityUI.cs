@@ -232,6 +232,12 @@ public class CityUI : MonoBehaviour {
         upgrade_buttons.Add(BOW_ILUHATAR, bow_iluhatarB);
         upgrade_buttons.Add(BARRACKS2, barracks2B);
 
+        foreach (Discipline d in Controller.I.discs.Values) {
+            d.on_resource_change += update_stat_text;
+            d.on_capacity_change += register_capacity_change;
+        }
+        Controller.I.city.on_resource_change += update_stat_text;
+
         new_game();
     }
 
@@ -253,7 +259,7 @@ public class CityUI : MonoBehaviour {
         set_color(CRAFT_SHOP, false, true);
         set_color(FORGE, false, true);
 
-        switch_upgradeP(Controller.I.get_disc().ID);
+        switch_upgradeP(TurnPhaser.I.active_disc_ID);
         upgradesP.SetActive(false);
     }
 
@@ -276,7 +282,7 @@ public class CityUI : MonoBehaviour {
     public void load_unit_counts() {
         foreach (int type in unit_counts.Keys) 
             unit_counts[type].text = 
-                Controller.I.get_disc().bat.units[type].Count.ToString();
+                TurnPhaser.I.active_disc.bat.units[type].Count.ToString();
     }
 
     public void try_hire_unit(string args_str) {
@@ -286,43 +292,43 @@ public class CityUI : MonoBehaviour {
         int mineral_cost = Int32.Parse(args[2]);
 
         if (verify_avail_unit_resources(sc_cost, mineral_cost)) {
-            Controller.I.get_disc().bat.add_units(type, 1);
-            Controller.I.get_disc().adjust_resources_visibly(
+            TurnPhaser.I.active_disc.bat.add_units(type, 1);
+            TurnPhaser.I.active_disc.show_adjustments(
                 new Dictionary<string, int>() {
                     {Storeable.STAR_CRYSTALS, -sc_cost},
                     {Storeable.MINERALS, -mineral_cost}
             });
             // Update TextMeshProUGUI in city ui and map ui
-            unit_counts[type].text = Controller.I.get_disc().bat.units[type].Count.ToString();
+            unit_counts[type].text = TurnPhaser.I.active_disc.bat.units[type].Count.ToString();
             MapUI.I.unit_countsT[type].text = unit_counts[type].text;
         }
     }
 
     public void move_resource_to_city(string type) {
         if (type == Storeable.EQUIMARES && 
-            Controller.I.city.get_var(Storeable.EQUIMARES) >= 10) {
+            Controller.I.city.get_res(Storeable.EQUIMARES) >= 10) {
             return;
         }
         if (Controller.I.city.get_valid_change_amount(type, 1) != 0 && 
-                Controller.I.get_disc().get_valid_change_amount(type, -1) != 0) {
+                TurnPhaser.I.active_disc.get_valid_change_amount(type, -1) != 0) {
             Controller.I.city.change_var(type, 1);
-            Controller.I.get_disc().change_var(type, -1);
+            TurnPhaser.I.active_disc.change_var(type, -1);
         }
     }
 
     public void move_resource_to_disc(string type) {
         if (Controller.I.city.get_valid_change_amount(type, -1) != 0 && 
-                Controller.I.get_disc().get_valid_change_amount(type, 1) != 0) {
+                TurnPhaser.I.active_disc.get_valid_change_amount(type, 1) != 0) {
             Controller.I.city.change_var(type, -1);
-            Controller.I.get_disc().change_var(type, 1);
+            TurnPhaser.I.active_disc.change_var(type, 1);
         }
     }
 
     private bool verify_avail_unit_resources(int sc_cost, int mineral_cost) {
-        Discipline disc = Controller.I.get_disc();
+        Discipline disc = TurnPhaser.I.active_disc;
 
-        if (disc.get_var(Storeable.STAR_CRYSTALS) >= sc_cost && 
-            disc.get_var(Storeable.MINERALS) >= mineral_cost) {
+        if (disc.get_res(Storeable.STAR_CRYSTALS) >= sc_cost && 
+            disc.get_res(Storeable.MINERALS) >= mineral_cost) {
                 return true;
         }
         return false;
@@ -332,6 +338,12 @@ public class CityUI : MonoBehaviour {
         if (hire_buttons.ContainsKey(player_unit)) {
             hire_buttons[player_unit].interactable = true;
         }
+    }
+
+    public void register_capacity_change(int ID, int sum, int capacity) {
+        if (TurnPhaser.I.active_disc_ID != ID)
+            return;
+        MapUI.update_capacity_text(city_capacityT, sum, capacity);
     }
 
 
@@ -365,13 +377,13 @@ public class CityUI : MonoBehaviour {
     }
 
     private bool can_afford_upgrade(int upgrade_ID) {
-        Discipline b = Controller.I.get_disc();
+        Discipline b = TurnPhaser.I.active_disc;
         Upgrade u = upgrades[upgrade_ID];
-        if (b.get_var(Storeable.STAR_CRYSTALS) < u.star_crystals ||
-            b.get_var(Storeable.MINERALS) < u.minerals ||
-            b.get_var(Storeable.ARELICS) < u.arelics ||
-            b.get_var(Storeable.MRELICS) < u.mrelics ||
-            b.get_var(Storeable.ERELICS) < u.erelics)
+        if (b.get_res(Storeable.STAR_CRYSTALS) < u.star_crystals ||
+            b.get_res(Storeable.MINERALS) < u.minerals ||
+            b.get_res(Storeable.ARELICS) < u.arelics ||
+            b.get_res(Storeable.MRELICS) < u.mrelics ||
+            b.get_res(Storeable.ERELICS) < u.erelics)
             return false;
         return true;
     }
@@ -395,7 +407,7 @@ public class CityUI : MonoBehaviour {
             return;
         }
         Upgrade u = upgrades[ID];
-        Controller.I.get_disc().adjust_resources_visibly(
+        TurnPhaser.I.active_disc.show_adjustments(
             new Dictionary<string, int>() {
                 {Storeable.STAR_CRYSTALS, -u.star_crystals},
                 {Storeable.MINERALS, -u.minerals},
@@ -535,7 +547,6 @@ public class CityUI : MonoBehaviour {
     }
 
     public void update_info_text(int punit_ID) {
-        Debug.Log(PlayerUnit.create_punit(punit_ID, -1));
         AttributeWriter.write_attribute_text(infoT, PlayerUnit.create_punit(punit_ID, -1));
     }
 

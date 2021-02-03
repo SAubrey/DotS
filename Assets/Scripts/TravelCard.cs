@@ -24,20 +24,15 @@ public class TravelCard {
     public Dictionary<string, int> consequence = new Dictionary<string, int>();
     public int equipment_reward_amount = 0;
 
-    // each value is the % out of 100 to roll over.
-    // The index maps to the consequence.
-    public int[] odds;
-    public bool reward = false;
     public int die_num_sides;
-
+    public bool rolled = false;
 
     public Rules rules = new Rules();
-    public bool requires_seeker = false;
     public TravelCardUnlockable unlockable;
 
     public virtual void on_open(TravelCardManager tcm) { }
     public virtual void on_continue(TravelCardManager tcm) { }
-    public virtual void use_roll_result(int result, Controller c) { }
+    public virtual void use_roll_result(int result) { }
 
     // Only accessed if ruins.
     public int enemy_biome_ID = MapCell.TITRUM_ID; 
@@ -45,7 +40,7 @@ public class TravelCard {
     public TravelCard(int id, int type) {
         ID = id;
         this.type = type;
-        foreach (string field in Storeable.FIELDS) {
+        foreach (string field in Controller.I.astra.resources.Keys) {
             consequence.Add(field, 0);
         }
     }
@@ -59,13 +54,14 @@ public class Rules {
 public class TravelCardUnlockable {
     public string resource_type;
     public int resource_cost;
-    public bool requires_seeker = false;
+    public bool requires_seeker { get => required_unit_type == PlayerUnit.SEEKER; }
+    public int required_unit_type;
     public TravelCardUnlockable(string type, int cost) {
         resource_type = type;
         resource_cost = cost;
     }
-    public TravelCardUnlockable(bool requires_seeker) {
-        this.requires_seeker = requires_seeker;
+    public TravelCardUnlockable(int required_unit_type) {
+        this.required_unit_type = required_unit_type;
     }
 }
 
@@ -153,7 +149,7 @@ public class Chance1_1 : Chance {
         consequence_text = "Draw 6 enemies";
     }
 
-    public override void use_roll_result(int result, Controller c) {
+    public override void use_roll_result(int result) {
         if (result % 2 == 0) {
             rules.enter_combat = true;
         }
@@ -170,7 +166,7 @@ public class Chance1_2 : Chance {
         "\n12 or less - Your men are demoralized\n-2 unity";
     }
 
-    public override void use_roll_result(int result, Controller c) {
+    public override void use_roll_result(int result) {
         rules.affect_resources = true;
         if (result >= 13) {
             consequence[Storeable.MINERALS] = 1;
@@ -178,7 +174,7 @@ public class Chance1_2 : Chance {
         } else {
             consequence[Storeable.UNITY] = -2;
         }
-        c.get_disc().adjust_resources_visibly(consequence);
+        //TurnPhaser.I.active_disc.show_adjustments(consequence);
     }
 }
 
@@ -191,7 +187,7 @@ public class Chance1_3 : Chance {
         consequence_text = "Draw 10 enemies";
     }
 
-    public override void use_roll_result(int result, Controller c) {
+    public override void use_roll_result(int result) {
         if (result % 2 == 0) {
             rules.enter_combat = true;
         }
@@ -265,13 +261,13 @@ public class Ruins1_1 : RuinsCard {
     }
 
     public override void on_continue(TravelCardManager tcm) {
-        // +1 seeker unit 
-        Controller.I.get_disc().bat.add_units(PlayerUnit.SEEKER, 1);
+        TurnPhaser.I.active_disc.bat.add_units(PlayerUnit.SEEKER, 1, true);
     }
 }
 
 public class Ruins1_2 : RuinsCard {
     public Ruins1_2() : base(TravelDeck.RUINS1_2) {
+        rules.affect_resources = true;
         equipment_reward_amount = 1;
         description = "Luckily these ruins are empty of any beasts or lost souls, we are instead " +
         "blessed with abandoned treasures and knowledge.";
@@ -299,13 +295,14 @@ public class Ruins1_3 : RuinsCard {
 
 public class Ruins1_4 : RuinsCard {
     public Ruins1_4() : base(TravelDeck.RUINS1_4) {
-        equipment_reward_amount = 1;
         rules.enter_combat = true;
-        enemy_count = 7;
+        rules.affect_resources = true;
         equipment_reward_amount = 1;
-        description = "Luckily these ruins are empty of any beasts or lost souls, we are instead " +
-        "blessed with abandoned treasures and knowledge.";
-        subtext = "";
+        enemy_biome_ID = MapCell.TITRUM_ID;
+        enemy_count = 7;
+        description = "These ruins have been overrun by the creatures of a nearby titrum forest.\n " +
+        "To find our past we must slay these lingering creatures.";
+        subtext = "Draw 7 titrum enemies";
         consequence_text = "1 equipment";
     }
 }
@@ -328,9 +325,10 @@ public class Location1_1 : LocationCard {
     }
 }
 
-public class Location1_2 : LocationCard { // NOT OPERABLE
+public class Location1_2 : LocationCard {
     public Location1_2() : base(TravelDeck.LOCATION1_2) {
-        unlockable = new TravelCardUnlockable(Storeable.STAR_CRYSTALS, 5);
+        unlockable = new TravelCardUnlockable(Storeable.STAR_CRYSTALS, -5);
+        rules.affect_resources = true;
         equipment_reward_amount = 1;
         description = "You find a sealed ancestral safe keep, there are 5 star crystal slots " +
         "that must be filled to open it.";
@@ -345,7 +343,7 @@ public class Location1_3 : LocationCard {
         consequence[Storeable.ARELICS] = 1;
         consequence[Storeable.ERELICS] = 1;
         consequence[Storeable.MRELICS] = 1;
-        unlockable = new TravelCardUnlockable(true);
+        unlockable = new TravelCardUnlockable(PlayerUnit.SEEKER);
         description = "A large stone door built into the side of a stone mound bears the symbol " +
         "of refuge. How might it open?";
         subtext = "Requires Seeker";
@@ -354,14 +352,14 @@ public class Location1_3 : LocationCard {
 }
 
 
-public class Location2_1 : LocationCard { // NOT OPERABLE
+public class Location2_1 : LocationCard {
     public Location2_1() : base(TravelDeck.LOCATION2_1) {
         rules.affect_resources = true;
-        // +2 equipment
+        equipment_reward_amount = 2;
         consequence[Storeable.STAR_CRYSTALS] = 6;
         consequence[Storeable.ARELICS] = 1;
         consequence[Storeable.MRELICS] = 1;
-        unlockable = new TravelCardUnlockable(true);
+        unlockable = new TravelCardUnlockable(PlayerUnit.SEEKER);
         description = "The land descends here into a stone altar. Down some steps a beautiful courtyard" +
         "was revealed, the power of Astra glowing along the ley lines of our ancestors, pulsing with life." +
         "Towards the back of the main area stands a deep emerald green obelisk from which all the ley lines converge.\n" +
@@ -410,7 +408,7 @@ public class Event1_3 : Event {
     }
     public override void on_continue(TravelCardManager tcm) {
         //tcm.c.map.move_player(tcm.c.get_disc().prev_pos);
-        Controller.I.get_disc().move(Controller.I.get_disc().previous_cell);
+        TurnPhaser.I.active_disc.move(TurnPhaser.I.active_disc.previous_cell);
     }
 }
 public class Event1_4 : Event {
@@ -476,9 +474,9 @@ public class Event2_3 : Event {
     }
     public override void on_continue(TravelCardManager tcm) {
         // Kill 2 random units
-        if (!Controller.I.get_disc().bat.has_scout) {
-            Controller.I.get_disc().bat.lose_random_unit("Caught in a trap");
-            Controller.I.get_disc().bat.lose_random_unit("Caught in a trap");
+        if (!TurnPhaser.I.active_disc.bat.has_scout) {
+            TurnPhaser.I.active_disc.bat.lose_random_unit("Caught in a trap");
+            TurnPhaser.I.active_disc.bat.lose_random_unit("Caught in a trap");
         }
     }
 }
@@ -498,16 +496,16 @@ public class Event2_4 : Event {
 
 public class Event2_5 : Event {
     public Event2_5() : base(TravelDeck.EVENT2_5) { 
+        rules.affect_resources = true;
         equipment_reward_amount = 1;
         this.enemy_count = 5;
         die_num_sides = 6;
-        rules.affect_resources = true;
         description = "Harsh rains batter over the region - This could bear ill tidings.";
         subtext = "Roll D6\n If even, draw 5 enemies.\nRanged units range is limited to 2 tiles.";
         consequence_text = "2 Martial relics\n1 equipment";
     }
 
-    public override void use_roll_result(int result, Controller c) {
+    public override void use_roll_result(int result) {
         if (result % 2 == 0) {
             rules.enter_combat = true;
             rules.affect_resources = true;

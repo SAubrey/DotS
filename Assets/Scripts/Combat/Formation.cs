@@ -68,7 +68,7 @@ public class Formation : MonoBehaviour {
             Debug.Log("Group is null at " + col + "," + row);
             return null;
         }
-        g.init();
+        //g.init();
         return g;
     }
 

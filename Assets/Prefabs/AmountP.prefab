@@ -112,7 +112,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: -33.66, y: 202.8}
-  m_SizeDelta: {x: 224.03, y: 45.69}
+  m_SizeDelta: {x: 224.03, y: 38}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &2767904958066491352
 CanvasRenderer:
@@ -163,6 +163,7 @@ GameObject:
   - component: {fileID: 7215847292093763624}
   - component: {fileID: 7895857189690202232}
   - component: {fileID: 6259026915548031730}
+  - component: {fileID: 1070944280798358622}
   m_Layer: 5
   m_Name: MoveB
   m_TagString: Untagged
@@ -282,6 +283,18 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+--- !u!114 &1070944280798358622
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5197481494118444512}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dcdfaeca447948640a4cc56284172da4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1001 &326278230054117377
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -552,7 +565,12 @@ PrefabInstance:
     - target: {fileID: 6147510670715696406, guid: e74122de9edf5c84092fa41a511fdc28,
         type: 3}
       propertyPath: m_fontSize
-      value: 33.55
+      value: 30
+      objectReference: {fileID: 0}
+    - target: {fileID: 6147510670715696406, guid: e74122de9edf5c84092fa41a511fdc28,
+        type: 3}
+      propertyPath: m_fontSizeMax
+      value: 30
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: e74122de9edf5c84092fa41a511fdc28, type: 3}
@@ -687,12 +705,17 @@ PrefabInstance:
     - target: {fileID: 6147510670715696406, guid: e74122de9edf5c84092fa41a511fdc28,
         type: 3}
       propertyPath: m_fontSize
-      value: 33.55
+      value: 30
       objectReference: {fileID: 0}
     - target: {fileID: 6147510670715696406, guid: e74122de9edf5c84092fa41a511fdc28,
         type: 3}
       propertyPath: m_HorizontalAlignment
       value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 6147510670715696406, guid: e74122de9edf5c84092fa41a511fdc28,
+        type: 3}
+      propertyPath: m_fontSizeMax
+      value: 30
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: e74122de9edf5c84092fa41a511fdc28, type: 3}

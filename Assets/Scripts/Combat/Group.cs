@@ -23,10 +23,22 @@ public class Group : MonoBehaviour {
     public int type;
 
     public int default_direction;
-    private int direction;
+    private int _direction;
+    public int direction {
+        get {
+            if (!initialized) {
+                _direction = default_direction;
+            }
+            return _direction;
+        }
+        private set {
+            _direction = value;
+        }
+    }
     public int col, row;
     public Slot[] slots = new Slot[MAX];
     private bool _disabled = false;
+    private bool initialized = false;
     Image img;
 
     void Awake() {
@@ -36,11 +48,14 @@ public class Group : MonoBehaviour {
         init();
     }
 
+    public static int init_groups = 0;
     public void init() {
-        //Formation.I.add_group(this);
         direction = default_direction;
+        //Debug.Log(direction + " " + init_groups);
+        init_groups++;
         set_color(type);
         reorder_slots_visually(direction);
+        initialized = true;
     }
 
     // Moves units up within their group upon vacancies from unit death/movement.
@@ -113,7 +128,7 @@ public class Group : MonoBehaviour {
         this.direction = direction;
         transform.localEulerAngles = new Vector3(0, 0, direction);
         foreach (Slot s in slots) {
-            s.rotate_to_direction(get_dir());
+            s.rotate_to_direction(direction);
         }
         reorder_slots_visually(direction);
     }
@@ -266,9 +281,5 @@ public class Group : MonoBehaviour {
 
     public bool faces(int direction) {
         return (direction == this.direction) ? true : false;
-    }
-
-    public int get_dir() {
-        return direction;
     }
 }

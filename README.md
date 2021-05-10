@@ -1,5 +1,6 @@
-![image](https://user-images.githubusercontent.com/22190742/97253557-20c92400-17e3-11eb-9440-413a1746f370.png)
-![image](https://user-images.githubusercontent.com/22190742/97254008-d8f6cc80-17e3-11eb-91f9-c26e3fdc889f.png)
+![image](https://user-images.githubusercontent.com/22190742/117708375-ba638c00-b19d-11eb-9feb-f8f50a267a01.png)
+![image](https://user-images.githubusercontent.com/22190742/117711889-a3bf3400-b1a1-11eb-86fd-6b15883bfbc4.png)
+
 Battle image here...  
 
 # Descendants of the Stars

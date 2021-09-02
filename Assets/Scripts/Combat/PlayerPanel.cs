@@ -51,6 +51,7 @@ public class PlayerPanel : UnitPanel {
 
         if (bp.movement_stage || bp.placement_stage)
             enable_rotateB();
+
         if (!punit.out_of_actions && !punit.has_acted_in_stage && 
                 (bp.movement_stage || ranging) &&
                 can_be_controlled_by_active_battalion) {

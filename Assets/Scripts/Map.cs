@@ -293,7 +293,9 @@ public class Map : MonoBehaviour, ISaveLoad {
     }
 
     public bool remove_oscillating_cell(MapCell cell) {
+        Debug.Log("Contains cell? " + oscillating_cells.Contains(cell));
         if (oscillating_cells.Contains(cell)) {
+            Debug.Log("removing osc cell");
             oscillating_cells.Remove(cell);
             return true;
         }

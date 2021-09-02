@@ -167,7 +167,8 @@ public class MapCellUI : MonoBehaviour {
     // To determine if the unlock button can be pressed, including that the 
     // requirements can be met if it is an unlockable cell.
     private bool can_unlock() {
-        if (!cell.locked)
+        bool on_cell = TurnPhaser.I.active_disc.cell == cell;
+        if (!cell.locked || !on_cell)
             return false;
         if (cell.has_rune_gate && !cell.restored_rune_gate && 
             TurnPhaser.I.active_disc.get_res(Storeable.STAR_CRYSTALS) >= 10) {

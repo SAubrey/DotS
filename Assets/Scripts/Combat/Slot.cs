@@ -5,7 +5,7 @@ using UnityEngine.EventSystems;
 using TMPro;
 
 
-public class Slot : MonoBehaviour {
+public class Slot : EventTrigger {
     public Image img, unit_img;
     private Unit unit;
     private Camera cam;
@@ -17,18 +17,21 @@ public class Slot : MonoBehaviour {
     public static readonly Color selected_color = new Color(1, 1, 1, .8f);
     public static readonly Color unselected_color = new Color(1, 1, 1, .1f);
     private static readonly Color healthbar_fill_color = new Color(.8f, .1f, .1f, .45f);
+    private static readonly Color healthbar_injured_fill_color = new Color(1f, .5f, 0f, .45f);
     private static readonly Color staminabar_fill_color = new Color(.1f, .8f, .1f, .45f);
+    private static readonly Color defensebar_fill_color = new Color(.1f, .1f, .8f, .45f);
     private static readonly Color statbar_bg_color = new Color(.4f, .4f, .4f, .3f);
     private static readonly Color equipment_text_color = new Color(1f, .67f, .32f, 1f);
-    public Slider healthbar, staminabar;
+    public Slider healthbar, staminabar, defensebar;
     public Canvas info_canv;
     public Image healthbar_bg, healthbar_fill;
     public Image staminabar_bg, staminabar_fill;
-    public GameObject staminabar_obj, healthbar_obj;
+    public Image defensebar_bg, defensebar_fill;
+    public GameObject staminabar_obj, healthbar_obj, defensebar_obj;
     public UnityEngine.Experimental.Rendering.Universal.Light2D light2d;
-    public Sprite range_icon, melee_icon;
+    public Sprite range_icon, melee_icon, shield_icon, armor_icon;
 
-    public TextMeshProUGUI attT, defT, hpT, stamT;
+    public TextMeshProUGUI attT, defT, hpT, stamT, defbarT;
     public Image attfgI, attbgI;
     public Image deffgI, defbgI;
     public Color attfgI_c, deffgI_c;
@@ -57,6 +60,8 @@ public class Slot : MonoBehaviour {
         staminabar_fill.color = staminabar_fill_color;
         staminabar_bg.color = statbar_bg_color;
         healthbar_bg.color = statbar_bg_color;
+        defensebar_fill.color = defensebar_fill_color;
+        defensebar_bg.color = statbar_bg_color;
     }
 
     public void click() {
@@ -87,7 +92,7 @@ public class Slot : MonoBehaviour {
         set_active_UI(false);
         set_nameT("");
         //show_selection(false);
-        set_color();
+        set_button_color();
         toggle_light(false);
         if (validate)
             group.validate_unit_order();
@@ -123,7 +128,7 @@ public class Slot : MonoBehaviour {
     /* Boosts from equipment are included in the base number and colored orange
     while boosts from attributes and attribute buffs are appended to the base number.  
     */
-    /*public override void OnPointerEnter(PointerEventData eventData) {
+    public override void OnPointerEnter(PointerEventData eventData) {
         if (!has_enemy)
             return;
         if (Selector.I.selecting_target && 
@@ -142,11 +147,15 @@ public class Slot : MonoBehaviour {
             update_healthbar();
             Selector.I.hovered_slot = null;
         }
-    }*/
+    }
+    
 
     public void init_UI(Unit u) {
         set_attack_icon(u);
-        set_color();
+        set_defense_icon(u);
+        set_button_color();
+        update_healthbar_color();
+        update_defensebar_color();
         show_equipment_boosts();
         set_nameT(unit.get_name());
         update_unit_img(group.direction);
@@ -167,46 +176,104 @@ public class Slot : MonoBehaviour {
         deffgI.color = Color.white;
     }
 
+    private void set_defense_icon(Unit u) {
+        if (u.is_playerunit) {
+            deffgI.sprite = shield_icon;
+            defbgI.sprite = shield_icon;
+        } else {
+            defbgI.sprite = armor_icon;
+            deffgI.sprite = armor_icon;
+        }
+    }
+
     // Updated when a boost is removed or applied,
     // or an attribute is activated or deactivated.
     public void update_text_UI() {
         update_healthbar();
         update_staminabar(get_unit().num_actions);
+        update_defensebar();
         update_attack();
-        update_defense();
+        //update_defense();
         if (UnitPanelManager.I.player_panel.slot == this) {
             UnitPanelManager.I.update_text(this); 
         }
     }
 
     public void update_healthbar(Unit preview_unit=null) {
-        healthbar.maxValue = get_unit().get_boosted_max_health();
+        healthbar.maxValue = get_unit().get_dynamic_max_health();
         
-        int prev_dmg = determine_preview_damage(preview_unit);
+        int prev_dmg = determine_damage_with_preview(preview_unit);
         int final_hp = get_unit().calc_hp_remaining(prev_dmg);
         healthbar.value = final_hp;
-        //update_healthbar_color();
+        update_healthbar_color();
         
         hpT.text = build_health_string(final_hp, prev_dmg);
     }
 
-    private int determine_preview_damage(Unit preview_unit=null) {
+    private int determine_damage_with_preview(Unit preview_unit=null) {
         List <Attack> atts = get_unit().is_playerunit ? 
             AttackQueuer.I.get_enemy_queue().get_incoming_attacks(get_unit()) :
             AttackQueuer.I.get_player_queue().get_incoming_attacks(get_unit());
-        return AttackQueuer.calc_final_group_dmg_taken(atts, preview_unit);// + get_unit().preview_damage;
+        return AttackQueuer.calc_final_group_dmg_taken(atts, preview_unit);
+    }
+
+    private int determine_defense_dmg_with_preview(Unit preview_unit=null) {
+        List <Attack> atts = get_unit().is_playerunit ? 
+            AttackQueuer.I.get_enemy_queue().get_incoming_attacks(get_unit()) :
+            AttackQueuer.I.get_player_queue().get_incoming_attacks(get_unit());
+        return AttackQueuer.calc_final_group_defense_reduction(atts, preview_unit);
     }
  
     public string build_health_string(float hp, float preview_damage) {
         //float hp = get_unit().health; // This will already include the boost but not the bonus.
-        float hp_boost = get_unit().get_stat_boost(Unit.HEALTH)
+        float hp_boost = get_unit().get_stat_buff(Unit.HEALTH)
             + get_unit().get_bonus_health();
 
         string str = (hp + get_unit().get_bonus_from_equipment(Unit.HEALTH)).ToString();
         if (preview_damage > 0)
-            str += "(-" + preview_damage.ToString() + ")";
+            str += " (-" + preview_damage.ToString() + ")";
         if (hp_boost > 0) 
-            str += "(+" + hp_boost.ToString() + ")";
+            str += " (+" + hp_boost.ToString() + ")";
+        return str;
+    }
+
+    private void update_healthbar_color() {
+        if (unit.is_playerunit) {
+            if (healthbar.value < healthbar.maxValue / 2f)
+                healthbar.fillRect.GetComponent<Image>().color = healthbar_injured_fill_color;
+        } else {
+            //float red = ((float)get_enemy().health / (float)get_enemy().max_health);
+            //healthbar.fillRect.GetComponent<Image>().color = new Color(1, red, red, 1);
+            healthbar.fillRect.GetComponent<Image>().color = healthbar_fill_color;
+        }
+    }
+
+    public void update_defensebar(Unit preview_unit=null) {
+        update_defensebar_color();
+        // The defense bar includes but does not show stat bonus.
+        defensebar.maxValue = get_unit().get_defense();
+        int prev_dmg = determine_defense_dmg_with_preview(preview_unit);
+        defensebar.value = get_unit().get_defense() - prev_dmg;
+        defbarT.text = build_defense_string(defensebar.value, prev_dmg);
+    }
+
+    private void update_defensebar_color() {
+        defensebar_obj.SetActive(get_unit().get_defense() != 0);
+        if (!get_unit().defending) {
+            defensebar_fill.color = Color.clear;
+        } else {
+            defensebar_fill.color = defensebar_fill_color;
+        }
+    }
+
+    public string build_defense_string(float def, float preview_damage) {
+        float def_boost = get_unit().get_stat_buff(Unit.DEFENSE)
+            + get_unit().get_bonus_def();
+        string str = def.ToString();
+        if (preview_damage > 0)
+            str += " (-" + preview_damage.ToString() + ")";
+        if (def_boost > 0) 
+            str += " (+" + def_boost.ToString() + ")";
         return str;
     }
 
@@ -215,16 +282,6 @@ public class Slot : MonoBehaviour {
         staminabar.value = stam;
         
         stamT.text = build_stamina_string(stam);
-    }
-
-    private void update_healthbar_color() {
-        if (unit.is_playerunit) {
-            if (healthbar.value < healthbar.maxValue / 2)
-                healthbar.fillRect.GetComponent<Image>().color = injured;
-        } else {
-            float red = ((float)get_enemy().health / (float)get_enemy().max_health);
-            healthbar.fillRect.GetComponent<Image>().color = new Color(1, red, red, 1);
-        }
     }
 
     public string build_stamina_string(float stam) {
@@ -267,7 +324,7 @@ public class Slot : MonoBehaviour {
     }
 
     public string build_att_string() {
-        float att_boost = get_unit().get_stat_boost(Unit.ATTACK)
+        float att_boost = get_unit().get_stat_buff(Unit.ATTACK)
             + get_unit().get_bonus_att_dmg();
 
         string str = (get_unit().get_raw_attack_dmg() +
@@ -281,10 +338,6 @@ public class Slot : MonoBehaviour {
         defT.text = build_def_string();
         toggle_defense(get_unit().get_defense() > 0);
         show_defending(get_unit());
-    }
-
-    public void update_defense_bar() {
-
     }
 
     private void show_defending(Unit u) {
@@ -320,7 +373,7 @@ public class Slot : MonoBehaviour {
     }
 
     public string build_def_string() {
-        int def_boost = get_unit().get_stat_boost(Unit.DEFENSE)
+        int def_boost = get_unit().get_stat_buff(Unit.DEFENSE)
             + get_unit().get_bonus_def();
 
         string str = (get_unit().get_raw_defense() + 
@@ -333,6 +386,7 @@ public class Slot : MonoBehaviour {
     public void set_active_UI(bool state) {
         staminabar_obj.SetActive(state);
         healthbar_obj.SetActive(state);
+        defensebar_obj.SetActive(state);
     }
 
     // Selection color is determined by opacity.
@@ -349,7 +403,7 @@ public class Slot : MonoBehaviour {
     }
 
     // Set the color of the square slot button's image.
-    public void set_color() {
+    public void set_button_color() {
         if (img == null)
             return;
         

@@ -18,7 +18,6 @@ public class EquipmentInventory {
         }
         add_to_inventory(Equipment.SHARPENED_BLADES, 2);
         add_to_inventory(Equipment.BOLSTERED_SHIELDS, 1);
-        add_to_inventory(Equipment.PULL_CART, 1);
     }
 
     public EquipmentSlot get_slot(int i) {

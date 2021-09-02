@@ -67,6 +67,7 @@ public class PlayerUnit : Unit {
         int state = get_post_dmg_state(final_dmg);
         health = (int)calc_hp_remaining(final_dmg);
         slot.update_healthbar();
+        slot.update_defensebar();
 
         if (state == INJURED) {
             injured = true;
@@ -81,7 +82,7 @@ public class PlayerUnit : Unit {
             num_actions--;
             defending = false; 
             if (final_dmg > 0) {
-                slot.update_defense();
+                slot.update_defensebar();
             }
         }
         return state;
@@ -124,8 +125,8 @@ public class PlayerUnit : Unit {
         return defense + get_bonus_def() + get_bonus_from_equipment(Unit.DEFENSE);
     }
 
-    public override int get_boosted_max_health() {
-        return max_health + get_bonus_health() + get_stat_boost(HEALTH) +
+    public override int get_dynamic_max_health() {
+        return max_health + get_bonus_health() + get_stat_buff(HEALTH) +
             get_bonus_from_equipment(Unit.HEALTH);
     }
 

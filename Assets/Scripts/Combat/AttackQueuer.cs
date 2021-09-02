@@ -113,7 +113,7 @@ public class AttackQueuer : MonoBehaviour {
         int dmg;
         // First determine effect of preview unit.
         if (preview_unit != null) {
-            dmg = Attack.get_dmg(preview_unit, defender);
+            dmg = Attack.get_dmg_before_def(preview_unit, defender);
             if (defender.defending && !preview_unit.has_attribute(Unit.PIERCING)) {
                 // defense and remaining damage cancel each other out.
                 int d = defense;
@@ -132,7 +132,7 @@ public class AttackQueuer : MonoBehaviour {
         // Calcuate damage from existing attacks.
         foreach (Attack a in atts) {
             Unit att = a.get_att_unit();
-            dmg = Attack.get_dmg(att, defender);
+            dmg = Attack.get_dmg_before_def(att, defender);
             if (defender.defending && !att.has_attribute(Unit.PIERCING)) {
                 int d = defense;
                 defense = Mathf.Max(defense - dmg, 0);
@@ -144,6 +144,42 @@ public class AttackQueuer : MonoBehaviour {
             sum_dmg -= defense;
         }
         return Mathf.Max(sum_dmg, 0);
+    }
+
+     public static int calc_final_group_defense_reduction(List<Attack> atts, Unit preview_unit=null) {
+        Unit defender = null;
+        if (atts != null) {
+            if (atts.Count > 0) {
+                defender = atts[0].get_def_unit();
+            }
+        } else if (Selector.I.hovered_slot != null) {
+            if (Selector.I.hovered_slot.has_enemy) {
+                defender = Selector.I.hovered_slot.get_unit();
+            }
+        }
+        if (defender == null)
+            return 0;
+
+        int defense = defender.get_defense();
+        if (!defender.defending || defense == 0) {
+            return 0;
+        }
+        int def_dmg = 0;
+        // First determine effect of preview unit.
+        if (preview_unit != null) {
+            if (!preview_unit.has_attribute(Unit.PIERCING)) {
+                def_dmg += Attack.get_dmg_before_def(preview_unit, defender);
+            }
+        }
+
+        // Calcuate damage from existing attacks.
+        foreach (Attack a in atts) {
+            Unit att = a.get_att_unit();
+            if (!att.has_attribute(Unit.PIERCING)) {
+                def_dmg += Attack.get_dmg_before_def(att, defender);
+            }
+        }
+        return Mathf.Min(def_dmg, defense);
     }
 
     private void attack(Attack att) {
@@ -260,6 +296,7 @@ public class AttackQueue {
             
             a.get_att_unit().attack_set = false;
             a.get_def_slot().update_healthbar();
+            a.get_def_slot().update_defensebar();
         }
         Debug.Log("Attempting to remove line. attack id: " + attack_id);
         LineDrawer.I.remove(attack_id);
@@ -344,11 +381,11 @@ public class Attack {
     }
 
     public static int calc_final_dmg_taken(Unit att, Unit def) {
-        return def.calc_dmg_taken(get_dmg(att, def), att.has_attribute(Unit.PIERCING));
+        return def.calc_dmg_taken(get_dmg_before_def(att, def), att.has_attribute(Unit.PIERCING));
     }
 
     // Accounts for grouping attack dmg.
-    public static int get_dmg(Unit att, Unit def) {
+    public static int get_dmg_before_def(Unit att, Unit def) {
         return att.get_attack_dmg() + calc_dir_dmg(att, def);
     }
 

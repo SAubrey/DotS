@@ -147,7 +147,7 @@ public class Storeable : MonoBehaviour, ISaveLoad {
     // Use != 0 with result to use as boolean.
     public int get_valid_change_amount(string type, int change) {
         // Return change without going lower than 0.
-        Debug.Log(type + " " + get_res(type) + " + " + change);
+        //Debug.Log(type + " " + get_res(type) + " + " + change);
         int amount = Statics.valid_nonnegative_change(get_res(type), change);
 
             //return change - (get_var(type) - change);

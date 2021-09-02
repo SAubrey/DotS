@@ -100,6 +100,7 @@ public class Enemy : Unit {
     public override int take_damage(int dmg) {
         health = Mathf.Max(0, health - dmg);
         slot.update_healthbar();
+        slot.update_defensebar();
 
         if (health <= 0) {
             dead = true;

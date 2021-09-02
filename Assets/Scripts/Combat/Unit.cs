@@ -53,14 +53,8 @@ public class Unit {
     // Combat fields
     public const int MELEE = 1, RANGE = 2;
     protected int attack_dmg;
-    // Defense and health flux in combat.
     protected int defense;
-    public int max_defense { get; private set; }
-    public void refill_defense() {
-        defense = max_defense;
-    }
     public int health, max_health;
-
     public int combat_style;
     public int movement_range = 1;
     public int attack_range = 1;
@@ -102,7 +96,8 @@ public class Unit {
                 value = false;
             _defending = value;
             if (slot != null) {
-                slot.update_defense();
+                //slot.update_defense();
+                slot.update_defensebar();
                 slot.update_healthbar();
             }
         }
@@ -144,8 +139,7 @@ public class Unit {
         this.name = name;
         this.ID = ID;
         attack_dmg = att;
-        max_defense = def;
-        defense = max_defense;
+        defense = def;
         combat_style = style;
         attack_range = style == MELEE ? 1 : 8;
         num_actions = max_num_actions;
@@ -272,8 +266,8 @@ public class Unit {
         return dx <= range && dy <= range;
     }
 
-    public virtual int get_boosted_max_health( ) {
-        return max_health + get_bonus_health() + get_stat_boost(HEALTH);
+    public virtual int get_dynamic_max_health( ) {
+        return max_health + get_bonus_health() + get_stat_buff(HEALTH);
     }
     
     // "Bonus" refers to any stat increases not from boost-type attributes.
@@ -300,7 +294,7 @@ public class Unit {
         return sum_def;
     }
 
-    public int get_stat_boost(int type) {
+    public int get_stat_buff(int type) {
         if (type != active_boost_type)
             return 0;
         return active_boost_amount;

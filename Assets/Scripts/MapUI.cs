@@ -281,8 +281,10 @@ public class MapUI : MonoBehaviour {
             if (objects.Count <= 0 && !hit_window) {
                 close_travelcardP();
 
-                if (over_tile)
+                if (over_tile) {
+                    Map.I.get_cell(pos).discover(); // DEBUG
                     generate_cell_UI(Map.I.get_cell(pos));
+                }
 
             }
         }

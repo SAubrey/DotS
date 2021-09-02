@@ -104,6 +104,7 @@ public class Selector : MonoBehaviour {
             if (attempt_attack(slot)) {
                 //int dmg = Attack.calc_final_dmg_taken(selected_slot.get_unit(), slot.get_unit());
                 slot.update_healthbar();
+                slot.update_defensebar();
                 deselect();
             }
         } else if (selecting_move) {

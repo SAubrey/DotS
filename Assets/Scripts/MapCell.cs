@@ -188,7 +188,10 @@ public class MapCell {
             Map.I.tm.SetTileFlags(vec, TileFlags.None);
             Map.I.tm.SetColor(vec, enemy_color); // Dark red
         } else {
-            tile.color = Color.white;
+            Debug.Log("setting tile color to white");
+            end_color_oscillation();
+            Map.I.tm.SetColor(new Vector3Int(pos.x, pos.y, 0), Color.white);
+            //tile.color = Color.white;
         }
     }
 

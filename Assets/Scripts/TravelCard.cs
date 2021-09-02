@@ -160,7 +160,7 @@ public class Chance1_2 : Chance {
     public Chance1_2() : base(TravelDeck.CHANCE1_2) {
         die_num_sides = 20;
         description = "It was around here we had anticipated ruins of our ancestors, " + 
-        "but the last battalion never returned, maybe we can at least find their remains.";
+        "but the last battalion never returned.\nMaybe we can at least find their remains.";
         subtext = "Roll D20";
         consequence_text = "13 or more - Some remaining resources are found\n3 star crystals, 1 mineral" + 
         "\n12 or less - Your men are demoralized\n-2 unity";

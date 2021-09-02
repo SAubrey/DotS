@@ -189,8 +189,9 @@ public class Battalion {
         }
 
         foreach (PlayerUnit pu in get_all_placed_units()) {
-            pu.health = pu.get_boosted_max_health();
-            pu.refill_defense();
+            pu.health = pu.get_dynamic_max_health();
+            //pu.refill_defense();
+            pu.has_acted_in_stage = false;
             if (pu.defending) {
                 pu.defending = false;
             }

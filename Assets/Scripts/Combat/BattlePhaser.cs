@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using System;
 
 // Controls the game logic of the battle phases
 public class BattlePhaser : MonoBehaviour {
@@ -48,6 +49,8 @@ public class BattlePhaser : MonoBehaviour {
             return Controller.I.get_disc(battle.active_bat_ID).bat; 
         }
     }
+
+    public event Action on_stage_change;
     void Awake() {
         if (I == null) {
             I = this;
@@ -217,8 +220,10 @@ public class BattlePhaser : MonoBehaviour {
             } else if (phase_stage == COMBAT2) combat();
             else if (phase_stage == ASSESSMENT) assessment();
 
-            if (battle != null)
+            if (battle != null) {
                 battle.clear_stage_actions();
+            }
+            
         }
     } 
 
